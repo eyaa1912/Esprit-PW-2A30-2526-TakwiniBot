@@ -24,12 +24,6 @@ Elle permet de connecter intelligemment les candidats en situation de handicap a
 * Vérification de profil
 * Suggestions d’amélioration (IA)
 
-### 📄 Gestion des candidatures
-
-* Postuler à des offres
-* Suivi du statut des candidatures
-* Classement intelligent des candidats (IA)
-
 ### 🤖 Matching intelligent
 
 * Calcul du score de compatibilité (%)
