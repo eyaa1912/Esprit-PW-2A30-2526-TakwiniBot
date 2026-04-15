@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Back Office - Liste reclamations</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; }
+        .header { background: linear-gradient(135deg, #2ecc71, #9b59b6); color: #fff; padding: 20px; text-align: center; }
+        .navbar { background: #fff; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .navbar ul { list-style: none; display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+        .navbar a { text-decoration: none; color: #9b59b6; font-weight: 600; }
+        .navbar a:hover { color: #2ecc71; }
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        h2 { color: #9b59b6; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        th { background: #9b59b6; color: #fff; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #dcdde1; vertical-align: top; }
+        tr:hover { background: #f5f6fa; }
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .badge-attente { background: #f39c12; color: #fff; }
+        .badge-traite { background: #2ecc71; color: #fff; }
+        .btn { padding: 8px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; margin: 2px; }
+        .btn-repondre { background: #9b59b6; color: #fff; }
+        .btn-supprimer { background: #e74c3c; color: #fff; }
+        .btn-supprimer:hover { background: #c0392b; }
+        .btn-refresh { background: #2ecc71; color: #fff; margin-bottom: 16px; }
+        .footer { background: #2f3640; color: #fff; text-align: center; padding: 20px; margin-top: 50px; }
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
+        .alert-success { background: rgba(46,204,113,0.2); border: 1px solid #2ecc71; color: #1f7a46; }
+        .alert-error { background: rgba(231,76,60,0.2); border: 1px solid #e74c3c; color: #b72f22; }
+        .empty-row { text-align: center; color: #666; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Back Office - TakwiniBot</h1>
+    </header>
+
+    <nav class="navbar">
+        <ul>
+            <li><a href="back_liste_reclamations.html">Reclamations</a></li>
+            <li><a href="back_repondre_reclamation.html">Repondre</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h2>Gestion des reclamations</h2>
+        <button id="refresh-btn" class="btn btn-refresh">Actualiser</button>
+        <div id="feedback-success" class="alert alert-success"></div>
+        <div id="feedback-error" class="alert alert-error"></div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Sujet</th>
+                    <th>Message</th>
+                    <th>Date</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="reclamations-body">
+                <tr><td colspan="7" class="empty-row">Chargement...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 TakwiniBot - Back Office</p>
+    </footer>
+
+    <script>
+        (function () {
+            var API_URL = '../../get_reclamations.php';
+            var DELETE_API_URL = '../../delete_reclamation.php';
+            var ADMIN_KEY = 'takwini_admin_id';
+            var tableBody = document.getElementById('reclamations-body');
+            var successEl = document.getElementById('feedback-success');
+            var errorEl = document.getElementById('feedback-error');
+            var refreshBtn = document.getElementById('refresh-btn');
+            var adminId = resolveAdminId();
+
+            function formatDate(dateString) {
+                if (!dateString) return '-';
+                var date = new Date(dateString.replace(' ', 'T'));
+                if (isNaN(date.getTime())) return dateString;
+                return date.toLocaleString('fr-FR');
+            }
+
+            function isTraite(statut) {
+                var value = (statut || '').toLowerCase();
+                return value.indexOf('traite') !== -1 || value.indexOf('trait') !== -1;
+            }
+
+            function escapeHtml(value) {
+                return String(value || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function showSuccess(text) {
+                successEl.textContent = text;
+                successEl.style.display = 'block';
+            }
+
+            function showError(text) {
+                errorEl.textContent = text;
+                errorEl.style.display = 'block';
+            }
+
+            function clearAlerts() {
+                successEl.style.display = 'none';
+                errorEl.style.display = 'none';
+            }
+
+            function resolveAdminId() {
+                var params = new URLSearchParams(window.location.search);
+                var fromUrl = Number(params.get('admin_id'));
+                if (Number.isInteger(fromUrl) && fromUrl > 0) {
+                    localStorage.setItem(ADMIN_KEY, String(fromUrl));
+                    return fromUrl;
+                }
+
+                var fromStorage = Number(localStorage.getItem(ADMIN_KEY));
+                if (Number.isInteger(fromStorage) && fromStorage > 0) {
+                    return fromStorage;
+                }
+
+                var fallback = 1;
+                localStorage.setItem(ADMIN_KEY, String(fallback));
+                return fallback;
+            }
+
+            function renderRows(rows) {
+                if (!rows || rows.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="7" class="empty-row">Aucune reclamation.</td></tr>';
+                    return;
+                }
+
+                tableBody.innerHTML = rows.map(function (item) {
+                    var traite = isTraite(item.statut);
+                    var badgeClass = traite ? 'badge-traite' : 'badge-attente';
+                    var badgeText = traite ? 'Traite' : 'En attente';
+                    return (
+                        '<tr>' +
+                            '<td>#' + item.id + '</td>' +
+                            '<td>' + escapeHtml(item.type) + '</td>' +
+                            '<td>' + escapeHtml(item.sujet) + '</td>' +
+                            '<td style="max-width:280px;">' + escapeHtml(item.message) + '</td>' +
+                            '<td>' + escapeHtml(formatDate(item.date_creation)) + '</td>' +
+                            '<td><span class="badge ' + badgeClass + '">' + badgeText + '</span></td>' +
+                            '<td>' +
+                                '<a class="btn btn-repondre" href="back_repondre_reclamation.html?id=' + encodeURIComponent(item.id) + '&admin_id=' + encodeURIComponent(String(adminId)) + '">Repondre</a>' +
+                                '<button class="btn btn-supprimer" data-id="' + item.id + '" onclick="supprimerReclamation(this)">Supprimer</button>' +
+                            '</td>' +
+                        '</tr>'
+                    );
+                }).join('');
+            }
+
+            async function loadReclamations() {
+                clearAlerts();
+                tableBody.innerHTML = '<tr><td colspan="7" class="empty-row">Chargement...</td></tr>';
+                try {
+                    var response = await fetch(API_URL);
+                    var result = await response.json();
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || 'Chargement impossible.');
+                    }
+                    renderRows(result.data || []);
+                } catch (error) {
+                    showError(error.message || 'Erreur reseau.');
+                    tableBody.innerHTML = '<tr><td colspan="7" class="empty-row">Erreur de chargement.</td></tr>';
+                }
+            }
+
+            // ── Delete handler (exposed globally for onclick) ──────────
+            window.supprimerReclamation = async function (btn) {
+                var recId = btn.getAttribute('data-id');
+                if (!recId) return;
+
+                if (!confirm('Voulez-vous vraiment supprimer la reclamation #' + recId + ' ? Cette action est irreversible.')) {
+                    return;
+                }
+
+                clearAlerts();
+                btn.disabled = true;
+                btn.textContent = '...';
+
+                try {
+                    var response = await fetch(DELETE_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: Number(recId) })
+                    });
+                    var result = await response.json();
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || 'Suppression impossible.');
+                    }
+                    showSuccess('Reclamation #' + recId + ' supprimee avec succes.');
+                    loadReclamations();
+                } catch (error) {
+                    showError(error.message || 'Erreur lors de la suppression.');
+                    btn.disabled = false;
+                    btn.textContent = 'Supprimer';
+                }
+            };
+
+            refreshBtn.addEventListener('click', loadReclamations);
+
+            var params = new URLSearchParams(window.location.search);
+            if (params.get('updated') === '1') {
+                showSuccess('La reponse a ete enregistree avec succes.');
+            }
+
+            loadReclamations();
+        })();
+    </script>
+</body>
+</html>

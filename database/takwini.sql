@@ -1,0 +1,16 @@
+CREATE DATABASE IF NOT EXISTS takwini
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE takwini;
+
+CREATE TABLE IF NOT EXISTS reclamations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(100) NOT NULL,
+    sujet VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    statut VARCHAR(50) NOT NULL DEFAULT 'En attente',
+    reponse TEXT NULL,
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+

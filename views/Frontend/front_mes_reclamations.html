@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TakwiniBot - Mes reclamations</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; }
+        .header { background: linear-gradient(135deg, #2ecc71, #9b59b6); color: #fff; padding: 20px; text-align: center; }
+        .navbar { background: #fff; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .navbar ul { list-style: none; display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+        .navbar a { text-decoration: none; color: #9b59b6; font-weight: 600; }
+        .navbar a:hover { color: #2ecc71; }
+        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+        h2 { color: #9b59b6; margin-bottom: 20px; }
+        .card { background: #fff; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .badge-attente { background: #f39c12; color: #fff; }
+        .badge-traite { background: #2ecc71; color: #fff; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #2ecc71; color: #fff; }
+        .footer { background: #2f3640; color: #fff; text-align: center; padding: 20px; margin-top: 50px; }
+        .reponse-box { background: rgba(46,204,113,0.1); padding: 15px; border-radius: 8px; margin-top: 15px; }
+        .flex-between { display: flex; justify-content: space-between; gap: 15px; align-items: center; margin-bottom: 15px; }
+        .muted { color: #666; }
+        .empty-state { background: #fff; border-radius: 12px; padding: 20px; color: #555; }
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
+        .alert-error { background: rgba(231,76,60,0.2); border: 1px solid #e74c3c; color: #b72f22; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>TakwiniBot</h1>
+    </header>
+
+    <nav class="navbar">
+        <ul>
+            <li><a href="front_formulaire_reclamation.html">Reclamation</a></li>
+            <li><a href="front_mes_reclamations.html">Mes reclamations</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h2>Mes reclamations</h2>
+        <div id="feedback" class="alert alert-error"></div>
+        <div id="reclamations-list"></div>
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="front_formulaire_reclamation.html" class="btn btn-primary">Deposer une reclamation</a>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 TakwiniBot</p>
+    </footer>
+
+    <script>
+        (function () {
+            var IDS_KEY = 'takwini_user_reclamation_ids';
+            var USER_KEY = 'takwini_user_id';
+            var API_URL = '../../get_user_reclamations.php';
+            var listEl = document.getElementById('reclamations-list');
+            var feedbackEl = document.getElementById('feedback');
+
+            function isTraite(statut) {
+                var value = (statut || '').toLowerCase();
+                return value.indexOf('traite') !== -1 || value.indexOf('trait') !== -1;
+            }
+
+            function formatDate(dateString) {
+                if (!dateString) return '-';
+                var date = new Date(dateString.replace(' ', 'T'));
+                if (isNaN(date.getTime())) return dateString;
+                return date.toLocaleString('fr-FR');
+            }
+
+            function escapeHtml(value) {
+                return String(value || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function renderEmpty() {
+                listEl.innerHTML = '<div class="empty-state">Aucune reclamation trouvee. Deposez votre premiere reclamation.</div>';
+            }
+
+            function readUserIds() {
+                try {
+                    var parsed = JSON.parse(localStorage.getItem(IDS_KEY) || '[]');
+                    if (!Array.isArray(parsed)) return [];
+                    return parsed
+                        .map(function (id) { return Number(id); })
+                        .filter(function (id) { return Number.isInteger(id) && id > 0; });
+                } catch (error) {
+                    return [];
+                }
+            }
+
+            function resolveUserId() {
+                var params = new URLSearchParams(window.location.search);
+                var fromUrl = Number(params.get('user_id'));
+                if (Number.isInteger(fromUrl) && fromUrl > 0) {
+                    localStorage.setItem(USER_KEY, String(fromUrl));
+                    return fromUrl;
+                }
+
+                var fromStorage = Number(localStorage.getItem(USER_KEY));
+                if (Number.isInteger(fromStorage) && fromStorage > 0) {
+                    return fromStorage;
+                }
+
+                return null;
+            }
+
+            function renderRows(rows) {
+                if (!rows || rows.length === 0) {
+                    renderEmpty();
+                    return;
+                }
+
+                listEl.innerHTML = rows.map(function (item) {
+                    var traite = isTraite(item.statut);
+                    var badgeClass = traite ? 'badge-traite' : 'badge-attente';
+                    var badgeText = traite ? 'Traite' : 'En attente';
+                    var reponseHtml = item.reponse
+                        ? '<div class="reponse-box"><p><strong>Reponse administrateur:</strong></p><p>' + escapeHtml(item.reponse) + '</p></div>'
+                        : '';
+
+                    return (
+                        '<div class="card">' +
+                            '<div class="flex-between">' +
+                                '<h3 style="color:#2ecc71;">#' + item.id + ' - ' + escapeHtml(item.sujet) + '</h3>' +
+                                '<span class="badge ' + badgeClass + '">' + badgeText + '</span>' +
+                            '</div>' +
+                            '<p><strong>Type:</strong> ' + escapeHtml(item.type) + '</p>' +
+                            '<p><strong>Date:</strong> ' + escapeHtml(formatDate(item.date_creation)) + '</p>' +
+                            '<p style="margin-top:8px;"><strong>Message:</strong></p>' +
+                            '<p style="background:#f5f6fa; padding:10px; border-radius:8px; margin-top:8px;">' + escapeHtml(item.message) + '</p>' +
+                            reponseHtml +
+                        '</div>'
+                    );
+                }).join('');
+            }
+
+            async function loadReclamations() {
+                feedbackEl.style.display = 'none';
+                var ids = readUserIds();
+                var userId = resolveUserId();
+                if (ids.length === 0 && !userId) {
+                    renderEmpty();
+                    return;
+                }
+
+                try {
+                    var query = [];
+                    if (userId) {
+                        query.push('user_id=' + encodeURIComponent(String(userId)));
+                    }
+                    if (ids.length > 0) {
+                        query.push('ids=' + encodeURIComponent(ids.join(',')));
+                    }
+                    var response = await fetch(API_URL + '?' + query.join('&'));
+                    var result = await response.json();
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || 'Chargement impossible.');
+                    }
+                    renderRows(result.data || []);
+                } catch (error) {
+                    feedbackEl.textContent = error.message || 'Erreur reseau.';
+                    feedbackEl.style.display = 'block';
+                    listEl.innerHTML = '<div class="empty-state">Impossible de charger les reclamations.</div>';
+                }
+            }
+
+            loadReclamations();
+        })();
+    </script>
+</body>
+</html>

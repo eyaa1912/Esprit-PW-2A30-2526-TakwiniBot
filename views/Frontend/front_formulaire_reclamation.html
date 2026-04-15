@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TakwiniBot - Formulaire reclamation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; }
+        .header { background: linear-gradient(135deg, #2ecc71, #9b59b6); color: #fff; padding: 20px; text-align: center; }
+        .navbar { background: #fff; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .navbar ul { list-style: none; display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+        .navbar a { text-decoration: none; color: #9b59b6; font-weight: 600; }
+        .navbar a:hover { color: #2ecc71; }
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        .form-container { background: #fff; border-radius: 15px; padding: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        h2 { color: #9b59b6; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #9b59b6; }
+        input, select, textarea { width: 100%; padding: 12px; border: 2px solid #dcdde1; border-radius: 8px; font-size: 16px; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #2ecc71; }
+        textarea { min-height: 120px; resize: vertical; }
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: #2ecc71; color: #fff; }
+        .btn-primary:hover { background: #27ae60; }
+        .btn-secondary { background: #9b59b6; color: #fff; }
+        .footer { background: #2f3640; color: #fff; text-align: center; padding: 20px; margin-top: 50px; }
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
+        .alert-error { background: rgba(231,76,60,0.2); border: 1px solid #e74c3c; color: #b72f22; }
+        .alert-success { background: rgba(46,204,113,0.2); border: 1px solid #2ecc71; color: #1f7a46; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>TakwiniBot</h1>
+    </header>
+
+    <nav class="navbar">
+        <ul>
+            <li><a href="front_formulaire_reclamation.html">Reclamation</a></li>
+            <li><a href="front_mes_reclamations.html">Mes reclamations</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="form-container">
+            <h2>Formulaire de reclamation</h2>
+
+            <div id="feedback" class="alert" role="alert"></div>
+
+            <form id="reclamation-form" action="../../insert_reclamation.php" method="POST">
+                <div class="form-group">
+                    <label for="type">Type de reclamation *</label>
+                    <select id="type" name="type" required>
+                        <option value="">Selectionnez un type</option>
+                        <option value="technique">Probleme technique</option>
+                        <option value="offre">Signalement offre</option>
+                        <option value="compte">Probleme de compte</option>
+                        <option value="suggestion">Suggestion</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="sujet">Sujet *</label>
+                    <input type="text" id="sujet" name="sujet" required maxlength="255" placeholder="Ex: Probleme d acces a une offre">
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Message *</label>
+                    <textarea id="message" name="message" required placeholder="Decrivez votre probleme en detail"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <button id="submit-btn" type="submit" class="btn btn-primary">Envoyer ma reclamation</button>
+                    <button type="reset" class="btn btn-secondary">Reinitialiser</button>
+                    <a href="front_mes_reclamations.html" class="btn btn-secondary" style="text-decoration: none; display: inline-block; margin-left: 8px;">Retour mes reclamations</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 TakwiniBot</p>
+    </footer>
+
+    <script>
+        (function () {
+            var API_URL = '../../insert_reclamation.php';
+            var IDS_KEY = 'takwini_user_reclamation_ids';
+            var USER_KEY = 'takwini_user_id';
+            var form = document.getElementById('reclamation-form');
+            var feedback = document.getElementById('feedback');
+            var submitBtn = document.getElementById('submit-btn');
+
+            function showMessage(type, text) {
+                feedback.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+                feedback.textContent = text;
+                feedback.style.display = 'block';
+            }
+
+            function storeReclamationId(id) {
+                if (!id) return;
+                var ids = [];
+                try {
+                    ids = JSON.parse(localStorage.getItem(IDS_KEY) || '[]');
+                    if (!Array.isArray(ids)) ids = [];
+                } catch (error) {
+                    ids = [];
+                }
+                if (ids.indexOf(id) === -1) {
+                    ids.push(id);
+                    localStorage.setItem(IDS_KEY, JSON.stringify(ids));
+                }
+            }
+
+            function resolveUserId() {
+                var params = new URLSearchParams(window.location.search);
+                var fromUrl = Number(params.get('user_id'));
+                if (Number.isInteger(fromUrl) && fromUrl > 0) {
+                    localStorage.setItem(USER_KEY, String(fromUrl));
+                    return fromUrl;
+                }
+
+                var fromStorage = Number(localStorage.getItem(USER_KEY));
+                if (Number.isInteger(fromStorage) && fromStorage > 0) {
+                    return fromStorage;
+                }
+
+                var fallback = 1;
+                localStorage.setItem(USER_KEY, String(fallback));
+                return fallback;
+            }
+
+            form.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                feedback.style.display = 'none';
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Envoi en cours...';
+
+                var payload = {
+                    type: document.getElementById('type').value.trim(),
+                    sujet: document.getElementById('sujet').value.trim(),
+                    message: document.getElementById('message').value.trim(),
+                    user_id: resolveUserId()
+                };
+
+                try {
+                    var response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    var result = await response.json();
+                    if (!response.ok || !result.success) {
+                        var errText = (result.errors && result.errors.join(' ')) || result.message || 'Echec de lenvoi.';
+                        throw new Error(errText);
+                    }
+
+                    if (result.data && result.data.id) {
+                        storeReclamationId(Number(result.data.id));
+                    }
+                    if (result.data && result.data.user_id) {
+                        localStorage.setItem(USER_KEY, String(result.data.user_id));
+                    }
+
+                    form.reset();
+                    showMessage('success', 'Reclamation envoyee avec succes.');
+                } catch (error) {
+                    showMessage('error', error.message || 'Erreur reseau.');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Envoyer ma reclamation';
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

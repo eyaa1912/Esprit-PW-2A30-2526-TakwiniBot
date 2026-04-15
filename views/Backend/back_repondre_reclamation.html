@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Back Office - Repondre reclamation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; }
+        .header { background: linear-gradient(135deg, #2ecc71, #9b59b6); color: #fff; padding: 20px; text-align: center; }
+        .navbar { background: #fff; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .navbar ul { list-style: none; display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+        .navbar a { text-decoration: none; color: #9b59b6; font-weight: 600; }
+        .navbar a:hover { color: #2ecc71; }
+        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        .form-container { background: #fff; border-radius: 15px; padding: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        h2 { color: #9b59b6; margin-bottom: 20px; }
+        h3 { color: #2ecc71; margin-bottom: 15px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #9b59b6; }
+        textarea { width: 100%; padding: 12px; border: 2px solid #dcdde1; border-radius: 8px; font-size: 16px; min-height: 150px; resize: vertical; }
+        textarea:focus { outline: none; border-color: #2ecc71; }
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #2ecc71; color: #fff; }
+        .btn-secondary { background: #9b59b6; color: #fff; }
+        .footer { background: #2f3640; color: #fff; text-align: center; padding: 20px; margin-top: 50px; }
+        .reclamation-originale { background: #f5f6fa; padding: 20px; border-radius: 10px; margin-bottom: 25px; }
+        .reponse-existante { background: rgba(46,204,113,0.1); padding: 20px; border-radius: 10px; margin-bottom: 25px; }
+        #bloc-sans-selection { display: none; padding: 15px; background: rgba(243,156,18,0.15); border-radius: 8px; margin-bottom: 20px; border: 1px solid #f39c12; }
+        #message-utilisateur { background: #fff; padding: 10px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; }
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
+        .alert-error { background: rgba(231,76,60,0.2); border: 1px solid #e74c3c; color: #b72f22; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Back Office - TakwiniBot</h1>
+    </header>
+
+    <nav class="navbar">
+        <ul>
+            <li><a href="back_liste_reclamations.html">Reclamations</a></li>
+            <li><a href="back_repondre_reclamation.html">Repondre</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="form-container">
+            <h2>Repondre a la reclamation <span id="reclamation-id-libelle">#-</span></h2>
+
+            <div id="feedback" class="alert alert-error"></div>
+
+            <div id="bloc-sans-selection">
+                <p>Aucune reclamation selectionnee. Ouvrez cette page depuis la liste avec le bouton Repondre.</p>
+                <p><a href="back_liste_reclamations.html" class="btn btn-secondary" style="margin-top: 10px;">Retour a la liste</a></p>
+            </div>
+
+            <div class="reclamation-originale" id="bloc-details-reclamation">
+                <h3>Details de la reclamation</h3>
+                <p><strong>Type:</strong> <span id="detail-type">-</span></p>
+                <p><strong>Sujet:</strong> <span id="detail-sujet">-</span></p>
+                <p><strong>Date:</strong> <span id="detail-date">-</span></p>
+                <p><strong>Message:</strong></p>
+                <p id="message-utilisateur">-</p>
+            </div>
+
+            <div class="reponse-existante" id="bloc-reponse-existante" style="display:none;">
+                <p><strong>Reponse actuelle:</strong></p>
+                <p id="detail-reponse">-</p>
+            </div>
+
+            <form id="reponse-form" action="../../repondre.php" method="POST">
+                <div class="form-group">
+                    <label for="reponse">Votre reponse *</label>
+                    <textarea id="reponse" name="reponse" required placeholder="Redigez votre reponse ici"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <button id="submit-btn" type="submit" class="btn btn-primary">Envoyer la reponse</button>
+                    <a href="back_liste_reclamations.html" class="btn btn-secondary">Retour a la liste</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 TakwiniBot - Back Office</p>
+    </footer>
+
+    <script>
+        (function () {
+            var GET_API_URL = '../../get_reclamations.php';
+            var REPONDRE_API_URL = '../../repondre.php';
+            var ADMIN_KEY = 'takwini_admin_id';
+            var reclamationId = null;
+
+            var idEl = document.getElementById('reclamation-id-libelle');
+            var feedback = document.getElementById('feedback');
+            var sansSel = document.getElementById('bloc-sans-selection');
+            var blocDetails = document.getElementById('bloc-details-reclamation');
+            var blocReponse = document.getElementById('bloc-reponse-existante');
+            var form = document.getElementById('reponse-form');
+            var submitBtn = document.getElementById('submit-btn');
+            var textarea = document.getElementById('reponse');
+
+            function escapeHtml(value) {
+                return String(value || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function formatDate(dateString) {
+                if (!dateString) return '-';
+                var date = new Date(dateString.replace(' ', 'T'));
+                if (isNaN(date.getTime())) return dateString;
+                return date.toLocaleString('fr-FR');
+            }
+
+            function showError(text) {
+                feedback.textContent = text;
+                feedback.style.display = 'block';
+            }
+
+            function clearError() {
+                feedback.style.display = 'none';
+            }
+
+            function resolveAdminId() {
+                var params = new URLSearchParams(window.location.search);
+                var fromUrl = Number(params.get('admin_id'));
+                if (Number.isInteger(fromUrl) && fromUrl > 0) {
+                    localStorage.setItem(ADMIN_KEY, String(fromUrl));
+                    return fromUrl;
+                }
+
+                var fromStorage = Number(localStorage.getItem(ADMIN_KEY));
+                if (Number.isInteger(fromStorage) && fromStorage > 0) {
+                    return fromStorage;
+                }
+
+                var fallback = 1;
+                localStorage.setItem(ADMIN_KEY, String(fallback));
+                return fallback;
+            }
+
+            function afficherVide() {
+                idEl.textContent = '#-';
+                sansSel.style.display = 'block';
+                blocDetails.style.display = 'none';
+                blocReponse.style.display = 'none';
+                form.style.display = 'none';
+            }
+
+            function afficherReclamation(item) {
+                idEl.textContent = '#' + item.id;
+                document.getElementById('detail-type').textContent = item.type || '-';
+                document.getElementById('detail-sujet').textContent = item.sujet || '-';
+                document.getElementById('detail-date').textContent = formatDate(item.date_creation);
+                document.getElementById('message-utilisateur').textContent = item.message || '-';
+
+                if (item.reponse) {
+                    document.getElementById('detail-reponse').innerHTML = escapeHtml(item.reponse);
+                    blocReponse.style.display = 'block';
+                } else {
+                    blocReponse.style.display = 'none';
+                }
+
+                sansSel.style.display = 'none';
+                blocDetails.style.display = 'block';
+                form.style.display = 'block';
+            }
+
+            async function loadReclamation() {
+                clearError();
+                var params = new URLSearchParams(window.location.search);
+                var idParam = Number(params.get('id'));
+                if (!Number.isInteger(idParam) || idParam <= 0) {
+                    afficherVide();
+                    return;
+                }
+
+                reclamationId = idParam;
+
+                try {
+                    var response = await fetch(GET_API_URL + '?id=' + encodeURIComponent(String(reclamationId)));
+                    var result = await response.json();
+                    if (!response.ok || !result.success || !result.data) {
+                        throw new Error(result.message || 'Reclamation introuvable.');
+                    }
+                    afficherReclamation(result.data);
+                } catch (error) {
+                    afficherVide();
+                    showError(error.message || 'Erreur reseau.');
+                }
+            }
+
+            form.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                clearError();
+
+                if (!reclamationId) {
+                    showError('ID reclamation manquant.');
+                    return;
+                }
+
+                var payload = {
+                    id: reclamationId,
+                    reponse: textarea.value.trim(),
+                    admin_id: resolveAdminId()
+                };
+
+                if (payload.reponse.length < 3) {
+                    showError('La reponse doit contenir au moins 3 caracteres.');
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Envoi en cours...';
+
+                try {
+                    var response = await fetch(REPONDRE_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    var result = await response.json();
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || 'Mise a jour impossible.');
+                    }
+                    window.location.href = 'back_liste_reclamations.html?updated=1';
+                } catch (error) {
+                    showError(error.message || 'Erreur reseau.');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Envoyer la reponse';
+                }
+            });
+
+            loadReclamation();
+        })();
+    </script>
+</body>
+</html>
