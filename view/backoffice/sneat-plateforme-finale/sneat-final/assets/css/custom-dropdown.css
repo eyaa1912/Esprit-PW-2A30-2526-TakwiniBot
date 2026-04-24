@@ -1,0 +1,185 @@
+/* ═══════════════════════════════════════════════════════════════
+   CUSTOM DROPDOWN STYLES - Amélioration du menu utilisateur
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Logo à gauche - amélioration */
+.app-brand {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: inherit;
+}
+
+.app-brand-logo img {
+  transition: transform 0.3s ease;
+}
+
+.app-brand-logo:hover img {
+  transform: scale(1.05);
+}
+
+/* Dropdown utilisateur - reste ouvert plus longtemps */
+.navbar-dropdown.dropdown-user .dropdown-menu {
+  min-width: 280px;
+  padding: 0.5rem 0;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  animation: fadeInDown 0.3s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Empêcher la fermeture rapide du dropdown */
+.navbar-dropdown.dropdown-user.show .dropdown-menu {
+  display: block !important;
+  pointer-events: auto;
+}
+
+/* Amélioration visuelle des items du dropdown */
+.navbar-dropdown.dropdown-user .dropdown-item {
+  padding: 0.75rem 1.5rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.navbar-dropdown.dropdown-user .dropdown-item:hover {
+  background-color: rgba(105, 108, 255, 0.08);
+  padding-left: 1.75rem;
+}
+
+.navbar-dropdown.dropdown-user .dropdown-item i {
+  font-size: 1.25rem;
+  width: 24px;
+  text-align: center;
+}
+
+/* Header du dropdown avec info utilisateur */
+.navbar-dropdown.dropdown-user .dropdown-item:first-child {
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, rgba(105, 108, 255, 0.05) 0%, rgba(105, 108, 255, 0.02) 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+.navbar-dropdown.dropdown-user .dropdown-item:first-child:hover {
+  background: linear-gradient(135deg, rgba(105, 108, 255, 0.1) 0%, rgba(105, 108, 255, 0.05) 100%);
+}
+
+/* Divider amélioré */
+.navbar-dropdown.dropdown-user .dropdown-divider {
+  margin: 0.5rem 0;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+/* Avatar dans le dropdown */
+.navbar-dropdown.dropdown-user .avatar {
+  position: relative;
+}
+
+.navbar-dropdown.dropdown-user .avatar-online::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background: #71dd37;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* Effet hover sur l'avatar dans la navbar */
+.nav-item.dropdown-user .avatar {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.nav-item.dropdown-user .avatar:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(105, 108, 255, 0.3);
+}
+
+/* Badge de notification amélioré */
+.badge-notifications {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* Responsive - mobile */
+@media (max-width: 767px) {
+  .navbar-dropdown.dropdown-user .dropdown-menu {
+    min-width: 260px;
+  }
+  
+  .navbar-dropdown.dropdown-user .dropdown-item {
+    padding: 0.65rem 1.25rem;
+  }
+}
+
+/* Dark mode support */
+html[data-theme="dark"] .navbar-dropdown.dropdown-user .dropdown-menu {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+html[data-theme="dark"] .navbar-dropdown.dropdown-user .dropdown-item:hover {
+  background-color: rgba(105, 108, 255, 0.15);
+}
+
+html[data-theme="dark"] .navbar-dropdown.dropdown-user .dropdown-item:first-child {
+  background: linear-gradient(135deg, rgba(105, 108, 255, 0.1) 0%, rgba(105, 108, 255, 0.05) 100%);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Amélioration du texte dans le dropdown */
+.navbar-dropdown.dropdown-user h6 {
+  font-weight: 600;
+  color: var(--bs-heading-color);
+  margin-bottom: 0.125rem;
+}
+
+.navbar-dropdown.dropdown-user small {
+  font-size: 0.8125rem;
+  opacity: 0.8;
+}
+
+/* Icônes colorées dans le dropdown */
+.navbar-dropdown.dropdown-user .dropdown-item .bx-user {
+  color: #696cff;
+}
+
+.navbar-dropdown.dropdown-user .dropdown-item .bx-cog {
+  color: #8592a3;
+}
+
+.navbar-dropdown.dropdown-user .dropdown-item .bx-power-off {
+  color: #ff3e1d;
+}
+
+/* Effet de focus pour accessibilité */
+.navbar-dropdown.dropdown-user .dropdown-item:focus {
+  outline: 2px solid rgba(105, 108, 255, 0.5);
+  outline-offset: -2px;
+}
