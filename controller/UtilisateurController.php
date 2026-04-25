@@ -28,6 +28,25 @@ class UtilisateurController {
                     'user'    => null
                 ];
             }
+
+            // Vérifier statut
+            if ($user['statut'] === 'en_attente') {
+                return [
+                    'success' => false,
+                    'action'  => 'en_attente',
+                    'message' => 'Votre compte est en attente de validation par un administrateur.',
+                    'user'    => null
+                ];
+            }
+
+            if ($user['statut'] === 'suspendu') {
+                return [
+                    'success' => false,
+                    'action'  => 'suspendu',
+                    'message' => 'Votre compte a été suspendu. Contactez l\'administrateur.',
+                    'user'    => null
+                ];
+            }
             
             $updateReq = $db->prepare('UPDATE users SET statut = :statut WHERE id = :id');
             $updateReq->execute(['statut' => 'actif', 'id' => $user['id']]);
@@ -57,7 +76,9 @@ class UtilisateurController {
         string $telephone = '',
         string $sexe = '',
         string $date_naissance = '',
-        string $adresse = ''
+        string $adresse = '',
+        int $handicap = 0,
+        ?string $type_handicap = null
     ): array {
         $db = config::getConnexion();
         try {
@@ -75,19 +96,21 @@ class UtilisateurController {
             }
             
             $hashed = password_hash($password, PASSWORD_BCRYPT);
-            $req = $db->prepare('INSERT INTO users (nom, prenom, email, mot_de_passe, telephone, date_naissance, adresse, sexe, role, email_verifie, statut) VALUES (:nom, :prenom, :email, :mdp, :telephone, :dob, :adresse, :sexe, :role, :ev, :statut)');
+            $req = $db->prepare('INSERT INTO users (nom, prenom, email, mot_de_passe, telephone, date_naissance, adresse, sexe, role, email_verifie, statut, handicap, type_handicap) VALUES (:nom, :prenom, :email, :mdp, :telephone, :dob, :adresse, :sexe, :role, :ev, :statut, :handicap, :type_handicap)');
             $req->execute([
-                'nom'       => $nom,
-                'prenom'    => $prenom ?: null,
-                'email'     => $email,
-                'mdp'       => $hashed,
-                'telephone' => $telephone ?: null,
-                'dob'       => $date_naissance ?: null,
-                'adresse'   => $adresse ?: null,
-                'sexe'      => $sexe ?: null,
-                'role'      => 'candidat',
-                'ev'        => 0,
-                'statut'    => 'actif'
+                'nom'           => $nom,
+                'prenom'        => $prenom ?: null,
+                'email'         => $email,
+                'mdp'           => $hashed,
+                'telephone'     => $telephone ?: null,
+                'dob'           => $date_naissance ?: null,
+                'adresse'       => $adresse ?: null,
+                'sexe'          => $sexe ?: null,
+                'role'          => 'candidat',
+                'ev'            => 0,
+                'statut'        => 'actif',
+                'handicap'      => $handicap,
+                'type_handicap' => $type_handicap
             ]);
             
             $newId = $db->lastInsertId();

@@ -39,11 +39,17 @@
             <li><a href="index.php">Accueil</a></li>
             <li><a href="about.php">À propos</a></li>
             <?php if (isset($_SESSION['user'])): ?>
-            <li><a href="formation.php">Formations</a></li>
-            <li><a href="gallery.php">Produits</a></li>
-            <li><a href="blog.php">Entretiens</a></li>
-            <li><a href="offres-emploi/offres-emploi.html">Offres</a></li>
-            <li><a href="front_mes_reclamations.php">Réclamations</a></li>
+                <?php if ($_SESSION['user']['role'] === 'candidat'): ?>
+                    <li><a href="formation.php">Formations</a></li>
+                    <li><a href="gallery.php">Produits</a></li>
+                    <li><a href="blog.php">Entretiens</a></li>
+                    <li><a href="offres-emploi/offres-emploi.html">Offres</a></li>
+                    <li><a href="front_mes_reclamations.php">Réclamations</a></li>
+                <?php elseif ($_SESSION['user']['role'] === 'recruteur'): ?>
+                    <li><a href="gallery.php">Produits</a></li>
+                    <li><a href="offres-emploi/offres-emploi.html">Offres</a></li>
+                    <li><a href="front_mes_reclamations.php">Réclamations</a></li>
+                <?php endif; ?>
             <?php endif; ?>
         </ul>
         <div class="nav-user d-none d-xl-flex">

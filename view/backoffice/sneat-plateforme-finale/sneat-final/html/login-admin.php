@@ -99,8 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <div class="input-group">
                 <input type="password" id="password" name="password" class="form-control"
                        placeholder="Votre mot de passe" required/>
-                <span class="input-group-text cursor-pointer" id="togglePassword">
-                  <i class="bx bx-hide" id="toggleIcon"></i>
+                <span class="input-group-text cursor-pointer" id="togglePassword" style="cursor:pointer;">
+                  <span id="toggleIcon">👁️</span>
                 </span>
               </div>
             </div>
@@ -148,4 +148,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   </body>
 </html>
+
 

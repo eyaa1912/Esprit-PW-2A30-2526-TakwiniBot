@@ -125,6 +125,9 @@ $inactifs = $total - $actifs;
                   <a href="gestion-utilisateurs.php" class="menu-link"><div class="text-truncate">Liste des utilisateurs</div></a>
                 </li>
                 <li class="menu-item">
+                  <a href="gestion-recruteurs.php" class="menu-link"><div class="text-truncate">Recruteurs</div></a>
+                </li>
+                <li class="menu-item">
                   <a href="pages-account-settings-account.php" class="menu-link"><div class="text-truncate">Profil</div></a>
                 </li>
               </ul>
@@ -170,6 +173,7 @@ $inactifs = $total - $actifs;
                 <i class="icon-base bx bx-moon icon-md" id="app-theme-toggle-icon"></i>
               </a>
             </li>
+            <?php include 'notifications.php'; ?>
             <li class="nav-item navbar-dropdown dropdown-user dropdown">
               <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
                 <?php 
@@ -554,6 +558,7 @@ document.getElementById('checkAll').addEventListener('change', function() {
 
   </body>
 </html>
+
 
 
 

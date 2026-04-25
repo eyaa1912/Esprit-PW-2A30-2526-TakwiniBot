@@ -164,7 +164,11 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
                         <div class="text-truncate">Liste des utilisateurs</div>
                       </a>
                     </li>
-                    
+                    <li class="menu-item">
+                      <a href="gestion-recruteurs.php" class="menu-link">
+                        <div class="text-truncate">Recruteurs</div>
+                      </a>
+                    </li>
                   </ul>
                 </li>
 
@@ -316,78 +320,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
                 </li>
 
                 <!-- NOTIFICATIONS -->
-                <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-2 me-xl-1">
-                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);"
-                    data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-label="Notifications">
-                    <span class="position-relative">
-                      <i class="icon-base bx bx-bell icon-md"></i>
-                      <span class="badge-notifications position-absolute" style="width:9px;height:9px;background:#ff3e1d;border-radius:50%;border:2px solid #fff;top:2px;right:-1px;" id="notif-count">5</span>
-                    </span>
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-end p-0" style="min-width:340px; max-width:360px;">
-                    <li class="border-bottom px-3 py-3">
-                      <div class="d-flex align-items-center justify-content-between">
-                        <h6 class="mb-0 fw-semibold">Notifications</h6>
-                        <span class="badge bg-label-primary rounded-pill" id="notif-badge">5 nouvelles</span>
-                      </div>
-                    </li>
-                    <li class="notif-list">
-                      <a href="gestion-formations.html" class="list-group-item list-group-item-action dropdown-notifications-item px-3 py-3">
-                        <div class="d-flex align-items-start gap-3">
-                          <div class="avatar avatar-sm bg-label-primary flex-shrink-0"><i class="icon-base bx bx-book-open icon-sm"></i></div>
-                          <div class="flex-grow-1">
-                            <p class="mb-0 small fw-medium">Nouvelle inscription formation</p>
-                            <small class="text-body-secondary">Ahmed Ben Ali — il y a 5 min</small>
-                          </div>
-                          <button type="button" class="btn-close btn-close-sm flex-shrink-0 mt-1" aria-label="Fermer" onclick="dismissNotif(this,event)"></button>
-                        </div>
-                      </a>
-                      <a href="gestion-entretiens.html" class="list-group-item list-group-item-action dropdown-notifications-item px-3 py-3">
-                        <div class="d-flex align-items-start gap-3">
-                          <div class="avatar avatar-sm bg-label-warning flex-shrink-0"><i class="icon-base bx bx-calendar icon-sm"></i></div>
-                          <div class="flex-grow-1">
-                            <p class="mb-0 small fw-medium">Entretien planifié demain</p>
-                            <small class="text-body-secondary">10h00 — Salle B · Rappel</small>
-                          </div>
-                          <button type="button" class="btn-close btn-close-sm flex-shrink-0 mt-1" aria-label="Fermer" onclick="dismissNotif(this,event)"></button>
-                        </div>
-                      </a>
-                      <a href="gestion-utilisateurs.php" class="list-group-item list-group-item-action dropdown-notifications-item px-3 py-3">
-                        <div class="d-flex align-items-start gap-3">
-                          <div class="avatar avatar-sm bg-label-success flex-shrink-0"><i class="icon-base bx bx-user-check icon-sm"></i></div>
-                          <div class="flex-grow-1">
-                            <p class="mb-0 small fw-medium">Nouvel utilisateur inscrit</p>
-                            <small class="text-body-secondary">Meriem Trabelsi — il y a 1 h</small>
-                          </div>
-                          <button type="button" class="btn-close btn-close-sm flex-shrink-0 mt-1" aria-label="Fermer" onclick="dismissNotif(this,event)"></button>
-                        </div>
-                      </a>
-                      <a href="gestion-offres.html" class="list-group-item list-group-item-action dropdown-notifications-item px-3 py-3">
-                        <div class="d-flex align-items-start gap-3">
-                          <div class="avatar avatar-sm bg-label-info flex-shrink-0"><i class="icon-base bx bx-briefcase icon-sm"></i></div>
-                          <div class="flex-grow-1">
-                            <p class="mb-0 small fw-medium">Nouvelle offre soumise</p>
-                            <small class="text-body-secondary">Offre #2024-089 — à valider</small>
-                          </div>
-                          <button type="button" class="btn-close btn-close-sm flex-shrink-0 mt-1" aria-label="Fermer" onclick="dismissNotif(this,event)"></button>
-                        </div>
-                      </a>
-                      <a href="gestion-reclamations.html" class="list-group-item list-group-item-action dropdown-notifications-item px-3 py-3">
-                        <div class="d-flex align-items-start gap-3">
-                          <div class="avatar avatar-sm bg-label-danger flex-shrink-0"><i class="icon-base bx bx-error-circle icon-sm"></i></div>
-                          <div class="flex-grow-1">
-                            <p class="mb-0 small fw-medium">Réclamation à traiter</p>
-                            <small class="text-body-secondary">Priorité haute — Plateforme</small>
-                          </div>
-                          <button type="button" class="btn-close btn-close-sm flex-shrink-0 mt-1" aria-label="Fermer" onclick="dismissNotif(this,event)"></button>
-                        </div>
-                      </a>
-                    </li>
-                    <li class="border-top text-center px-3 py-2">
-                      <a href="javascript:void(0);" class="small text-primary fw-medium" onclick="markAllRead()">Tout marquer comme lu</a>
-                    </li>
-                  </ul>
-                </li>
+                <?php include 'notifications.php'; ?>
 
                 <!-- PARAMÈTRES (offcanvas) -->
                 <li class="nav-item me-2 me-xl-1">
@@ -1060,6 +993,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 
   </body>
 </html>
+
 
 
 
