@@ -1,0 +1,1157 @@
+<!doctype html>
+
+<html
+  lang="en"
+  class="layout-menu-fixed layout-compact"
+  data-assets-path="../assets/"
+  data-template="vertical-menu-template-free">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+
+    <title>Demo: Basic Inputs - Forms | Sneat - Bootstrap Dashboard FREE</title>
+
+    <meta name="description" content="" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../assets/img/favicon/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+      rel="stylesheet" />
+
+    <link rel="stylesheet" href="../assets/vendor/fonts/iconify-icons.css" />
+
+    <!-- Core CSS -->
+    <!-- build:css assets/vendor/css/theme.css  -->
+
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/dark-mode.css" />
+
+    <!-- Vendors CSS -->
+
+    <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+
+    <!-- endbuild -->
+
+    <!-- Page CSS -->
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+
+    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+
+    <script src="../assets/js/config.js"></script>
+  </head>
+
+  <body>
+    <!-- Layout wrapper -->
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Menu -->
+
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+          <div class="app-brand demo">
+            <a href="index.html" class="app-brand-link">
+              <span class="app-brand-logo demo"><img src="../assets/img/favicon/tak.png" alt="Takwinibot" style="width:56px;height:56px;object-fit:contain;"></span>
+            </a>
+
+            <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+              <i class="bx bx-chevron-left d-block d-xl-none align-middle"></i>
+            </a>
+          </div>
+
+          <div class="menu-divider mt-0"></div>
+
+          <div class="menu-inner-shadow"></div>
+
+                                                  <ul class="menu-inner py-1">
+            <!-- Tableau de bord : accueil + modules plateforme (pas de démos externes Académie / e-commerce) -->
+            <li class="menu-item">
+              <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons bx bx-home-smile"></i>
+                <div class="text-truncate">Tableau de bord</div>
+              </a>
+              <ul class="menu-sub">
+                <li class="menu-item">
+                  <a href="index.html" class="menu-link">
+                    <div class="text-truncate">Accueil</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="javascript:void(0);" class="menu-link menu-toggle">
+                    <div class="text-truncate">Formations</div>
+                  </a>
+                  <ul class="menu-sub">
+                    <li class="menu-item">
+                      <a href="gestion-formations.html" class="menu-link">
+                        <div class="text-truncate">Vue d&apos;ensemble</div>
+                      </a>
+                    </li>
+                    <li class="menu-item">
+                      <a href="gestion-formations.html#sessions" class="menu-link">
+                        <div class="text-truncate">Nos formations</div>
+                      </a>
+                    </li>
+                    <li class="menu-item">
+                      <a href="gestion-inscriptions.html" class="menu-link">
+                        <div class="text-truncate">Inscriptions</div>
+                      </a>
+                    </li>
+                    <li class="menu-item">
+                      <a href="gestion-certificats.html" class="menu-link">
+                        <div class="text-truncate">Certificats</div>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="menu-item">
+                  <a href="javascript:void(0);" class="menu-link menu-toggle">
+                    <div class="text-truncate">Offres</div>
+                  </a>
+                  <ul class="menu-sub">
+                    <li class="menu-item">
+                      <a href="gestion-offres.php" class="menu-link">
+                        <div class="text-truncate">Liste des offres</div>
+                      </a>
+                    </li>
+                    <li class="menu-item">
+                      <a href="gestion-contrats.html" class="menu-link">
+                        <div class="text-truncate">Contrats</div>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="menu-item">
+                  <a href="gestion-reclamations.html" class="menu-link">
+                    <div class="text-truncate">Réclamations</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="gestion-entretiens.html" class="menu-link">
+                    <div class="text-truncate">Entretiens</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="gestion-produits.html" class="menu-link">
+                    <div class="text-truncate">Produits</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="javascript:void(0);" class="menu-link menu-toggle">
+                    <div class="text-truncate">Utilisateurs</div>
+                  </a>
+                  <ul class="menu-sub">
+                    <li class="menu-item">
+                      <a href="gestion-utilisateurs.html" class="menu-link">
+                        <div class="text-truncate">Liste des utilisateurs</div>
+                      </a>
+                    </li>
+                    <li class="menu-item">
+                      <a href="pages-account-settings-account.html" class="menu-link">
+                        <div class="text-truncate">Profil</div>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+
+            <li class="menu-header small text-uppercase">
+              <span class="menu-header-text">Applications</span>
+            </li>
+            <li class="menu-item">
+              <a href="email-boite.html" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-envelope"></i>
+                <div class="text-truncate">Email</div>
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="app-chat-local.html" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-chat"></i>
+                <div class="text-truncate">Discuter</div>
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="app-calendrier-local.html" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-calendar"></i>
+                <div class="text-truncate">Calendrier</div>
+              </a>
+            </li>
+
+            <li class="menu-item">
+              <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons bx bx-lock-open-alt"></i>
+                <div class="text-truncate">Authentification</div>
+              </a>
+              <ul class="menu-sub">
+                <li class="menu-item">
+                  <a href="auth-login-basic.html" class="menu-link" target="_blank">
+                    <div class="text-truncate">Connexion</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="auth-register-basic.html" class="menu-link" target="_blank">
+                    <div class="text-truncate">Inscription</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="auth-forgot-password-basic.html" class="menu-link" target="_blank">
+                    <div class="text-truncate">Mot de passe oublié</div>
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </aside>
+        <!-- / Menu -->
+
+        <!-- Layout container -->
+        <div class="layout-page">
+          <!-- Navbar -->
+
+          <nav
+            class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
+            id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                <i class="icon-base bx bx-menu icon-md"></i>
+              </a>
+            </div>
+
+            <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
+              <!-- Search -->
+              <div class="navbar-nav align-items-center me-auto">
+                <div class="nav-item d-flex align-items-center">
+                  <span class="w-px-22 h-px-22"><i class="icon-base bx bx-search icon-md"></i></span>
+                  <input
+                    type="text"
+                    class="form-control border-0 shadow-none ps-1 ps-sm-2 d-md-block d-none"
+                    placeholder="Search..."
+                    aria-label="Search..." />
+                </div>
+              </div>
+              <!-- /Search -->
+
+              <ul class="navbar-nav flex-row align-items-center ms-md-auto">
+                <li class="nav-item dropdown me-2 me-xl-1">
+                  <a
+                    class="nav-link dropdown-toggle hide-arrow"
+                    href="javascript:void(0);"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    aria-label="Langue">
+                    <i class="icon-base bx bx-globe icon-md"></i>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="javascript:void(0);" data-app-lang="fr">Français</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="javascript:void(0);" data-app-lang="en">English</a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="nav-item dropdown me-2 me-xl-1">
+                  <a
+                    class="nav-link dropdown-toggle hide-arrow"
+                    href="javascript:void(0);"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    aria-label="Disposition du menu">
+                    <i class="icon-base bx bx-layout icon-md"></i>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="javascript:void(0);" data-app-layout="vertical">Menu vertical</a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="https://demos.themeselection.com/sneat-bootstrap-html-admin-template/html/horizontal-menu-template/"
+                        target="_blank"
+                        rel="noopener"
+                        >Menu horizontal <span class="badge bg-label-primary ms-1 text-uppercase fs-tiny">Pro</span></a
+                      >
+                    </li>
+                  </ul>
+                </li>
+<!-- app-toolbar-extras -->
+                <li class="nav-item dropdown-shortcuts navbar-dropdown dropdown me-2 me-xl-1">
+                  <a
+                    class="nav-link dropdown-toggle hide-arrow"
+                    href="javascript:void(0);"
+                    data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside"
+                    aria-expanded="false"
+                    aria-label="Raccourcis">
+                    <i class="icon-base bx bx-grid-alt icon-md"></i>
+                  </a>
+                  <div class="dropdown-menu dropdown-menu-end border-0 p-0">
+                    <div class="dropdown-shortcuts-list">
+                      <div class="row row-bordered g-0">
+                        <div class="dropdown-shortcuts-item col-6 border-end border-bottom">
+                          <a href="gestion-formations.html" class="d-flex flex-column align-items-center justify-content-center gap-2 py-4 text-body">
+                            <span class="dropdown-shortcuts-icon rounded-circle d-inline-flex"><i class="icon-base bx bx-book-open icon-md"></i></span>
+                            <small class="text-body-secondary">Formations</small>
+                          </a>
+                        </div>
+                        <div class="dropdown-shortcuts-item col-6 border-bottom">
+                          <a href="gestion-offres.php" class="d-flex flex-column align-items-center justify-content-center gap-2 py-4 text-body">
+                            <span class="dropdown-shortcuts-icon rounded-circle d-inline-flex"><i class="icon-base bx bx-briefcase icon-md"></i></span>
+                            <small class="text-body-secondary">Offres</small>
+                          </a>
+                        </div>
+                        <div class="dropdown-shortcuts-item col-6 border-end">
+                          <a href="gestion-reclamations.html" class="d-flex flex-column align-items-center justify-content-center gap-2 py-4 text-body">
+                            <span class="dropdown-shortcuts-icon rounded-circle d-inline-flex"><i class="icon-base bx bx-error-circle icon-md"></i></span>
+                            <small class="text-body-secondary">Réclamations</small>
+                          </a>
+                        </div>
+                        <div class="dropdown-shortcuts-item col-6">
+                          <a href="gestion-produits.html" class="d-flex flex-column align-items-center justify-content-center gap-2 py-4 text-body">
+                            <span class="dropdown-shortcuts-icon rounded-circle d-inline-flex"><i class="icon-base bx bx-cart icon-md"></i></span>
+                            <small class="text-body-secondary">Produits</small>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-2 me-xl-1">
+                  <a
+                    class="nav-link dropdown-toggle hide-arrow"
+                    href="javascript:void(0);"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    aria-label="Notifications">
+                    <span class="position-relative">
+                      <i class="icon-base bx bx-bell icon-md"></i>
+                      <span
+                        class="badge-notifications position-absolute" style="width:9px;height:9px;background:#ff3e1d;border-radius:50%;border:2px solid #fff;top:2px;right:-1px;"
+                        >3</span
+                      >
+                    </span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end dropdown-notifications-list">
+                    <li class="dropdown-menu-header border-bottom">
+                      <div class="d-flex align-items-center px-3 py-3">
+                        <h6 class="mb-0">Notifications</h6>
+                      </div>
+                    </li>
+                    <li class="list-group list-group-flush">
+                      <a href="gestion-reclamations.html" class="list-group-item list-group-item-action dropdown-notifications-item">
+                        <div class="d-flex align-items-center gap-3">
+                          <div class="flex-shrink-0"><div class="avatar avatar-sm bg-label-primary"><i class="icon-base bx bx-error icon-sm"></i></div></div>
+                          <div class="flex-grow-1">
+                            <p class="mb-0 small">Réclamation à traiter</p>
+                            <small class="text-body-secondary">Plateforme</small>
+                          </div>
+                        </div>
+                      </a>
+                      <a href="gestion-entretiens.html" class="list-group-item list-group-item-action dropdown-notifications-item">
+                        <div class="d-flex align-items-center gap-3">
+                          <div class="flex-shrink-0"><div class="avatar avatar-sm bg-label-warning"><i class="icon-base bx bx-calendar icon-sm"></i></div></div>
+                          <div class="flex-grow-1">
+                            <p class="mb-0 small">Entretien planifié demain</p>
+                            <small class="text-body-secondary">Rappel</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="nav-item me-2 me-xl-1">
+                  <a class="nav-link" href="javascript:void(0);" id="app-theme-toggle" aria-label="Basculer thème clair ou sombre">
+                    <i class="icon-base bx bx-moon icon-md" id="app-theme-toggle-icon"></i>
+                  </a>
+                </li>
+                <li class="nav-item dropdown me-2 me-xl-1">
+                  <a
+                    class="nav-link dropdown-toggle hide-arrow"
+                    href="javascript:void(0);"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    aria-label="Couleurs et apparence">
+                    <i class="icon-base bx bx-cog icon-md"></i>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li><h6 class="dropdown-header">Couleur principale</h6></li>
+                    <li>
+                      <a class="dropdown-item" href="javascript:void(0);" data-app-primary-reset="1">Par défaut (Sneat)</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="javascript:void(0);" data-app-primary="#696cff" data-app-primary-rgb="105, 108, 255">Violet</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="javascript:void(0);" data-app-primary="#71dd37" data-app-primary-rgb="113, 221, 55">Vert</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="javascript:void(0);" data-app-primary="#03c3ec" data-app-primary-rgb="3, 195, 236">Cyan</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="javascript:void(0);" data-app-primary="#ff3e1d" data-app-primary-rgb="255, 62, 29">Rouge</a>
+                    </li>
+                    <li><div class="dropdown-divider"></div></li>
+                    <li>
+                      <a class="dropdown-item" href="pages-account-settings-account.html"
+                        ><i class="icon-base bx bx-user icon-sm me-2"></i>Paramètres du compte</a
+                      >
+                    </li>
+                  </ul>
+                </li>
+
+
+                <!-- Place this tag where you want the button to render. -->
+                <li class="nav-item lh-1 me-4">
+                  <a
+                    class="github-button"
+                    href="https://github.com/themeselection/sneat-bootstrap-html-admin-template-free"
+                    data-icon="octicon-star"
+                    data-size="large"
+                    data-show-count="true"
+                    aria-label="Star themeselection/sneat-html-admin-template-free on GitHub"
+                    >Star</a
+                  >
+                </li>
+
+                <!-- User -->
+                <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                  <a
+                    class="nav-link dropdown-toggle hide-arrow p-0"
+                    href="javascript:void(0);"
+                    data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+                      <img src="../assets/img/avatars/1.png" alt class="w-px-40 h-auto rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="pages-account-settings-account.html">
+                        <div class="d-flex">
+                          <div class="flex-shrink-0 me-3">
+                            <div class="avatar avatar-online">
+                              <img src="../assets/img/avatars/1.png" alt class="w-px-40 h-auto rounded-circle" />
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <h6 class="mb-0">John Doe</h6>
+                            <small class="text-body-secondary">Admin</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                    <li>
+                      <div class="dropdown-divider my-1"></div>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="pages-account-settings-account.html">
+                        <i class="icon-base bx bx-user icon-md me-3"></i><span>My Profile</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="pages-account-settings-account.html">
+                        <i class="icon-base bx bx-cog icon-md me-3"></i><span>Settings</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <span class="d-flex align-items-center align-middle">
+                          <i class="flex-shrink-0 icon-base bx bx-credit-card icon-md me-3"></i
+                          ><span class="flex-grow-1 align-middle">Billing Plan</span>
+                          <span class="flex-shrink-0 badge rounded-pill bg-danger">4</span>
+                        </span>
+                      </a>
+                    </li>
+                    <li>
+                      <div class="dropdown-divider my-1"></div>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="auth-login-basic.html">
+                        <i class="icon-base bx bx-power-off icon-md me-3"></i><span>Log Out</span>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <!--/ User -->
+              </ul>
+            </div>
+          </nav>
+
+          <!-- / Navbar -->
+
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <!-- Content -->
+            <div class="container-xxl flex-grow-1 container-p-y">
+              <div class="row g-6">
+                <div class="col-md-6">
+                  <div class="card">
+                    <h5 class="card-header">Default</h5>
+                    <div class="card-body">
+                      <div>
+                        <label for="defaultFormControlInput" class="form-label">Name</label>
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="defaultFormControlInput"
+                          placeholder="John Doe"
+                          aria-describedby="defaultFormControlHelp" />
+                        <div id="defaultFormControlHelp" class="form-text">
+                          We'll never share your details with anyone else.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="card">
+                    <h5 class="card-header">Float label</h5>
+                    <div class="card-body">
+                      <div class="form-floating">
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="floatingInput"
+                          placeholder="John Doe"
+                          aria-describedby="floatingInputHelp" />
+                        <label for="floatingInput">Name</label>
+                        <div id="floatingInputHelp" class="form-text">
+                          We'll never share your details with anyone else.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Form controls -->
+                <div class="col-md-6">
+                  <div class="card">
+                    <h5 class="card-header">Form Controls</h5>
+                    <div class="card-body">
+                      <div class="mb-4">
+                        <label for="exampleFormControlInput1" class="form-label">Email address</label>
+                        <input
+                          type="email"
+                          class="form-control"
+                          id="exampleFormControlInput1"
+                          placeholder="name@example.com" />
+                      </div>
+                      <div class="mb-4">
+                        <label for="exampleFormControlReadOnlyInput1" class="form-label">Read only</label>
+                        <input
+                          class="form-control"
+                          type="text"
+                          id="exampleFormControlReadOnlyInput1"
+                          value="Readonly input here..."
+                          aria-label="readonly input example"
+                          readonly />
+                      </div>
+                      <div class="mb-4">
+                        <label for="exampleFormControlReadOnlyInputPlain1" class="form-label">Read plain</label>
+                        <input
+                          type="text"
+                          readonly
+                          class="form-control-plaintext"
+                          id="exampleFormControlReadOnlyInputPlain1"
+                          value="email@example.com" />
+                      </div>
+                      <div class="mb-4">
+                        <label for="exampleFormControlSelect1" class="form-label">Example select</label>
+                        <select class="form-select" id="exampleFormControlSelect1" aria-label="Default select example">
+                          <option selected>Open this select menu</option>
+                          <option value="1">One</option>
+                          <option value="2">Two</option>
+                          <option value="3">Three</option>
+                        </select>
+                      </div>
+                      <div class="mb-4">
+                        <label for="exampleDataList" class="form-label">Datalist example</label>
+                        <input
+                          class="form-control"
+                          list="datalistOptions"
+                          id="exampleDataList"
+                          placeholder="Type to search..." />
+                        <datalist id="datalistOptions">
+                          <option value="San Francisco"></option>
+                          <option value="New York"></option>
+                          <option value="Seattle"></option>
+                          <option value="Los Angeles"></option>
+                          <option value="Chicago"></option>
+                        </datalist>
+                      </div>
+                      <div class="mb-4">
+                        <label for="exampleFormControlSelect2" class="form-label">Example multiple select</label>
+                        <select
+                          multiple
+                          class="form-select"
+                          id="exampleFormControlSelect2"
+                          aria-label="Multiple select example">
+                          <option selected>Open this select menu</option>
+                          <option value="1">One</option>
+                          <option value="2">Two</option>
+                          <option value="3">Three</option>
+                        </select>
+                      </div>
+                      <div class="mb-4">
+                        <label for="exampleFormControlSelect3" class="form-label"
+                          >An example of a multi-select option is the 'size' attribute</label
+                        >
+                        <select
+                          class="form-select"
+                          id="exampleFormControlSelect3"
+                          size="2"
+                          aria-label="Size 2 select example">
+                          <option selected>Open this select menu</option>
+                          <option value="1">One</option>
+                          <option value="2">Two</option>
+                          <option value="3">Three</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label for="exampleFormControlTextarea1" class="form-label">Example textarea</label>
+                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Input Sizing -->
+                <div class="col-md-6">
+                  <div class="card">
+                    <h5 class="card-header">Input Sizing & Shape</h5>
+                    <div class="card-body">
+                      <small class="fw-medium">Input text</small>
+
+                      <div class="mt-2 mb-4">
+                        <label for="largeInput" class="form-label">Large input</label>
+                        <input
+                          id="largeInput"
+                          class="form-control form-control-lg"
+                          type="text"
+                          placeholder=".form-control-lg" />
+                      </div>
+                      <div class="mb-4">
+                        <label for="defaultInput" class="form-label">Default input</label>
+                        <input id="defaultInput" class="form-control" type="text" placeholder="Default input" />
+                      </div>
+                      <div>
+                        <label for="smallInput" class="form-label">Small input</label>
+                        <input
+                          id="smallInput"
+                          class="form-control form-control-sm"
+                          type="text"
+                          placeholder=".form-control-sm" />
+                      </div>
+                    </div>
+                    <hr class="m-0" />
+                    <div class="card-body">
+                      <small class="fw-medium">Input select</small>
+                      <div class="mt-2 mb-4">
+                        <label for="largeSelect" class="form-label">Large select</label>
+                        <select id="largeSelect" class="form-select form-select-lg">
+                          <option>Large select</option>
+                          <option value="1">One</option>
+                          <option value="2">Two</option>
+                          <option value="3">Three</option>
+                        </select>
+                      </div>
+                      <div class="mb-4">
+                        <label for="defaultSelect" class="form-label">Default select</label>
+                        <select id="defaultSelect" class="form-select">
+                          <option>Default select</option>
+                          <option value="1">One</option>
+                          <option value="2">Two</option>
+                          <option value="3">Three</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label for="smallSelect" class="form-label">Small select</label>
+                        <select id="smallSelect" class="form-select form-select-sm">
+                          <option>Small select</option>
+                          <option value="1">One</option>
+                          <option value="2">Two</option>
+                          <option value="3">Three</option>
+                        </select>
+                      </div>
+                    </div>
+                    <hr class="m-0" />
+                    <div class="card-body">
+                      <small class="fw-medium">Input Shape</small>
+                      <div class="mt-2">
+                        <label for="roundedInput" class="form-label">Rounded input</label>
+                        <input
+                          id="roundedInput"
+                          class="form-control rounded-pill"
+                          type="text"
+                          placeholder="Default input" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Default Checkboxes and radios & Default checkboxes and radios -->
+                <div class="col-xl-6">
+                  <div class="card mb-6">
+                    <h5 class="card-header">Checkboxes and Radios</h5>
+                    <!-- Checkboxes and Radios -->
+                    <div class="row g-0">
+                      <div class="col-md p-6">
+                        <small class="fw-medium">Checkboxes</small>
+                        <div class="form-check mt-4">
+                          <input class="form-check-input" type="checkbox" value="" id="defaultCheck1" />
+                          <label class="form-check-label" for="defaultCheck1"> Unchecked </label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" value="" id="defaultCheck2" checked />
+                          <label class="form-check-label" for="defaultCheck2"> Indeterminate </label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" value="" id="defaultCheck3" checked />
+                          <label class="form-check-label" for="defaultCheck3"> Checked </label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" value="" id="disabledCheck1" disabled />
+                          <label class="form-check-label" for="disabledCheck1"> Disabled Unchecked </label>
+                        </div>
+                        <div class="form-check">
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            value=""
+                            id="disabledCheck2"
+                            disabled
+                            checked />
+                          <label class="form-check-label" for="disabledCheck2"> Disabled Checked </label>
+                        </div>
+                      </div>
+                      <div class="col-md p-6">
+                        <small class="fw-medium">Radio</small>
+                        <div class="form-check mt-4">
+                          <input
+                            name="default-radio-1"
+                            class="form-check-input"
+                            type="radio"
+                            value=""
+                            id="defaultRadio1" />
+                          <label class="form-check-label" for="defaultRadio1"> Unchecked </label>
+                        </div>
+                        <div class="form-check">
+                          <input
+                            name="default-radio-1"
+                            class="form-check-input"
+                            type="radio"
+                            value=""
+                            id="defaultRadio2"
+                            checked />
+                          <label class="form-check-label" for="defaultRadio2"> Checked </label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" value="" id="disabledRadio1" disabled />
+                          <label class="form-check-label" for="disabledRadio1"> Disabled unchecked </label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" value="" id="disabledRadio2" disabled checked />
+                          <label class="form-check-label" for="disabledRadio2"> Disabled checkbox </label>
+                        </div>
+                      </div>
+                    </div>
+                    <hr class="m-0" />
+                    <!-- Inline Checkboxes -->
+                    <div class="row g-0">
+                      <div class="col-md p-6">
+                        <small class="fw-medium d-block">Inline Checkboxes</small>
+                        <div class="form-check form-check-inline mt-4">
+                          <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1" />
+                          <label class="form-check-label" for="inlineCheckbox1">1</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2" />
+                          <label class="form-check-label" for="inlineCheckbox2">2</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            id="inlineCheckbox3"
+                            value="option3"
+                            disabled />
+                          <label class="form-check-label" for="inlineCheckbox3">3 (disabled)</label>
+                        </div>
+                      </div>
+                      <div class="col-md p-6">
+                        <small class="fw-medium d-block">Inline Radio</small>
+                        <div class="form-check form-check-inline mt-4">
+                          <input
+                            class="form-check-input"
+                            type="radio"
+                            name="inlineRadioOptions"
+                            id="inlineRadio1"
+                            value="option1" />
+                          <label class="form-check-label" for="inlineRadio1">1</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                          <input
+                            class="form-check-input"
+                            type="radio"
+                            name="inlineRadioOptions"
+                            id="inlineRadio2"
+                            value="option2" />
+                          <label class="form-check-label" for="inlineRadio2">2</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                          <input
+                            class="form-check-input"
+                            type="radio"
+                            name="inlineRadioOptions"
+                            id="inlineRadio3"
+                            value="option3"
+                            disabled />
+                          <label class="form-check-label" for="inlineRadio3">3 (disabled)</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Switches -->
+                  <div class="card mb-6">
+                    <div class="row row-bordered g-0">
+                      <div class="col-xxl-6 col-xl-12 col-md-6">
+                        <h5 class="card-header">Switches</h5>
+                        <div class="card-body">
+                          <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" />
+                            <label class="form-check-label" for="flexSwitchCheckDefault"
+                              >Default switch checkbox input</label
+                            >
+                          </div>
+                          <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" checked />
+                            <label class="form-check-label" for="flexSwitchCheckChecked"
+                              >Checked switch checkbox input</label
+                            >
+                          </div>
+                          <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="flexSwitchCheckDisabled" disabled />
+                            <label class="form-check-label" for="flexSwitchCheckDisabled"
+                              >Disabled switch checkbox input</label
+                            >
+                          </div>
+                          <div class="form-check form-switch">
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              id="flexSwitchCheckCheckedDisabled"
+                              checked
+                              disabled />
+                            <label class="form-check-label" for="flexSwitchCheckCheckedDisabled"
+                              >Disabled checked switch checkbox input</label
+                            >
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-xxl-6 col-xl-12 col-md-6">
+                        <h5 class="card-header text-end">Reverse</h5>
+                        <div class="card-body">
+                          <div class="form-check form-check-reverse">
+                            <input class="form-check-input" type="checkbox" value="" id="reverseCheck1" />
+                            <label class="form-check-label" for="reverseCheck1"> Reverse checkbox </label>
+                          </div>
+                          <div class="form-check form-check-reverse">
+                            <input class="form-check-input" type="checkbox" value="" id="reverseCheck2" disabled />
+                            <label class="form-check-label" for="reverseCheck2"> Disabled reverse checkbox </label>
+                          </div>
+                          <div class="form-check form-check-reverse">
+                            <input
+                              name="reverse-radio-1"
+                              class="form-check-input"
+                              type="radio"
+                              value=""
+                              id="reverseRadio1" />
+                            <label class="form-check-label" for="reverseRadio1"> Unchecked </label>
+                          </div>
+                          <div class="form-check form-check-reverse">
+                            <input
+                              name="reverse-radio-1"
+                              class="form-check-input"
+                              type="radio"
+                              value=""
+                              id="reverseRadio2"
+                              checked />
+                            <label class="form-check-label" for="reverseRadio2"> Checked </label>
+                          </div>
+                          <div class="form-check form-switch form-check-reverse mb-0">
+                            <input class="form-check-input" type="checkbox" id="flexSwitchCheckReverse" />
+                            <label class="form-check-label" for="flexSwitchCheckReverse"
+                              >Reverse switch checkbox input</label
+                            >
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Range -->
+                  <div class="card">
+                    <h5 class="card-header">Range</h5>
+                    <div class="card-body">
+                      <div class="mb-4">
+                        <label for="formRange1" class="form-label">Example range</label>
+                        <input type="range" class="form-range" id="formRange1" />
+                      </div>
+                      <div class="mb-4">
+                        <label for="disabledRange" class="form-label">Disabled range</label>
+                        <input type="range" class="form-range" id="disabledRange" disabled />
+                      </div>
+                      <div class="mb-4">
+                        <label for="formRange2" class="form-label">Min and max</label>
+                        <input type="range" class="form-range" min="0" max="5" id="formRange2" />
+                      </div>
+                      <div>
+                        <label for="formRange3" class="form-label">Steps</label>
+                        <input type="range" class="form-range" min="0" max="5" step="0.5" id="formRange3" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-xl-6">
+                  <!-- HTML5 Inputs -->
+                  <div class="card mb-6">
+                    <h5 class="card-header">HTML5 Inputs</h5>
+                    <div class="card-body">
+                      <div class="mb-4 row">
+                        <label for="html5-text-input" class="col-md-2 col-form-label">Text</label>
+                        <div class="col-md-10">
+                          <input class="form-control" type="text" value="Sneat" id="html5-text-input" />
+                        </div>
+                      </div>
+                      <div class="mb-4 row">
+                        <label for="html5-search-input" class="col-md-2 col-form-label">Search</label>
+                        <div class="col-md-10">
+                          <input class="form-control" type="search" value="Search ..." id="html5-search-input" />
+                        </div>
+                      </div>
+                      <div class="mb-4 row">
+                        <label for="html5-email-input" class="col-md-2 col-form-label">Email</label>
+                        <div class="col-md-10">
+                          <input class="form-control" type="email" value="john@example.com" id="html5-email-input" />
+                        </div>
+                      </div>
+                      <div class="mb-4 row">
+                        <label for="html5-url-input" class="col-md-2 col-form-label">URL</label>
+                        <div class="col-md-10">
+                          <input
+                            class="form-control"
+                            type="url"
+                            value="https://themeselection.com"
+                            id="html5-url-input" />
+                        </div>
+                      </div>
+                      <div class="mb-4 row">
+                        <label for="html5-tel-input" class="col-md-2 col-form-label">Phone</label>
+                        <div class="col-md-10">
+                          <input class="form-control" type="tel" value="90-(164)-188-556" id="html5-tel-input" />
+                        </div>
+                      </div>
+                      <div class="mb-4 row">
+                        <label for="html5-password-input" class="col-md-2 col-form-label">Password</label>
+                        <div class="col-md-10">
+                          <input class="form-control" type="password" value="password" id="html5-password-input" />
+                        </div>
+                      </div>
+                      <div class="mb-4 row">
+                        <label for="html5-number-input" class="col-md-2 col-form-label">Number</label>
+                        <div class="col-md-10">
+                          <input class="form-control" type="number" value="18" id="html5-number-input" />
+                        </div>
+                      </div>
+                      <div class="mb-4 row">
+                        <label for="html5-datetime-local-input" class="col-md-2 col-form-label">Datetime</label>
+                        <div class="col-md-10">
+                          <input
+                            class="form-control"
+                            type="datetime-local"
+                            value="2021-06-18T12:30:00"
+                            id="html5-datetime-local-input" />
+                        </div>
+                      </div>
+                      <div class="mb-4 row">
+                        <label for="html5-date-input" class="col-md-2 col-form-label">Date</label>
+                        <div class="col-md-10">
+                          <input class="form-control" type="date" value="2021-06-18" id="html5-date-input" />
+                        </div>
+                      </div>
+                      <div class="mb-4 row">
+                        <label for="html5-month-input" class="col-md-2 col-form-label">Month</label>
+                        <div class="col-md-10">
+                          <input class="form-control" type="month" value="2021-06" id="html5-month-input" />
+                        </div>
+                      </div>
+                      <div class="mb-4 row">
+                        <label for="html5-week-input" class="col-md-2 col-form-label">Week</label>
+                        <div class="col-md-10">
+                          <input class="form-control" type="week" value="2021-W25" id="html5-week-input" />
+                        </div>
+                      </div>
+                      <div class="mb-4 row">
+                        <label for="html5-time-input" class="col-md-2 col-form-label">Time</label>
+                        <div class="col-md-10">
+                          <input class="form-control" type="time" value="12:30:00" id="html5-time-input" />
+                        </div>
+                      </div>
+                      <div class="mb-4 row">
+                        <label for="html5-color-input" class="col-md-2 col-form-label">Color</label>
+                        <div class="col-md-10">
+                          <input
+                            type="color"
+                            class="form-control"
+                            id="html5-color-input"
+                            value="#666EE8"
+                            title="Choose your color" />
+                        </div>
+                      </div>
+                      <div class="row">
+                        <label for="html5-range" class="col-md-2 col-form-label">Range</label>
+                        <div class="col-md-10">
+                          <input type="range" class="form-range mt-4" id="html5-range" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- File input -->
+                  <div class="card">
+                    <h5 class="card-header">File input</h5>
+                    <div class="card-body">
+                      <div class="mb-4">
+                        <label for="formFile" class="form-label">Default file input example</label>
+                        <input class="form-control" type="file" id="formFile" />
+                      </div>
+                      <div class="mb-4">
+                        <label for="formFileMultiple" class="form-label">Multiple files input example</label>
+                        <input class="form-control" type="file" id="formFileMultiple" multiple />
+                      </div>
+                      <div class="mb-4">
+                        <label for="formFileDisabled" class="form-label">Disabled file input example</label>
+                        <input class="form-control" type="file" id="formFileDisabled" disabled />
+                      </div>
+                      <div class="mb-4">
+                        <label for="formFileSm" class="form-label">Small file input example</label>
+                        <input class="form-control form-control-sm" id="formFileSm" type="file" />
+                      </div>
+                      <div>
+                        <label for="formFileLg" class="form-label">Large file input example</label>
+                        <input class="form-control form-control-lg" id="formFileLg" type="file" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- / Content -->
+
+            <!-- Footer -->
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl">
+                <div
+                  class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
+                  <div class="mb-2 mb-md-0">
+                    ©
+                    <script>
+                      document.write(new Date().getFullYear());
+                    </script>
+                    , made with ❤️ by
+                    <a href="https://themeselection.com" target="_blank" class="footer-link">ThemeSelection</a>
+                  </div>
+                  <div class="d-none d-lg-inline-block">
+                    <a
+                      href="https://themeselection.com/item/category/admin-templates/"
+                      target="_blank"
+                      class="footer-link me-4"
+                      >Admin Templates</a
+                    >
+
+                    <a href="https://themeselection.com/license/" class="footer-link me-4" target="_blank">License</a>
+                    <a
+                      href="https://themeselection.com/item/category/bootstrap-admin-templates/"
+                      target="_blank"
+                      class="footer-link me-4"
+                      >Bootstrap Dashboard</a
+                    >
+
+                    <a
+                      href="https://demos.themeselection.com/sneat-bootstrap-html-admin-template/documentation/"
+                      target="_blank"
+                      class="footer-link me-4"
+                      >Documentation</a
+                    >
+
+                    <a
+                      href="https://github.com/themeselection/sneat-bootstrap-html-admin-template-free/issues"
+                      target="_blank"
+                      class="footer-link"
+                      >Support</a
+                    >
+                  </div>
+                </div>
+              </div>
+            </footer>
+            <!-- / Footer -->
+
+            <div class="content-backdrop fade"></div>
+          </div>
+          <!-- Content wrapper -->
+        </div>
+        <!-- / Layout page -->
+      </div>
+
+      <!-- Overlay -->
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+    <!-- / Layout wrapper -->
+
+    <div class="buy-now">
+      <a
+        href="https://themeselection.com/item/sneat-dashboard-pro-bootstrap/"
+        target="_blank"
+        class="btn btn-danger btn-buy-now"
+        >Upgrade to Pro</a
+      >
+    </div>
+
+    <!-- Core JS -->
+
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+
+    <script src="../assets/vendor/libs/popper/popper.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+
+    <script src="../assets/vendor/js/menu.js"></script>
+
+    <!-- endbuild -->
+
+    <!-- Vendors JS -->
+
+    <!-- Main JS -->
+
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/navbar-extras.js"></script>
+
+    <!-- Page JS -->
+
+    <script src="../assets/js/form-basic-inputs.js"></script>
+
+    <!-- Place this tag before closing body tag for github widget button. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+  </body>
+</html>
