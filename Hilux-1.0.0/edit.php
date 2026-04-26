@@ -189,18 +189,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label" for="nom_candidat">Nom candidat *</label>
-                                <input type="text" id="nom_candidat" name="nom_candidat" class="form-control <?= isset($errors['nom_candidat']) ? 'is-invalid' : '' ?>" value="<?= e($data['nom_candidat']) ?>" required>
+                                <input type="text" id="nom_candidat" name="nom_candidat" class="form-control <?= isset($errors['nom_candidat']) ? 'is-invalid' : '' ?>" value="<?= e($data['nom_candidat']) ?>">
                                 <div class="invalid-feedback"><?= e($errors['nom_candidat'] ?? 'Champ requis.') ?></div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="email_candidat">Email candidat *</label>
-                                <input type="email" id="email_candidat" name="email_candidat" class="form-control <?= isset($errors['email_candidat']) ? 'is-invalid' : '' ?>" value="<?= e($data['email_candidat']) ?>" required>
+                                <input type="text" id="email_candidat" name="email_candidat" class="form-control <?= isset($errors['email_candidat']) ? 'is-invalid' : '' ?>" value="<?= e($data['email_candidat']) ?>">
                                 <div class="invalid-feedback"><?= e($errors['email_candidat'] ?? 'Email invalide.') ?></div>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label" for="genre">Genre *</label>
-                                <select id="genre" name="genre" class="form-select <?= isset($errors['genre']) ? 'is-invalid' : '' ?>" required>
+                                <select id="genre" name="genre" class="form-select <?= isset($errors['genre']) ? 'is-invalid' : '' ?>">
                                     <option value="">Sélectionner</option>
                                     <?php foreach ($genres as $genre): ?>
                                         <option value="<?= e($genre) ?>" <?= $data['genre'] === $genre ? 'selected' : '' ?>>
@@ -213,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <div class="col-md-6">
                                 <label class="form-label" for="type_handicap">Type de handicap *</label>
-                                <input type="text" id="type_handicap" name="type_handicap" class="form-control <?= isset($errors['type_handicap']) ? 'is-invalid' : '' ?>" value="<?= e($data['type_handicap']) ?>" required>
+                                <input type="text" id="type_handicap" name="type_handicap" class="form-control <?= isset($errors['type_handicap']) ? 'is-invalid' : '' ?>" value="<?= e($data['type_handicap']) ?>">
                                 <div class="invalid-feedback"><?= e($errors['type_handicap'] ?? 'Champ requis.') ?></div>
                             </div>
 
@@ -224,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <div class="col-md-6">
                                 <label class="form-label" for="type_entretien">Type d’entretien *</label>
-                                <select id="type_entretien" name="type_entretien" class="form-select <?= isset($errors['type_entretien']) ? 'is-invalid' : '' ?>" required>
+                                <select id="type_entretien" name="type_entretien" class="form-select <?= isset($errors['type_entretien']) ? 'is-invalid' : '' ?>">
                                     <option value="">Sélectionner</option>
                                     <?php foreach ($typesEntretien as $type): ?>
                                         <option value="<?= e($type) ?>" <?= $data['type_entretien'] === $type ? 'selected' : '' ?>>
@@ -237,19 +237,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <div class="col-md-3">
                                 <label class="form-label" for="date_entretien">Date *</label>
-                                <input type="date" id="date_entretien" name="date_entretien" class="form-control <?= isset($errors['date_entretien']) ? 'is-invalid' : '' ?>" value="<?= e($data['date_entretien']) ?>" required>
+                                <input type="date" id="date_entretien" name="date_entretien" class="form-control <?= isset($errors['date_entretien']) ? 'is-invalid' : '' ?>" value="<?= e($data['date_entretien']) ?>">
                                 <div class="invalid-feedback"><?= e($errors['date_entretien'] ?? 'Champ requis.') ?></div>
                             </div>
 
                             <div class="col-md-3">
                                 <label class="form-label" for="heure_entretien">Heure *</label>
-                                <input type="time" id="heure_entretien" name="heure_entretien" class="form-control <?= isset($errors['heure_entretien']) ? 'is-invalid' : '' ?>" value="<?= e($data['heure_entretien']) ?>" required>
+                                <input type="time" id="heure_entretien" name="heure_entretien" class="form-control <?= isset($errors['heure_entretien']) ? 'is-invalid' : '' ?>" value="<?= e($data['heure_entretien']) ?>">
                                 <div class="invalid-feedback"><?= e($errors['heure_entretien'] ?? 'Champ requis.') ?></div>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label" for="poste_cible">Poste cible *</label>
-                                <input type="text" id="poste_cible" name="poste_cible" class="form-control <?= isset($errors['poste_cible']) ? 'is-invalid' : '' ?>" value="<?= e($data['poste_cible']) ?>" required>
+                                <input type="text" id="poste_cible" name="poste_cible" class="form-control <?= isset($errors['poste_cible']) ? 'is-invalid' : '' ?>" value="<?= e($data['poste_cible']) ?>">
                                 <div class="invalid-feedback"><?= e($errors['poste_cible'] ?? 'Champ requis.') ?></div>
                             </div>
 
@@ -260,13 +260,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <div class="col-md-3">
                                 <label class="form-label" for="score_rse">Score RSE (1-5)</label>
-                                <input type="number" id="score_rse" name="score_rse" min="1" max="5" step="1" class="form-control <?= isset($errors['score_rse']) ? 'is-invalid' : '' ?>" value="<?= e($data['score_rse']) ?>">
+                                <input type="text" id="score_rse" name="score_rse" class="form-control <?= isset($errors['score_rse']) ? 'is-invalid' : '' ?>" value="<?= e($data['score_rse']) ?>">
                                 <div class="invalid-feedback"><?= e($errors['score_rse'] ?? 'Valeur entre 1 et 5.') ?></div>
                             </div>
 
                             <div class="col-md-3">
                                 <label class="form-label" for="statut">Statut *</label>
-                                <select id="statut" name="statut" class="form-select <?= isset($errors['statut']) ? 'is-invalid' : '' ?>" required>
+                                <select id="statut" name="statut" class="form-select <?= isset($errors['statut']) ? 'is-invalid' : '' ?>">
                                     <?php foreach ($statuts as $item): ?>
                                         <option value="<?= e($item) ?>" <?= $data['statut'] === $item ? 'selected' : '' ?>>
                                             <?= e(ucfirst($item)) ?>

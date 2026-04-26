@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 $dbHost = '127.0.0.1';
-$dbName = 'takwinibot';
+$dbName = 'projet_takwini';
 $dbUser = 'root';
 $dbPass = '';
 $dbCharset = 'utf8mb4';
