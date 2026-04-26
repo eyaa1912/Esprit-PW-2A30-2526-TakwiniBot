@@ -1,0 +1,5 @@
+Client (Hilux) — ajouter un entretien:
+http://localhost/Hilux-1.0.0/Hilux-1.0.0/View/entretien/add.php
+
+Admin (Sneat) — dashboard entretiens:
+http://localhost/Hilux-1.0.0/sneat-plateforme-finale/sneat-plateforme-finale/sneat-final/gestion-entretiens.php
