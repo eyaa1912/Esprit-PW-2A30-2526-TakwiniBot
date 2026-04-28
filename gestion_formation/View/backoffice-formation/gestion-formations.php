@@ -69,7 +69,7 @@ $debutants  = count(array_filter($formations, fn($f) => $f['niveau'] === 'Début
               <a href="javascript:void(0);" class="menu-link menu-toggle"><div class="text-truncate">Formations</div></a>
               <ul class="menu-sub">
                 <li class="menu-item active"><a href="gestion-formations.php" class="menu-link"><div class="text-truncate">Vue d'ensemble</div></a></li>
-                <li class="menu-item"><a href="html/gestion-inscriptions.html" class="menu-link"><div class="text-truncate">Inscriptions</div></a></li>
+                <li class="menu-item"><a href="gestion-inscriptions.php" class="menu-link"><div class="text-truncate">Inscriptions</div></a></li>
                 <li class="menu-item"><a href="html/gestion-certificats.html" class="menu-link"><div class="text-truncate">Certificats</div></a></li>
               </ul>
             </li>

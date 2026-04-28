@@ -1,10 +1,8 @@
 <?php
 
-
-
-class config
-
-{
+if (!class_exists('config')) {
+    class config
+    {
 
   private static $pdo = null;
 
@@ -48,5 +46,6 @@ class config
 
   }
 
+    }
 }
 

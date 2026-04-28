@@ -1,5 +1,33 @@
 <?php
 require_once __DIR__ . '/../../../Controller/FormationController.php';
+require_once __DIR__ . '/../../../Controller/Inscriptioncontroller .php';
+require_once __DIR__ . '/../../../Model/Inscription.php';
+
+// Traitement du formulaire d'inscription
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'inscrire') {
+    $user_id = intval($_POST['user_id']);
+    $formation_id = intval($_POST['formation_id']);
+    $nom = trim($_POST['nom']);
+    $prenom = trim($_POST['prenom']);
+    $email = trim($_POST['email']);
+    $niveau = $_POST['niveau'] ?? null;
+    $mode_formation = $_POST['mode_formation'] ?? null;
+    
+    // Validation
+    if ($user_id > 0 && $formation_id > 0 && !empty($nom) && !empty($prenom) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $inscription = new Inscription($user_id, $formation_id, $nom, $prenom, $email, $niveau, $mode_formation);
+        $ic = new InscriptionController();
+        try {
+            $ic->addInscription($inscription);
+            $success_message = "Inscription réussie !";
+        } catch (Exception $e) {
+            $error_message = "Erreur lors de l'inscription : " . $e->getMessage();
+        }
+    } else {
+        $error_message = "Données invalides. Veuillez vérifier vos informations.";
+    }
+}
+
 $fc = new FormationController();
 $formations = $fc->listFormations()->fetchAll();
 $images = ['assets/img/property/1.jpg','assets/img/property/2.jpg','assets/img/property/3.jpg',
@@ -27,6 +55,25 @@ $images = ['assets/img/property/1.jpg','assets/img/property/2.jpg','assets/img/p
   <link rel="stylesheet" href="assets/css/responsive.css">
 </head>
 <body data-spy="scroll" data-offset="80">
+
+  <!-- Messages de succès ou d'erreur -->
+  <?php if (isset($success_message)): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert" style="position:fixed;top:20px;right:20px;z-index:99999;min-width:300px;">
+      <strong>Succès!</strong> <?= htmlspecialchars($success_message) ?>
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  <?php endif; ?>
+  
+  <?php if (isset($error_message)): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" style="position:fixed;top:20px;right:20px;z-index:99999;min-width:300px;">
+      <strong>Erreur!</strong> <?= htmlspecialchars($error_message) ?>
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  <?php endif; ?>
 
   <!-- PRELOADER -->
   <div class="preloader"><div class="status"><div class="status-mes"></div></div></div>
@@ -148,29 +195,50 @@ $images = ['assets/img/property/1.jpg','assets/img/property/2.jpg','assets/img/p
                   </button>
                 </div>
                 <div class="modal-body">
-                  <form>
+                  <form id="inscriptionForm<?= $f['id'] ?>" method="POST" action="">
                     <input type="hidden" name="formation_id" value="<?= $f['id'] ?>">
+                    <input type="hidden" name="action" value="inscrire">
+                    
                     <div class="form-group" style="text-align:left;">
-                      <label>CIN</label>
-                      <input type="text" class="form-control" placeholder="Votre CIN" required>
+                      <label>ID Utilisateur <span style="color:red;">*</span></label>
+                      <input type="number" name="user_id" class="form-control" placeholder="Votre ID utilisateur" required min="1">
+                      <small class="form-text text-muted">Entrez votre identifiant utilisateur</small>
                     </div>
+                    
                     <div class="form-group" style="text-align:left;">
-                      <label>Nom</label>
-                      <input type="text" class="form-control" placeholder="Votre Nom" required>
+                      <label>Nom <span style="color:red;">*</span></label>
+                      <input type="text" name="nom" class="form-control" placeholder="Votre nom" required maxlength="100">
                     </div>
+                    
                     <div class="form-group" style="text-align:left;">
-                      <label>Pr&eacute;nom</label>
-                      <input type="text" class="form-control" placeholder="Votre Pr&eacute;nom" required>
+                      <label>Prénom <span style="color:red;">*</span></label>
+                      <input type="text" name="prenom" class="form-control" placeholder="Votre prénom" required maxlength="100">
                     </div>
+                    
                     <div class="form-group" style="text-align:left;">
-                      <label>Email</label>
-                      <input type="email" class="form-control" placeholder="Votre adresse email" required>
+                      <label>Email <span style="color:red;">*</span></label>
+                      <input type="email" name="email" class="form-control" placeholder="votre.email@exemple.com" required maxlength="150">
+                    </div>
+                    
+                    <div class="form-group" style="text-align:left;">
+                      <label>Niveau</label>
+                      <input type="text" name="niveau" class="form-control" placeholder="Ex: Débutant, Intermédiaire, Avancé" maxlength="100">
+                    </div>
+                    
+                    <div class="form-group" style="text-align:left;">
+                      <label>Mode de formation</label>
+                      <select name="mode_formation" class="form-control">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="En ligne">En ligne</option>
+                        <option value="Présentiel">Présentiel</option>
+                        <option value="Hybride">Hybride</option>
+                      </select>
                     </div>
                   </form>
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
-                  <button type="button" class="btn btn-serach-bg" style="background-color:#3bafda;color:#fff;">S'inscrire</button>
+                  <button type="submit" form="inscriptionForm<?= $f['id'] ?>" class="btn btn-serach-bg" style="background-color:#3bafda;color:#fff;">S'inscrire</button>
                 </div>
               </div>
             </div>
@@ -227,5 +295,14 @@ $images = ['assets/img/property/1.jpg','assets/img/property/2.jpg','assets/img/p
   <script src="assets/js/scrolltopcontrol.js"></script>
   <script src="assets/js/wow.min.js"></script>
   <script src="assets/js/scripts.js"></script>
+  
+  <!-- Assistant Vocal -->
+  <script src="assets/js/voice-assistant.js"></script>
+  
+  <!-- Commandes Vocales -->
+  <script src="assets/js/voice-commands.js"></script>
+  
+  <!-- Validation Inscription -->
+  <script src="assets/js/validationinscription.js"></script>
 </body>
 </html>

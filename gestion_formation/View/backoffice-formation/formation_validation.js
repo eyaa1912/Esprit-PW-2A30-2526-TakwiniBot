@@ -1,7 +1,4 @@
-/**
- * Validation personnalisée pour les formulaires de formation
- * Sans utiliser les attributs HTML5 (required, min, max, etc.)
- */
+
 
 // Fonction pour afficher les erreurs
 function showError(input, message) {
@@ -76,14 +73,14 @@ function validateDuree(duree) {
     }
   }
   
-  // Vérifier si c'est en mois
+
   if (dureeStr.includes('mois') || dureeStr.includes('month')) {
     if (value > 24) {
       return { valid: false, message: 'La durée ne peut pas dépasser 24 mois (2 ans).' };
     }
   }
   
-  // Vérifier si c'est en jours
+
   if (dureeStr.includes('jour') || dureeStr.includes('day')) {
     if (value > 730) {
       return { valid: false, message: 'La durée ne peut pas dépasser 730 jours (2 ans).' };
@@ -93,7 +90,7 @@ function validateDuree(duree) {
   return { valid: true };
 }
 
-// Validation du prix : ne doit pas dépasser 9000 TND
+
 function validatePrix(prix) {
   if (prix === '' || prix === null || prix === undefined) {
     return { valid: false, message: 'Le prix est obligatoire.' };
@@ -116,7 +113,7 @@ function validatePrix(prix) {
   return { valid: true };
 }
 
-// Validation du niveau : doit être sélectionné (obligatoire)
+
 function validateNiveau(niveau) {
   if (!niveau || niveau === '') {
     return { valid: false, message: 'Le niveau est obligatoire.' };
@@ -130,14 +127,14 @@ function validateNiveau(niveau) {
   return { valid: true };
 }
 
-// Validation de la description : seulement texte et chiffres
+
 function validateDescription(description) {
-  // La description est optionnelle
+ 
   if (!description || description.trim() === '') {
     return { valid: true };
   }
   
-  // Vérifier qu'elle ne contient que des lettres, chiffres, espaces et ponctuation de base
+  
   const regex = /^[a-zA-Z0-9\s.,;:!?()àâäéèêëïîôùûüÿçÀÂÄÉÈÊËÏÎÔÙÛÜŸÇ\-'"]+$/;
   if (!regex.test(description)) {
     return { valid: false, message: 'La description ne doit contenir que du texte et des chiffres.' };
@@ -150,23 +147,23 @@ function validateDescription(description) {
   return { valid: true };
 }
 
-// Fonction principale de validation du formulaire
+
 function validateFormationForm(form) {
   let isValid = true;
   
-  // Récupérer les champs
+ 
   const titreInput = form.querySelector('[name="titre"]');
   const dureeInput = form.querySelector('[name="duree"]');
   const prixInput = form.querySelector('[name="prix"]');
   const niveauInput = form.querySelector('[name="niveau"]');
   const descriptionInput = form.querySelector('[name="description"]');
   
-  // Nettoyer toutes les erreurs précédentes
+
   [titreInput, dureeInput, prixInput, niveauInput, descriptionInput].forEach(input => {
     if (input) clearError(input);
   });
   
-  // Valider le titre
+ 
   const titreResult = validateTitre(titreInput.value);
   if (!titreResult.valid) {
     showError(titreInput, titreResult.message);
