@@ -279,6 +279,21 @@ $inactifs = $total - $actifs;
             </div>
           </div>
 
+          <!-- Graphique des rôles -->
+          <?php
+            $nbAdmin     = count(array_filter($users, fn($u) => $u['role'] === 'admin'));
+            $nbCandidat  = count(array_filter($users, fn($u) => $u['role'] === 'candidat'));
+            $nbRecruteur = count(array_filter($users, fn($u) => $u['role'] === 'recruteur'));
+          ?>
+          <div class="card mb-6">
+            <div class="card-header">
+              <h5 class="mb-0">Graphique des rôles</h5>
+            </div>
+            <div class="card-body">
+              <canvas id="rolesChart" height="100"></canvas>
+            </div>
+          </div>
+
           <!-- Formulaire modification (inline si ?edit=X) -->
           <?php if ($editUser): ?>
           <div class="card mb-6">
@@ -339,8 +354,14 @@ $inactifs = $total - $actifs;
             <div class="card-datatable table-responsive">
               <div class="dataTables_wrapper dt-bootstrap5 no-footer">
                 <div class="row mx-2 pt-3 pb-3">
-                  <div class="col-md-10 d-flex justify-content-end">
+                  <div class="col-md-10 d-flex justify-content-end gap-2">
                     <div class="dt-buttons btn-group flex-wrap">
+                      <button class="btn btn-outline-secondary" type="button" id="btnSortNom" title="Trier par nom">
+                        Trier A → Z
+                      </button>
+                      <button class="btn btn-outline-danger" type="button" id="btnExportPdf">
+                        Export PDF
+                      </button>
                       <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#addUtilisateurModal">
                         <span><i class="bx bx-plus me-0 me-sm-1 bx-sm"></i><span class="d-none d-sm-inline-block">Ajouter Utilisateur</span></span>
                       </button>
@@ -352,7 +373,9 @@ $inactifs = $total - $actifs;
                   <thead>
                     <tr>
                       <th><input type="checkbox" class="form-check-input" id="checkAll"></th>
-                      <th>UTILISATEUR</th>
+                      <th id="th-nom" style="cursor:pointer;user-select:none;">
+                        UTILISATEUR
+                      </th>
                       <th>RÔLE</th>
                       <th>STATUT</th>
                       <th>ACTIONS</th>
@@ -484,21 +507,24 @@ $inactifs = $total - $actifs;
 <script src="../assets/vendor/js/bootstrap.js"></script>
 <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
 <script src="../assets/vendor/js/menu.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="../assets/js/main.js"></script>
 <script src="../assets/js/navbar-extras.js"></script>
 
 <script>
-// Recherche + filtres en temps réel
+//Recherche
 function filterTable() {
   const search  = document.getElementById('searchInput').value.toLowerCase();
   const role    = document.getElementById('filterRole').value.toLowerCase();
   const statut  = document.getElementById('filterStatut').value.toLowerCase();
 
   document.querySelectorAll('#usersTable tbody tr').forEach(row => {
-    const text   = row.textContent.toLowerCase();
+    const nom    = (row.querySelector('.fw-medium')?.textContent || '').toLowerCase();
     const rRole  = row.dataset.role;
     const rStat  = row.dataset.statut;
-    const matchS = text.includes(search);
+    const matchS = nom.includes(search);
     const matchR = !role   || rRole  === role;
     const matchT = !statut || rStat  === statut;
     row.style.display = (matchS && matchR && matchT) ? '' : 'none';
@@ -512,6 +538,101 @@ document.getElementById('filterStatut').addEventListener('change', filterTable);
 // Checkbox tout sélectionner
 document.getElementById('checkAll').addEventListener('change', function() {
   document.querySelectorAll('.row-check').forEach(cb => cb.checked = this.checked);
+});
+
+// Graphique des rôles
+new Chart(document.getElementById('rolesChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Admin', 'Candidat', 'Recruteur'],
+        datasets: [{
+            label: 'Nombre',
+            data: [<?= $nbAdmin ?>, <?= $nbCandidat ?>, <?= $nbRecruteur ?>],
+            backgroundColor: ['#696cff', '#71dd37', '#ffab00'],
+            borderRadius: 8,
+            borderSkipped: false,
+            barThickness: 60,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ' ' + ctx.parsed.y + ' utilisateur(s)'
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 },
+                title: { display: true, text: 'Nombre', color: '#888' },
+                grid: { color: 'rgba(0,0,0,0.05)' }
+            },
+            x: {
+                grid: { display: false }
+            }
+        }
+    }
+});
+
+// Tri par nom A→Z uniquement
+document.getElementById('btnSortNom').addEventListener('click', function () {
+    const tbody = document.querySelector('#usersTable tbody');
+    const rows  = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.sort((a, b) => {
+        const nomA = a.querySelector('.fw-medium')?.textContent.trim().toLowerCase() || '';
+        const nomB = b.querySelector('.fw-medium')?.textContent.trim().toLowerCase() || '';
+        return nomA.localeCompare(nomB, 'fr');
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+});
+
+document.getElementById('th-nom').addEventListener('click', function () {
+    document.getElementById('btnSortNom').click();
+});
+
+// Export PDF
+document.getElementById('btnExportPdf').addEventListener('click', function () {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Titre
+    doc.setFontSize(16);
+    doc.setTextColor(40, 40, 40);
+    doc.text('Liste des Utilisateurs - Takwini', 14, 18);
+
+    // Date
+    doc.setFontSize(9);
+    doc.setTextColor(120, 120, 120);
+    doc.text('Exporté le ' + new Date().toLocaleDateString('fr-FR'), 14, 25);
+
+    // Données du tableau (lignes visibles uniquement)
+    const rows = [];
+    document.querySelectorAll('#usersTable tbody tr').forEach(tr => {
+        if (tr.style.display === 'none') return;
+        const nom    = tr.querySelector('.fw-medium')?.textContent.trim() || '';
+        const email  = tr.querySelector('small')?.textContent.trim() || '';
+        const role   = tr.dataset.role || '';
+        const statut = tr.dataset.statut || '';
+        rows.push([nom, email, role, statut]);
+    });
+
+    doc.autoTable({
+        startY: 30,
+        head: [['Nom', 'Email', 'Rôle', 'Statut']],
+        body: rows,
+        headStyles: { fillColor: [105, 108, 255], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 245, 255] },
+        styles: { fontSize: 10, cellPadding: 4 },
+        margin: { left: 14, right: 14 }
+    });
+
+    doc.save('utilisateurs-takwini.pdf');
 });
 </script>
 </body>

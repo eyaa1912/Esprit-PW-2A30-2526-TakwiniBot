@@ -21,7 +21,7 @@ class AuthController
         $stmt->execute(['email' => $email]);
         $user = $stmt->fetch();
 
-        // ── CAS 1 : Utilisateur INEXISTANT → inscription ────────────────────────
+        // ── CAS 1 : Utilisateur INEXISTANT → inscription 
         if (!$user) {
             $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
@@ -48,7 +48,7 @@ class AuthController
             ];
         }
 
-        // ── CAS 2 : Utilisateur EXISTANT → vérification du mot de passe ─────────
+        // ── CAS 2 : Utilisateur EXISTANT → vérification du mot de passe 
         if (!password_verify($password, $user['mot_de_passe'])) {
             return [
                 'success' => false,
