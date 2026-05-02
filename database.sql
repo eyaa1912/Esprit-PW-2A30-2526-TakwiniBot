@@ -13,14 +13,6 @@ CREATE TABLE IF NOT EXISTS users (
     created_at     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS password_resets (
-    email VARCHAR(150) NOT NULL,
-    token VARCHAR(255) NOT NULL,
-    expires_at DATETIME NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX (email)
-);
-
 CREATE TABLE IF NOT EXISTS face_descriptors (
     user_id INT PRIMARY KEY,
     descriptor JSON NOT NULL,

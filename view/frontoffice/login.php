@@ -200,11 +200,12 @@ body::before{content:'';position:fixed;inset:0;background:rgba(27,94,32,.55);z-i
         <img src="../../nonn.png" id="eye-login" onclick="togglePwd('login-password',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;width:20px;height:20px;object-fit:contain;" data-show="../../ouii.png" data-hide="../../nonn.png">
       </div>
       <span class="field-error" id="err-login-password"></span>
-      <a href="forgot-password.php" id="forgot-link" style="position:relative;padding-bottom:2px;color:#4caf50;font-weight:500;font-size:13px;text-decoration:none;">
-        Mot de passe oublie ?
-        <span id="forgot-underline" style="position:absolute;bottom:0;left:0;width:0;height:2px;background:#4caf50;border-radius:2px;transition:width .3s ease;"></span>
-      </a>
-      <button type="submit" class="btn-main" id="btn-login">Se connecter</button>
+      <div style="width:100%;text-align:right;margin-top:4px;">
+       <a href="forgot-password.php" style="font-size:12px;color:#4caf50;text-decoration:none;font-weight:500;">
+        Mot de passe oublié ?
+       </a>
+       </div>
+      <button type="submit" class="btn-main" id="btn-login" style="margin-top:20px;">Se connecter</button>
       <div style="display:flex;align-items:center;gap:10px;width:100%;margin:10px 0 4px;">
         <div style="flex:1;height:1px;background:#e0e0e0;"></div>
         <span style="font-size:11px;color:#aaa;font-weight:600;">OU</span>
@@ -352,11 +353,6 @@ function switchRole(role){
 // Handicap
 function toggleHandicap(cb){ document.getElementById('handicap-desc-wrap').style.display = cb.checked ? 'block' : 'none'; }
 
-// Forgot link underline
-const fl = document.getElementById('forgot-link');
-const fu = document.getElementById('forgot-underline');
-if(fl){ fl.addEventListener('mouseenter',()=>{ fu.style.width='100%'; fl.style.color='#2e7d32'; }); fl.addEventListener('mouseleave',()=>{ fu.style.width='0'; fl.style.color='#4caf50'; }); }
-
 // Eye toggle
 function togglePwd(id, icon){
     const inp = document.getElementById(id);
@@ -453,7 +449,7 @@ async function openCameraModal(msgElement) {
             setTimeout(async () => {
                 faceMsg.textContent = 'Analyse en cours...';
                 try {
-                    const det = await faceapi.detectSingleFace(faceVideo, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+                    const det = await faceapi.detectSingleFace(faceVideo, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.6 })).withFaceLandmarks().withFaceDescriptor();
                     if (!det) { faceMsg.style.color='#e53935'; faceMsg.textContent='Aucun visage détecté.'; setTimeout(()=>fermerFaceModal(),2000); return; }
                     faceMsg.style.color='#4caf50'; faceMsg.textContent='Visage détecté ! Traitement...';
                     const descriptor = Array.from(det.descriptor);

@@ -32,7 +32,8 @@ try {
     }
 
     $bestMatch   = null;
-    $bestDistance = 0.6; // seuil max
+    $bestDistance = 0.50; // seuil max
+    $minFoundDistance = 999;
 
     foreach ($rows as $row) {
         $stored = json_decode($row['descriptor'], true);
@@ -46,6 +47,10 @@ try {
         }
         $distance = sqrt($sum);
 
+        if ($distance < $minFoundDistance) {
+            $minFoundDistance = $distance;
+        }
+
         if ($distance < $bestDistance) {
             $bestDistance = $distance;
             $bestMatch    = $row;
@@ -53,7 +58,8 @@ try {
     }
 
     if (!$bestMatch) {
-        echo json_encode(['success' => false, 'error' => 'Visage non reconnu']);
+        $dist_str = ($minFoundDistance == 999) ? "N/A" : round($minFoundDistance, 3);
+        echo json_encode(['success' => false, 'error' => "Visage non reconnu. (Distance calculée : " . $dist_str . ", Seuil : 0.50)"]);
         exit;
     }
 

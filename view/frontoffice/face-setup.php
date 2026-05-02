@@ -119,7 +119,7 @@ async function loadModels() {
 
 async function startCamera() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 480, height: 360, facingMode: 'user' } });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 400, height: 300, facingMode: 'user' } });
         video.srcObject = stream;
         video.addEventListener('loadeddata', () => {
             btnReg.disabled = false;
@@ -135,7 +135,7 @@ async function startCamera() {
 async function detectLoop() {
     const circle = document.querySelector('.face-circle');
     setInterval(async () => {
-        const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions());
+        const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.6 }));
         if (det) {
             circle.style.borderColor = 'rgba(76,175,80,1)';
             circle.style.boxShadow   = '0 0 0 9999px rgba(0,0,0,.35), 0 0 20px rgba(76,175,80,.6)';
@@ -153,7 +153,7 @@ btnReg.addEventListener('click', async () => {
 
     try {
         const detection = await faceapi
-            .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+            .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.6 }))
             .withFaceLandmarks()
             .withFaceDescriptor();
 
