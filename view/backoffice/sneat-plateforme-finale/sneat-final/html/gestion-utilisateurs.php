@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once __DIR__ . '/../../../../../config.php';
 require_once __DIR__ . '/../../../../../controller/UtilisateurController.php';
@@ -61,6 +61,14 @@ $users    = $controller->getAll();
 $total    = count($users);
 $actifs   = count(array_filter($users, fn($u) => $u['statut'] === 'actif'));
 $inactifs = $total - $actifs;
+
+// Avatar navbar admin
+$__av = $_SESSION['user']['avatar'] ?? '';
+if (!empty($__av)) {
+    $__navAvatar = '../../../../../view/frontoffice/' . $__av;
+} else {
+    $__navAvatar = '../assets/img/avatars/1.png';
+}
 ?>
 <!doctype html>
 <html lang="fr" class="layout-menu-fixed layout-compact" data-assets-path="../assets/" data-template="vertical-menu-template-free">
@@ -118,7 +126,7 @@ $inactifs = $total - $actifs;
                   <a href="gestion-utilisateurs.php" class="menu-link"><div class="text-truncate">Liste des utilisateurs</div></a>
                 </li>
                 <li class="menu-item">
-                  <a href="pages-account-settings-account.html" class="menu-link"><div class="text-truncate">Profil</div></a>
+                  <a href="gestion-recruteurs.php" class="menu-link"><div class="text-truncate">Liste des recruteurs</div></a>
                 </li>
               </ul>
             </li>
@@ -160,7 +168,7 @@ $inactifs = $total - $actifs;
             <li class="nav-item navbar-dropdown dropdown-user dropdown">
               <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
                 <div class="avatar avatar-online">
-                  <img src="../assets/img/avatars/1.png" alt class="w-px-40 h-auto rounded-circle"/>
+                  <img src="<?= $__navAvatar ?>" alt class="rounded-circle" style="width:40px;height:40px;object-fit:cover;"/>
                 </div>
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
@@ -169,7 +177,7 @@ $inactifs = $total - $actifs;
                     <div class="d-flex">
                       <div class="flex-shrink-0 me-3">
                         <div class="avatar avatar-online">
-                          <img src="../assets/img/avatars/1.png" alt class="w-px-40 h-auto rounded-circle"/>
+                          <img src="<?= $__navAvatar ?>" alt class="rounded-circle" style="width:40px;height:40px;object-fit:cover;"/>
                         </div>
                       </div>
                       <div class="flex-grow-1">

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once __DIR__ . '/../../../../../config.php';
 
@@ -54,7 +54,7 @@ $__navAvatar = !empty($__av) ? '../../../../../view/frontoffice/' . $__av : '../
         <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
             <div class="app-brand demo">
                 <a href="index.php" class="app-brand-link">
-                    <span class="app-brand-logo demo"><img src="../assets/img/favicon/tak.png" alt="Takwini" style="width:56px;height:56px;object-fit:contain;"></span>
+                    <span class="app-brand-logo demo"><img src="../assets/img/favicon/tak.png" alt="Takwini" style="width:72px;height:72px;object-fit:contain;"></span>
                 </a>
                 <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
                     <i class="bx bx-chevron-left d-block d-xl-none align-middle"></i>
@@ -62,11 +62,33 @@ $__navAvatar = !empty($__av) ? '../../../../../view/frontoffice/' . $__av : '../
             </div>
             <div class="menu-divider mt-0"></div>
             <ul class="menu-inner py-1">
-                <li class="menu-item"><a href="index.php" class="menu-link"><i class="menu-icon tf-icons bx bx-home-smile"></i><div class="text-truncate">Tableau de bord</div></a></li>
-                <li class="menu-item"><a href="gestion-utilisateurs.php" class="menu-link"><i class="menu-icon tf-icons bx bx-group"></i><div class="text-truncate">Utilisateurs</div></a></li>
-                <li class="menu-item active"><a href="gestion-recruteurs.php" class="menu-link"><i class="menu-icon tf-icons bx bx-briefcase"></i><div class="text-truncate">Recruteurs</div></a></li>
-                <li class="menu-item"><a href="changer-motdepasse.php" class="menu-link"><i class="menu-icon tf-icons bx bx-lock"></i><div class="text-truncate">Mot de passe</div></a></li>
-                <li class="menu-item"><a href="../../../../../view/frontoffice/formations/index.php" class="menu-link" target="_blank"><i class="menu-icon tf-icons bx bx-globe"></i><div class="text-truncate">Voir le site</div></a></li>
+                <li class="menu-item active open">
+                    <a href="javascript:void(0);" class="menu-link menu-toggle">
+                        <i class="menu-icon tf-icons bx bx-home-smile"></i>
+                        <div class="text-truncate">Tableau de bord</div>
+                    </a>
+                    <ul class="menu-sub">
+                        <li class="menu-item"><a href="index.php" class="menu-link"><div class="text-truncate">Accueil</div></a></li>
+                        <li class="menu-item"><a href="gestion-formations.html" class="menu-link"><div class="text-truncate">Formations</div></a></li>
+                        <li class="menu-item"><a href="gestion-offres.html" class="menu-link"><div class="text-truncate">Offres</div></a></li>
+                        <li class="menu-item"><a href="gestion-reclamations.html" class="menu-link"><div class="text-truncate">Réclamations</div></a></li>
+                        <li class="menu-item"><a href="gestion-entretiens.html" class="menu-link"><div class="text-truncate">Entretiens</div></a></li>
+                        <li class="menu-item"><a href="gestion-produits.html" class="menu-link"><div class="text-truncate">Produits</div></a></li>
+                        <li class="menu-item open">
+                            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                                <div class="text-truncate">Utilisateurs</div>
+                            </a>
+                            <ul class="menu-sub">
+                                <li class="menu-item"><a href="gestion-utilisateurs.php" class="menu-link"><div class="text-truncate">Liste des utilisateurs</div></a></li>
+                                <li class="menu-item active"><a href="gestion-recruteurs.php" class="menu-link"><div class="text-truncate">Liste des recruteurs</div></a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li class="menu-header small text-uppercase"><span class="menu-header-text">Applications</span></li>
+                <li class="menu-item"><a href="email-boite.html" class="menu-link"><i class="menu-icon tf-icons bx bx-envelope"></i><div class="text-truncate">Email</div></a></li>
+                <li class="menu-item"><a href="app-chat-local.html" class="menu-link"><i class="menu-icon tf-icons bx bx-chat"></i><div class="text-truncate">Discuter</div></a></li>
+                <li class="menu-item"><a href="app-calendrier-local.html" class="menu-link"><i class="menu-icon tf-icons bx bx-calendar"></i><div class="text-truncate">Calendrier</div></a></li>
                 <li class="menu-item"><a href="../../../../../controller/logout.php" class="menu-link"><i class="menu-icon tf-icons bx bx-power-off"></i><div class="text-truncate">Déconnexion</div></a></li>
             </ul>
         </aside>
@@ -253,3 +275,5 @@ $__navAvatar = !empty($__av) ? '../../../../../view/frontoffice/' . $__av : '../
 <script src="../assets/js/i18n.js"></script>
 </body>
 </html>
+
+

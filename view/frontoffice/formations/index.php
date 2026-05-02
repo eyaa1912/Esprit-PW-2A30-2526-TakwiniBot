@@ -51,71 +51,94 @@
 	<!-- END PRELOADER -->
 
 	<!-- START NAVBAR -->
-	<div class="site-mobile-menu site-navbar-target">
-		<div class="site-mobile-menu-header">
-			<div class="site-mobile-menu-close mt-3">
-				<span class="icon-close2 js-menu-toggle"></span>
-			</div>
+	<?php
+	session_start();
+	// Logout
+	if (isset($_GET['logout'])) {
+	    session_destroy();
+	    header('Location: /gestion_utilisateur_v5/gestion_utilisateur1/view/frontoffice/formations/index.php');
+	    exit;
+	}
+	$user      = $_SESSION['user'] ?? null;
+	$role      = $user['role'] ?? 'visiteur';
+	$nom       = $user ? htmlspecialchars($user['nom']) : '';
+	$loginUrl  = '/gestion_utilisateur_v5/gestion_utilisateur1/view/frontoffice/login.php';
+	$logoutUrl = '/gestion_utilisateur_v5/gestion_utilisateur1/controller/logout.php';
+	?>
+	<style>
+	.tk-nav{background:#fff;box-shadow:0 2px 16px rgba(0,0,0,.08);position:sticky;top:0;z-index:9999;width:100%;}
+	.tk-nav-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 48px;}
+	.tk-logo img{height:90px;width:auto;}
+	.tk-links{display:flex;align-items:center;gap:6px;list-style:none;margin:0;padding:0;width:100%;}
+	.tk-links li a{color:#444;text-decoration:none;font-size:15px;font-weight:600;padding:10px 18px;border-radius:8px;transition:all .2s;white-space:nowrap;display:block;}
+	.tk-links li a:hover{background:#e8f5e9;color:#2e7d32;}
+	.tk-links .spacer{flex:1;}
+	.tk-btn-connect{background:linear-gradient(135deg,#4caf50,#2e7d32)!important;color:#fff!important;padding:12px 28px!important;border-radius:50px!important;font-weight:700!important;font-size:15px!important;box-shadow:0 4px 14px rgba(76,175,80,.3);}
+	.tk-btn-connect:hover{transform:translateY(-2px);}
+	.tk-user-wrap{position:relative;}
+	.tk-user-btn{display:inline-flex;align-items:center;gap:10px;background:#4caf50;color:#fff;padding:9px 20px 9px 9px;border-radius:50px;font-weight:700;font-size:15px;cursor:pointer;margin-left:8px;}
+	.tk-user-btn .av{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #fff;}
+	.tk-user-btn .av-init{width:42px;height:42px;border-radius:50%;background:#2e7d32;border:2px solid #fff;display:inline-flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;}
+	.tk-dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.12);min-width:180px;overflow:hidden;z-index:9999;}
+	.tk-dropdown a{display:block;padding:14px 20px;color:#333;text-decoration:none;font-size:14px;font-weight:500;transition:background .2s;}
+	.tk-dropdown a:hover{background:#f5f5f5;}
+	.tk-dropdown a.logout{color:#e53935;}
+	.tk-user-wrap.open .tk-dropdown{display:block;}
+	</style>
+	<nav class="tk-nav">
+		<div class="tk-nav-inner">
+			<a href="index.php" class="tk-logo"><img src="assets/img/logo.png" alt="Takwinibot"></a>
+			<ul class="tk-links">
+				<!-- Spacer gauche -->
+				<li class="spacer"></li>
+				<!-- Accueil et A propos au centre -->
+				<li><a href="index.php">Accueil</a></li>
+				<li><a href="about.html">A propos</a></li>
+				<!-- Spacer droit -->
+				<li class="spacer"></li>
+				<?php if (in_array($role, ['candidat','recruteur'])): ?>
+				<li><a href="offres-emploi/offres-emploi.html">Offres</a></li>
+				<?php endif; ?>
+				<?php if ($role === 'candidat'): ?>
+				<li><a href="formation.html">Formations</a></li>
+				<?php endif; ?>
+				<?php if (in_array($role, ['candidat','recruteur'])): ?>
+				<li><a href="front_mes_reclamations.html">Reclamations</a></li>
+				<li><a href="gallery.html">Produits</a></li>
+				<?php endif; ?>
+				<?php if ($role === 'candidat'): ?>
+				<li><a href="entretiens.html">Entretiens</a></li>
+				<?php endif; ?>
+				<?php if ($user): ?>
+				<li class="tk-user-wrap">
+					<div class="tk-user-btn">
+						<?php $av=$user['avatar']??''; $avSrc=!empty($av)?'../'.$av:null; ?>
+						<?php if($avSrc): ?><img src="<?=htmlspecialchars($avSrc)?>" class="av"><?php else: ?><span class="av-init"><?=strtoupper(substr($nom,0,1))?></span><?php endif; ?>
+						Salut <?=$nom?> <span style="font-size:10px;">&#9660;</span>
+					</div>
+					<div class="tk-dropdown">
+						<a href="../profil.php">Mon profil</a>
+						<a href="/gestion_utilisateur_v5/gestion_utilisateur1/view/frontoffice/formations/index.php?logout=1" class="logout" id="btn-logout">Deconnexion</a>
+					</div>
+				</li>
+				<?php else: ?>
+				<li><a href="<?=$loginUrl?>" class="tk-btn-connect">Se connecter</a></li>
+				<?php endif; ?>
+			</ul>
 		</div>
-		<div class="site-mobile-menu-body"></div>
-	</div>
-
-	<header class="site-navbar js-sticky-header site-navbar-target" role="banner">
-		<div class="container">
-			<div class="row align-items-center">
-				<div class="col-6 col-xl-2">
-					<h1 class="mb-0 site-logo"><a href="index.html"><img src="assets/img/logo.png" alt=""></a></h1>
-				</div>
-				<div class="col-12 col-md-10 d-none d-xl-block">
-					<nav class="site-navigation position-relative text-right" role="navigation">
-						<ul class="site-menu main-menu js-clone-nav mr-auto d-none d-lg-block">
-							<li class="has-children">
-								<a href="index.html" class="nav-link">Home</a>
-								<ul class="dropdown">
-									<li><a href="index_map.html" class="nav-link">Home Map</a></li>
-									<li><a href="index_parallax.html" class="nav-link">Home Parallax</a></li>
-									<li><a href="index_slideshow.html" class="nav-link">Home Slider</a></li>
-									<li><a href="index_video.html" class="nav-link">Home video</a></li>
-								</ul>
-							</li>
-							<li><a class="nav-link" href="about.html">about</a></li>
-							<li class="has-children">
-								<a href="formation.html" class="nav-link">Formations</a>
-								<ul class="dropdown">
-									<li><a href="formation-details.html" class="nav-link">DÃ©tails de la Formation</a></li>
-								</ul>
-							</li>
-							<li><a href="gallery.html">Produits</a></li>
-							<li class="has-children">
-								<a href="#" class="nav-link">Pages</a>
-								<ul class="dropdown">
-									<li><a href="agent_profile.html" class="nav-link">agent profile</a></li>
-									<li><a href="login.html" class="nav-link">login page</a></li>
-									<li><a href="register.html" class="nav-link">register page</a></li>
-									<li><a href="faq.html" class="nav-link">Faqs</a></li>
-									<li><a href="404.html" class="nav-link">404 page</a></li>
-								</ul>
-							</li>
-							<li class="has-children">
-								<a href="blog.html" class="nav-link">Entretien</a>
-								<ul class="dropdown">
-									<li><a href="blog.html" class="nav-link">Blog Post</a></li>
-									<li><a href="blog-post.html" class="nav-link">Blog Single</a></li>
-								</ul>
-							</li>
-							<li><a class="nav-link" href="C:\Users\Eya\Downloads\Hilux-1.0.0 (1)\Hilux-1.0.0\Hilux-1.0.0\formations\offres-emploi\offres-emploi.html">Offres</a></li>
-							<li class="nav-reclamation-login"><a class="nav-link" href="front_mes_reclamations.html">Réclamations</a><a href="C:\Users\Eya\Downloads\Hilux-1.0.0 (1)\Hilux-1.0.0\Hilux-1.0.0\formations\Modern-Login-master\Modern-Login-master\login.html" class="login-pill">Se connecter</a></li>
-						</ul>
-					</nav>
-				</div>
-				<div class="col-6 d-inline-block d-xl-none ml-md-0 py-3" style="position: relative; top: 3px;">
-					<a href="#" class="site-menu-toggle js-menu-toggle float-right"><span
-							class="icon-menu h3"></span></a>
-				</div>
-			</div>
-		</div>
-	</header>
-	<!-- END NAVBAR-->
+	</nav>
+	<script>
+	// Dropdown au clic
+	document.querySelector('.tk-user-btn') && document.querySelector('.tk-user-btn').addEventListener('click', function(e){
+	    e.stopPropagation();
+	    this.closest('.tk-user-wrap').classList.toggle('open');
+	});
+	document.addEventListener('click', function(){
+	    var w = document.querySelector('.tk-user-wrap');
+	    if(w) w.classList.remove('open');
+	});
+	</script>
+	<!-- END NAVBAR -->
 
 	<!-- START HOME -->
 	<section id="home" class="home_bg"
@@ -912,6 +935,7 @@
 </body>
 
 </html>
+
 
 
 
