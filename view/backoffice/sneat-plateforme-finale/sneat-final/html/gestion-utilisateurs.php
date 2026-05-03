@@ -386,6 +386,7 @@ if (!empty($__av)) {
                       </th>
                       <th>RÔLE</th>
                       <th>STATUT</th>
+                      <th>BANNISSEMENT</th>
                       <th>ACTIONS</th>
                     </tr>
                   </thead>
@@ -419,9 +420,30 @@ if (!empty($__av)) {
                         </span>
                       </td>
                       <td>
-                        <span class="badge bg-label-<?= $u['statut'] === 'actif' ? 'success' : 'secondary' ?> text-capitalize">
+                        <span class="badge bg-label-<?= $u['statut'] === 'actif' ? 'success' : ($u['statut'] === 'suspendu' ? 'danger' : 'secondary') ?> text-capitalize">
                           <?= $u['statut'] ?>
                         </span>
+                      </td>
+                      <td>
+                        <?php $isBanned = ($u['statut'] === 'suspendu'); ?>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="form-check form-switch mb-0">
+                            <input
+                              class="form-check-input ban-toggle"
+                              type="checkbox"
+                              role="switch"
+                              id="ban-<?= $u['id'] ?>"
+                              data-id="<?= $u['id'] ?>"
+                              <?= $isBanned ? 'checked' : '' ?>
+                              style="cursor:pointer;width:2.5em;height:1.3em;"
+                            >
+                          </div>
+                          <label for="ban-<?= $u['id'] ?>" class="mb-0" style="cursor:pointer;font-size:12px;font-weight:600;">
+                            <span class="ban-label-<?= $u['id'] ?> <?= $isBanned ? 'text-danger' : 'text-success' ?>">
+                              <?= $isBanned ? 'Banni' : 'Actif' ?>
+                            </span>
+                          </label>
+                        </div>
                       </td>
                       <td>
                         <div class="d-flex align-items-center">
@@ -642,6 +664,82 @@ document.getElementById('btnExportPdf').addEventListener('click', function () {
 
     doc.save('utilisateurs-takwini.pdf');
 });
+
+// ── Toggle Ban/Unban ─────────────────────────────────────────────────────────
+document.querySelectorAll('.ban-toggle').forEach(function(toggle) {
+    toggle.addEventListener('change', function() {
+        const userId = this.dataset.id;
+        const isBanning = this.checked; // checked = on veut bannir
+        const label = document.querySelector('.ban-label-' + userId);
+        const row   = this.closest('tr');
+
+        // Confirmation
+        const action = isBanning ? 'bannir' : 'débannir';
+        if (!confirm('Voulez-vous vraiment ' + action + ' cet utilisateur ?')) {
+            this.checked = !this.checked; // annuler
+            return;
+        }
+
+        fetch('toggle-ban.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: parseInt(userId) })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const banned = data.newStatut === 'suspendu';
+
+                // Mettre à jour le label
+                label.textContent = banned ? 'Banni' : 'Actif';
+                label.className   = 'ban-label-' + userId + (banned ? ' text-danger' : ' text-success');
+
+                // Mettre à jour le badge statut dans la même ligne
+                const badge = row.querySelector('td:nth-child(5) .badge');
+                if (badge) {
+                    badge.textContent = data.newStatut;
+                    badge.className   = 'badge text-capitalize bg-label-' + (banned ? 'danger' : 'success');
+                }
+
+                // Mettre à jour data-statut pour les filtres
+                row.dataset.statut = data.newStatut;
+
+                // Toast notification
+                showToast(data.message, banned ? 'danger' : 'success');
+            } else {
+                this.checked = !this.checked; // annuler le toggle
+                showToast(data.message || 'Erreur.', 'danger');
+            }
+        })
+        .catch(() => {
+            this.checked = !this.checked;
+            showToast('Erreur réseau.', 'danger');
+        });
+    });
+});
+
+function showToast(msg, type) {
+    const existing = document.getElementById('ban-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'ban-toast';
+    toast.style.cssText = `
+        position:fixed;bottom:24px;right:24px;z-index:9999;
+        background:${type === 'danger' ? '#dc3545' : '#198754'};
+        color:#fff;padding:12px 20px;border-radius:10px;
+        font-size:14px;font-weight:600;
+        box-shadow:0 4px 16px rgba(0,0,0,.2);
+        animation:slideIn .3s ease;
+    `;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+}
 </script>
+<style>
+@keyframes slideIn { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.ban-toggle:checked { background-color: #dc3545 !important; border-color: #dc3545 !important; }
+</style>
 </body>
 </html>

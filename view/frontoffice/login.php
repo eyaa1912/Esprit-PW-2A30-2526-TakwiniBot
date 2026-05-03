@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../controller/UtilisateurController.php';
@@ -177,6 +177,26 @@ body::before{content:'';position:fixed;inset:0;background:rgba(27,94,32,.55);z-i
 .btn-toggle{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.7);border-radius:50px;padding:11px 36px;font-size:14px;font-weight:700;cursor:pointer;transition:all .25s;width:200px;margin:6px 0;}
 .btn-toggle:hover{background:rgba(255,255,255,.15);border-color:#fff;transform:translateY(-2px);}
 .toggle-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:50px;padding:6px 16px;font-size:12px;font-weight:600;margin-bottom:20px;}
+
+/* Soulignement animé mot de passe oublié */
+.forgot-link{
+  position:relative;
+  display:inline-block;
+}
+.forgot-link::after{
+  content:'';
+  position:absolute;
+  left:0;
+  bottom:-2px;
+  width:0%;
+  height:1.5px;
+  background:#4caf50;
+  border-radius:2px;
+  transition:width .3s ease;
+}
+.forgot-link:hover::after{
+  width:100%;
+}
 </style>
 </head>
 <body>
@@ -201,10 +221,11 @@ body::before{content:'';position:fixed;inset:0;background:rgba(27,94,32,.55);z-i
       </div>
       <span class="field-error" id="err-login-password"></span>
       <div style="width:100%;text-align:right;margin-top:4px;">
-       <a href="forgot-password.php" style="font-size:12px;color:#4caf50;text-decoration:none;font-weight:500;">
-        Mot de passe oublié ?
-       </a>
-       </div>
+        <a href="forgot-password.php" class="forgot-link"
+           style="font-size:12px;color:#4caf50;text-decoration:none;font-weight:500;">
+          Mot de passe oublié ?
+        </a>
+      </div>
       <button type="submit" class="btn-main" id="btn-login" style="margin-top:20px;">Se connecter</button>
       <div style="display:flex;align-items:center;gap:10px;width:100%;margin:10px 0 4px;">
         <div style="flex:1;height:1px;background:#e0e0e0;"></div>

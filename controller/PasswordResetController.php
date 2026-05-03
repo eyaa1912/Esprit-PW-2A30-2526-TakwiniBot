@@ -19,10 +19,10 @@ class PasswordResetController
     }
 
     /**
-     * Envoie un email de réinitialisation si l'email existe dans la BDD.
+     * Génère un code à 6 chiffres et l'envoie par email.
      * Retourne toujours un message générique (sécurité).
      */
-    public function sendResetLink(string $email): array
+    public function sendResetCode(string $email): array
     {
         // Vérifier si l'email existe
         $stmt = $this->db->prepare('SELECT id FROM users WHERE email = :email LIMIT 1');
@@ -31,95 +31,96 @@ class PasswordResetController
 
         if (!$user) {
             // On retourne quand même un succès (évite l'énumération d'emails)
-            return ['success' => true, 'message' => 'Si cet email existe, un lien vous a été envoyé.'];
+            return ['success' => true, 'message' => 'Si cet email existe, un code vous a été envoyé.'];
         }
 
-        // Générer le token
-        $token      = bin2hex(random_bytes(16));
-        $token_hash = hash('sha256', $token);
-        $expiry     = date('Y-m-d H:i:s', time() + 60 * 30); // 30 minutes
+        // Générer un code à 6 chiffres
+        $code       = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $code_hash  = hash('sha256', $code);
+        $expiry     = date('Y-m-d H:i:s', time() + 60 * 15); // 15 minutes
 
-        // Sauvegarder le token en BDD
+        // Sauvegarder le code hashé en BDD
         $stmt = $this->db->prepare(
             'UPDATE users SET reset_token_hash = :hash, reset_token_expires_at = :exp WHERE email = :email'
         );
         $stmt->execute([
-            'hash'  => $token_hash,
+            'hash'  => $code_hash,
             'exp'   => $expiry,
             'email' => $email,
         ]);
 
-        // Construire le lien (adapter le chemin selon ton hébergement)
-        $resetLink = 'http://localhost/gestion_utilisateur_v5/gestion_utilisateur1/view/frontoffice/reset-password.php?token=' . $token;
-
-        // Envoyer l'email
+        // Envoyer l'email avec le code
         $mail = new PHPMailer(true);
         try {
-            // ── Configurer ton SMTP ici ────────────────────────────────
             $mail->isSMTP();
+            $mail->SMTPDebug  = 0; // Mettre à 2 pour voir les logs SMTP en cas de problème
             $mail->SMTPAuth   = true;
-            $mail->Host       = 'smtp.gmail.com';       // <-- ton serveur SMTP
+            $mail->Host       = 'smtp.gmail.com';
             $mail->Port       = 587;
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Username   = 'teya5466@gmail.com';  // <-- ton email
-            $mail->Password   = 'zgcd nupj csbt ugdg'; // <-- mot de passe app Gmail
-            // ────────────────────────────────────────────────────────────
+            $mail->Username   = 'teya5466@gmail.com';
+            $mail->Password   = 'zgcd nupj csbt ugdg';
+            $mail->CharSet    = 'UTF-8';
 
             $mail->isHTML(true);
-            $mail->setFrom('noreply@takwini.tn', 'Takwini');
+            $mail->setFrom('teya5466@gmail.com', 'Takwini'); // From doit correspondre au compte SMTP
             $mail->addAddress($email);
-            $mail->Subject = 'Réinitialisation de votre mot de passe - Takwini';
+            $mail->Subject = 'Votre code de réinitialisation - Takwini';
             $mail->Body    = "
-                <div style='font-family:Inter,sans-serif;max-width:500px;margin:auto;padding:30px;'>
-                    <h2 style='color:#2e7d32;'>Mot de passe oublié ?</h2>
-                    <p>Cliquez sur le bouton ci-dessous pour réinitialiser votre mot de passe.</p>
-                    <p><strong>Ce lien expire dans 30 minutes.</strong></p>
-                    <a href='{$resetLink}' style='display:inline-block;padding:12px 28px;background:#4caf50;color:#fff;text-decoration:none;border-radius:10px;font-weight:700;margin:16px 0;'>
-                        Réinitialiser mon mot de passe
-                    </a>
-                    <p style='color:#999;font-size:12px;'>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
+                <div style='font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:30px;background:#f9f9f9;border-radius:16px;'>
+                    <h2 style='color:#2e7d32;text-align:center;'>Réinitialisation du mot de passe</h2>
+                    <p style='color:#555;text-align:center;'>Utilisez le code ci-dessous pour réinitialiser votre mot de passe.</p>
+                    <div style='text-align:center;margin:28px 0;'>
+                        <span style='display:inline-block;font-size:40px;font-weight:900;letter-spacing:12px;color:#2e7d32;background:#e8f5e9;padding:18px 32px;border-radius:14px;border:2px dashed #4caf50;'>
+                            {$code}
+                        </span>
+                    </div>
+                    <p style='color:#888;font-size:13px;text-align:center;'><strong>Ce code expire dans 15 minutes.</strong></p>
+                    <p style='color:#bbb;font-size:12px;text-align:center;margin-top:20px;'>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
                 </div>
             ";
+            $mail->AltBody = "Votre code de réinitialisation Takwini : {$code} (expire dans 15 minutes)";
 
             $mail->send();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+            // Retourner l'erreur réelle pour faciliter le débogage
             return ['success' => false, 'message' => 'Erreur envoi email : ' . $mail->ErrorInfo];
         }
 
-        return ['success' => true, 'message' => 'Si cet email existe, un lien vous a été envoyé.'];
+        return ['success' => true, 'message' => 'Code envoyé ! Vérifiez votre boîte email (et les spams).'];
     }
 
     /**
-     * Vérifie la validité du token et retourne l'utilisateur correspondant.
+     * Vérifie la validité du code à 6 chiffres.
      */
-    public function validateToken(string $token): array
+    public function validateCode(string $email, string $code): array
     {
-        $token_hash = hash('sha256', $token);
+        $code_hash = hash('sha256', $code);
 
         $stmt = $this->db->prepare(
-            'SELECT * FROM users WHERE reset_token_hash = :hash LIMIT 1'
+            'SELECT * FROM users WHERE email = :email AND reset_token_hash = :hash LIMIT 1'
         );
-        $stmt->execute(['hash' => $token_hash]);
+        $stmt->execute(['email' => $email, 'hash' => $code_hash]);
         $user = $stmt->fetch();
 
         if (!$user) {
-            return ['valid' => false, 'message' => 'Lien invalide ou déjà utilisé.'];
+            return ['valid' => false, 'message' => 'Code incorrect.'];
         }
 
         if (strtotime($user['reset_token_expires_at']) <= time()) {
-            return ['valid' => false, 'message' => 'Ce lien a expiré. Veuillez en demander un nouveau.'];
+            return ['valid' => false, 'message' => 'Ce code a expiré. Veuillez en demander un nouveau.'];
         }
 
         return ['valid' => true, 'user' => $user];
     }
 
     /**
-     * Réinitialise le mot de passe après validation du token.
+     * Réinitialise le mot de passe après validation du code.
      */
-    public function resetPassword(string $token, string $password, string $confirm): array
+    public function resetPasswordWithCode(string $email, string $code, string $password, string $confirm): array
     {
-        // Valider le token
-        $check = $this->validateToken($token);
+        // Valider le code
+        $check = $this->validateCode($email, $code);
         if (!$check['valid']) {
             return ['success' => false, 'message' => $check['message']];
         }
@@ -135,12 +136,32 @@ class PasswordResetController
         $user         = $check['user'];
         $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 
-        // Mettre à jour le mot de passe et effacer le token
+        // Mettre à jour le mot de passe et effacer le code
         $stmt = $this->db->prepare(
             'UPDATE users SET mot_de_passe = :mdp, reset_token_hash = NULL, reset_token_expires_at = NULL WHERE id = :id'
         );
         $stmt->execute(['mdp' => $passwordHash, 'id' => $user['id']]);
 
         return ['success' => true, 'message' => 'Mot de passe mis à jour avec succès. Vous pouvez vous connecter.'];
+    }
+
+    // ── Méthodes conservées pour compatibilité ──────────────────────────────
+
+    /** @deprecated Utiliser sendResetCode() */
+    public function sendResetLink(string $email): array
+    {
+        return $this->sendResetCode($email);
+    }
+
+    /** @deprecated Utiliser validateCode() */
+    public function validateToken(string $token): array
+    {
+        return ['valid' => false, 'message' => 'Méthode obsolète, utilisez un code.'];
+    }
+
+    /** @deprecated Utiliser resetPasswordWithCode() */
+    public function resetPassword(string $token, string $password, string $confirm): array
+    {
+        return ['success' => false, 'message' => 'Méthode obsolète, utilisez un code.'];
     }
 }
