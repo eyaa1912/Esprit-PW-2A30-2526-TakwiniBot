@@ -58,6 +58,30 @@ $offres            = $offreCtrl->listOffres()->fetchAll();
 $offresSansContrat = $contratCtrl->offresSansContrat();
 $flashError        = $flashError ?? null;
 
+// Données graphiques contrats
+$chartStatutData = json_encode([$totalActifs, $totalExpires, $totalAnnules]);
+
+// Salaire moyen par type d'offre
+$salParType = [];
+foreach ($contrats as $c) {
+    $type = $c['offre_type'] ?? 'Autre';
+    $sal  = (float) preg_replace('/[^0-9.]/', '', explode(' ', $c['salaire'] ?? '0')[0]);
+    if (!isset($salParType[$type])) $salParType[$type] = ['total' => 0, 'count' => 0];
+    $salParType[$type]['total'] += $sal;
+    $salParType[$type]['count']++;
+}
+$salMoyLabels = json_encode(array_keys($salParType) ?: ['Aucun']);
+$salMoyData   = json_encode(array_values(array_map(fn($v) => $v['count'] > 0 ? round($v['total'] / $v['count']) : 0, $salParType)) ?: [0]);
+
+// Contrats par mois
+$contratsMois = [];
+foreach ($contrats as $c) {
+    $mois = !empty($c['dateCreation']) ? date('M', strtotime($c['dateCreation'])) : 'N/A';
+    $contratsMois[$mois] = ($contratsMois[$mois] ?? 0) + 1;
+}
+$chartContratsMoisLabels = json_encode(array_keys($contratsMois) ?: ['Aucun']);
+$chartContratsMoisData   = json_encode(array_values($contratsMois) ?: [0]);
+
 function badge_statut(?string $s): string {
     $map = ['actif' => 'success', 'expiré' => 'warning', 'annulé' => 'danger'];
     $cls = $map[$s ?? ''] ?? 'secondary';
@@ -649,19 +673,18 @@ function badge_statut(?string $s): string {
   <div class="card">
     <div class="card-header border-bottom">
       <h5 class="card-title">Liste des contrats</h5>
-      <div class="d-flex justify-content-between align-items-center row py-3 gap-3 gap-md-0">
-        <div class="col-md-4">
-          <select class="form-select text-capitalize" id="filter-statut">
-            <option value="">Tous les statuts</option>
-            <option value="actif">Actif</option>
-            <option value="expiré">Expiré</option>
-            <option value="annulé">Annulé</option>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <input type="date" class="form-control" id="filter-date" placeholder="Filtrer par date de création">
-        </div>
-        <div class="col-md-4"></div>
+      <div class="d-flex align-items-center gap-3 py-3 flex-wrap">
+        <input type="text" class="form-control" id="search-contrat" placeholder="Rechercher par offre, statut..." style="max-width:280px;">
+        <input type="date" class="form-control" id="filter-date" style="max-width:200px;">
+        <select class="form-select" id="sort-order-contrat" style="max-width:160px;">
+          <option value="">Trier par ordre</option>
+          <option value="asc">A → Z</option>
+          <option value="desc">Z → A</option>
+        </select>
+        <button type="button" class="btn btn-danger" id="btn-export-pdf-contrat">
+          <i class="bx bxs-file-pdf me-1"></i> Export PDF
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-reset-contrat">Réinitialiser</button>
       </div>
     </div>
     <div class="card-datatable table-responsive">
@@ -672,9 +695,6 @@ function badge_statut(?string $s): string {
           </div>
           <div class="col-md-10">
             <div class="dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-end flex-md-row flex-column gap-3">
-              <div class="dataTables_filter">
-                <input type="search" class="form-control" placeholder="Rechercher par nom d'offre..." id="search-contrat" />
-              </div>
               <div class="dt-buttons btn-group flex-wrap">
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#contratModal" id="btn-add">
                   + Ajouter Contrat
@@ -765,55 +785,92 @@ function badge_statut(?string $s): string {
     var perPageSel = document.getElementById('filter-perpage');
 
     function applyFilters() {
-        var statut  = document.getElementById('filter-statut').value.toLowerCase();
-        var date    = document.getElementById('filter-date').value;
-        var search  = document.getElementById('search-contrat').value.toLowerCase().trim();
-        var perPage = parseInt(perPageSel.value) || 0;
+        var search = document.getElementById('search-contrat').value.toLowerCase().trim();
+        var date   = document.getElementById('filter-date').value;
 
-        var visible = 0;
         allRows.forEach(function (row) {
-            var matchStatut = !statut  || row.dataset.statut === statut;
-            var matchDate   = !date    || row.dataset.date === date;
-            var matchSearch = !search  || row.dataset.offreTitre.includes(search);
-
-            var show = matchStatut && matchDate && matchSearch;
-            row.style.display = show ? '' : 'none';
-            if (show) visible++;
+            var matchSearch = !search || row.textContent.toLowerCase().includes(search);
+            var matchDate   = !date   || (row.dataset.date && row.dataset.date === date);
+            row.style.display = (matchSearch && matchDate) ? '' : 'none';
         });
-
-        // Pagination simple : masquer les lignes au-delà de perPage
-        if (perPage > 0) {
-            var shown = 0;
-            allRows.forEach(function (row) {
-                if (row.style.display !== 'none') {
-                    shown++;
-                    if (shown > perPage) row.style.display = 'none';
-                }
-            });
-            visible = Math.min(visible, perPage);
-        }
-
-        infoEl.textContent = visible + ' contrat(s) affiché(s)';
     }
 
-    document.getElementById('filter-statut').addEventListener('change', applyFilters);
-    document.getElementById('filter-date').addEventListener('change', applyFilters);
     document.getElementById('search-contrat').addEventListener('input', applyFilters);
-    perPageSel.addEventListener('change', applyFilters);
+    document.getElementById('filter-date').addEventListener('change', applyFilters);
 
-    // Bouton reset filtres
-    var btnReset = document.createElement('button');
-    btnReset.className = 'btn btn-outline-secondary btn-sm ms-2';
-    btnReset.textContent = 'Réinitialiser';
-    btnReset.type = 'button';
-    btnReset.addEventListener('click', function () {
-        document.getElementById('filter-statut').value = '';
-        document.getElementById('filter-date').value = '';
+    // Tri A→Z / Z→A (colonne 2 = Offre titre)
+    document.getElementById('sort-order-contrat').addEventListener('change', function () {
+        var order = this.value;
+        if (!order) return;
+        var tbody = document.getElementById('contrat-table').tBodies[0];
+        var rows  = Array.from(tbody.rows);
+        rows.sort(function (a, b) {
+            var va = a.cells[2] ? a.cells[2].textContent.trim() : '';
+            var vb = b.cells[2] ? b.cells[2].textContent.trim() : '';
+            return order === 'asc'
+                ? va.localeCompare(vb, 'fr', { sensitivity: 'base' })
+                : vb.localeCompare(va, 'fr', { sensitivity: 'base' });
+        });
+        rows.forEach(function (r) { tbody.appendChild(r); });
+    });
+
+    document.getElementById('btn-reset-contrat').addEventListener('click', function () {
         document.getElementById('search-contrat').value = '';
-        perPageSel.value = '10';
+        document.getElementById('filter-date').value = '';
+        document.getElementById('sort-order-contrat').value = '';
         applyFilters();
     });
-    document.getElementById('filter-date').parentNode.appendChild(btnReset);
+
+    // Tri par clic sur les en-têtes
+    var table   = document.getElementById('contrat-table');
+    var sortDir = {};
+    var style = document.createElement('style');
+    style.textContent = '#contrat-table thead th[data-sort="asc"]::after{content:" ↑";color:#696cff;} #contrat-table thead th[data-sort="desc"]::after{content:" ↓";color:#696cff;} #contrat-table thead th:not(:last-child):hover{background:rgba(105,108,255,.06);}';
+    document.head.appendChild(style);
+    Array.from(table.querySelectorAll('thead th')).forEach(function (th, i) {
+        if (i === table.querySelectorAll('thead th').length - 1) return;
+        th.style.cursor = 'pointer';
+        th.title = 'Cliquer pour trier';
+        th.addEventListener('click', function () {
+            var asc = sortDir[i] !== true;
+            sortDir = {};
+            sortDir[i] = asc;
+            Array.from(table.querySelectorAll('thead th')).forEach(function(t){ t.dataset.sort = ''; });
+            th.dataset.sort = asc ? 'asc' : 'desc';
+            var rows = Array.from(table.tBodies[0].rows);
+            rows.sort(function (a, b) {
+                var va = a.cells[i] ? a.cells[i].textContent.trim() : '';
+                var vb = b.cells[i] ? b.cells[i].textContent.trim() : '';
+                return asc ? va.localeCompare(vb, 'fr', {sensitivity:'base'}) : vb.localeCompare(va, 'fr', {sensitivity:'base'});
+            });
+            rows.forEach(function (r) { table.tBodies[0].appendChild(r); });
+        });
+    });
+
+    // Export PDF
+    document.getElementById('btn-export-pdf-contrat').addEventListener('click', function () {
+        var table = document.getElementById('contrat-table');
+        var rows  = Array.from(table.querySelectorAll('tbody tr')).filter(function(r){ return r.style.display !== 'none'; });
+        var heads = Array.from(table.querySelectorAll('thead th')).slice(0, -1).map(function(th){ return th.textContent.trim(); });
+
+        var body = rows.map(function(row) {
+            return Array.from(row.cells).slice(0, -1).map(function(td){ return td.textContent.trim(); });
+        });
+
+        var docDef = {
+            pageOrientation: 'landscape',
+            content: [
+                { text: 'Liste des Contrats', style: 'header' },
+                { text: new Date().toLocaleDateString('fr-FR'), style: 'date' },
+                { table: { headerRows: 1, widths: Array(heads.length).fill('*'), body: [heads].concat(body) } }
+            ],
+            styles: {
+                header: { fontSize: 16, bold: true, margin: [0, 0, 0, 4] },
+                date:   { fontSize: 10, color: '#888', margin: [0, 0, 0, 12] }
+            }
+        };
+        pdfMake.createPdf(docDef).download('contrats.pdf');
+    });
 })();
 </script>
 
@@ -1197,6 +1254,9 @@ document.getElementById('contratForm').addEventListener('submit', function(e) {
     <script src="../assets/js/main.js"></script>
     <script src="../assets/js/navbar-extras.js"></script>
 
+    <!-- pdfmake pour export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
     <!-- Place this tag before closing body tag for github widget button. -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once __DIR__ . '/../config.php';
 
@@ -46,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="assets/css/menu.css">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/responsive.css">
+    <link rel="stylesheet" href="assets/css/accessibility.css">
 </head>
 <body data-spy="scroll" data-offset="80">
 
@@ -145,5 +146,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script src="assets/js/menu.js"></script>
 <script src="assets/js/jquery.sticky.js"></script>
 <script src="assets/js/scripts.js"></script>
+<script src="assets/js/accessibility.js"></script>
 </body>
 </html>

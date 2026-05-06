@@ -38,6 +38,7 @@
 		  <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
 		  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 		<![endif]-->
+    <link rel="stylesheet" href="assets/css/accessibility.css">
 </head>
 
 <body data-spy="scroll" data-offset="80">
@@ -69,42 +70,15 @@
 				<div class="col-12 col-md-10 d-none d-xl-block">
 					<nav class="site-navigation position-relative text-right" role="navigation">
 						<ul class="site-menu main-menu js-clone-nav mr-auto d-none d-lg-block">
-							<li class="has-children">
-								<a href="index.html" class="nav-link">Home</a>
-								<ul class="dropdown">
-									<li><a href="index_map.html" class="nav-link">Home Map</a></li>
-									<li><a href="index_parallax.html" class="nav-link">Home Parallax</a></li>
-									<li><a href="index_slideshow.html" class="nav-link">Home Slider</a></li>
-									<li><a href="index_video.html" class="nav-link">Home video</a></li>
-								</ul>
+							<li><a href="index.php" class="nav-link">Accueil</a></li>
+							<li><a href="about.html" class="nav-link">À propos</a></li>
+							<li><a href="formation.html" class="nav-link">Formations</a></li>
+							<li><a href="offres.php" class="nav-link">Offres</a></li>
+							<li><a href="blog.html" class="nav-link">Entretiens</a></li>
+							<li><a href="front_formulaire_reclamation.html" class="nav-link">Contact</a></li>
+							<li class="nav-reclamation-login">
+								<a href="login.php" class="login-pill">Se connecter</a>
 							</li>
-							<li><a class="nav-link" href="about.html">about</a></li>
-							<li class="has-children">
-								<a href="formation.html" class="nav-link">Formations</a>
-								<ul class="dropdown">
-									<li><a href="formation-details.html" class="nav-link">Nos Formations</a></li>
-								</ul>
-							</li>
-							<li><a href="gallery.html">Produits</a></li>
-							<li class="has-children">
-								<a href="#" class="nav-link">Pages</a>
-								<ul class="dropdown">
-									<li><a href="agent_profile.html" class="nav-link">agent profile</a></li>
-									<li><a href="login.html" class="nav-link">login page</a></li>
-									<li><a href="register.html" class="nav-link">register page</a></li>
-									<li><a href="faq.html" class="nav-link">Faqs</a></li>
-									<li><a href="404.html" class="nav-link">404 page</a></li>
-								</ul>
-							</li>
-							<li class="has-children">
-								<a href="blog.html" class="nav-link">Entretien</a>
-								<ul class="dropdown">
-									<li><a href="blog.html" class="nav-link">Blog Post</a></li>
-									<li><a href="blog-post.html" class="nav-link">Blog Single</a></li>
-								</ul>
-							</li>
-							<li><a class="nav-link" href="offres.php">Offres</a></li>
-							<li class="nav-reclamation-login"><a class="nav-link" href="front_mes_reclamations.html">Réclamations</a><a href="file:///C:/Users/AMEN/Desktop/Modern-Login-master/Modern-Login-master/login.html" class="login-pill">Se connecter</a></li>
 						</ul>
 					</nav>
 				</div>
@@ -128,10 +102,10 @@
 						<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi fermentum justo vitae
 							convallis varius. Nulla tristique risus ut justo pulvinar mattis.</p>
 						<div class="home_btn">
-							<a href="about.html" class="app-btn wow bounceIn page-scroll home_btn_color_one"
-								data-wow-delay=".6s">About us</a>
-							<a href="gallery.html" class="app-btn wow bounceIn page-scroll home_btn_color_two"
-								data-wow-delay=".8s">our Listing</a>
+							<a href="offres.php" class="app-btn wow bounceIn page-scroll home_btn_color_one"
+								data-wow-delay=".6s">Voir les offres</a>
+							<a href="offres.php#postuler" class="app-btn wow bounceIn page-scroll home_btn_color_two"
+								data-wow-delay=".8s">Postuler</a>
 						</div>
 					</div>
 				</div><!--- END COL -->
@@ -909,6 +883,8 @@
 	  </div>
 	</div>
 
+<?php include __DIR__ . '/includes/accessibility.php'; ?>
+<script src="assets/js/accessibility.js"></script>
 </body>
 
 </html>

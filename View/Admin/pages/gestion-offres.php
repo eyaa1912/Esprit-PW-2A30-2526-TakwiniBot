@@ -4,16 +4,37 @@ require_once __DIR__ . '/../../../Controller/OffreController.php';
 
 $controller = new OffreController();
 
+/* ── Suppression automatique des offres expirées ── */
+$controller->deleteExpiredOffres();
+
+/* ── Fonction upload image ── */
+function uploadOffreImage(): string
+{
+    if (empty($_FILES['image']['name'])) return '';
+    $ext     = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+    $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    if (!in_array($ext, $allowed)) return '';
+    $uploadDir = __DIR__ . '/../../../uploads/offres/';
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+    $filename = 'offre_' . time() . '_' . uniqid() . '.' . $ext;
+    if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $filename)) {
+        return 'uploads/offres/' . $filename;
+    }
+    return '';
+}
+
 /* ================= CRUD ================= */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'create') {
+        $imagePath = uploadOffreImage();
         $offre = new Offre(
             trim($_POST['titre'] ?? ''),
             trim($_POST['description'] ?? ''),
             trim($_POST['type'] ?? ''),
-            trim($_POST['datePublication'] ?? '')
+            trim($_POST['datePublication'] ?? ''),
+            $imagePath
         );
         $controller->addOffre($offre);
         header("Location: gestion-offres.php");
@@ -21,11 +42,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($_POST['action'] === 'update') {
+        $imagePath = uploadOffreImage();
+        // Si pas de nouvelle image, garder l'ancienne
+        if ($imagePath === '') {
+            $existing = $controller->getOffre((int)$_POST['id']);
+            $imagePath = $existing['image'] ?? '';
+        }
         $offre = new Offre(
             trim($_POST['titre'] ?? ''),
             trim($_POST['description'] ?? ''),
             trim($_POST['type'] ?? ''),
-            trim($_POST['datePublication'] ?? '')
+            trim($_POST['datePublication'] ?? ''),
+            $imagePath
         );
         $controller->updateOffre((int)$_POST['id'], $offre);
         header("Location: gestion-offres.php");
@@ -40,6 +68,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $offres = $controller->listOffres()->fetchAll();
+
+// Stats réelles pour les cartes
+$totalOffres    = count($offres);
+$totalCDI       = count(array_filter($offres, fn($o) => ($o['type'] ?? '') === 'CDI'));
+$totalCDD       = count(array_filter($offres, fn($o) => ($o['type'] ?? '') === 'CDD'));
+$totalStage     = count(array_filter($offres, fn($o) => ($o['type'] ?? '') === 'Stage'));
+$totalFreelance = count(array_filter($offres, fn($o) => ($o['type'] ?? '') === 'Freelance'));
+
+// Données graphiques
+// 1. Répartition par type (donut)
+$chartTypesData   = json_encode([$totalCDI, $totalCDD, $totalStage, $totalFreelance]);
+
+// 2. Offres par mois (barres)
+$offresMois = [];
+foreach ($offres as $o) {
+    $mois = !empty($o['dateExpiration']) ? date('M', strtotime($o['dateExpiration'])) : 'N/A';
+    $offresMois[$mois] = ($offresMois[$mois] ?? 0) + 1;
+}
+$chartMoisLabels = json_encode(array_keys($offresMois));
+$chartMoisData   = json_encode(array_values($offresMois));
+$totalFreelance = count(array_filter($offres, fn($o) => ($o['type'] ?? '') === 'Freelance'));
 ?>
 
 
@@ -559,8 +608,7 @@ $offres = $controller->listOffres()->fetchAll();
                         <div class="content-left">
                           <span>Offres</span>
                           <div class="d-flex align-items-end mt-2">
-                            <h4 class="mb-0 me-2">2,156</h4>
-                            <small class="text-success">(+19%)</small>
+                            <h4 class="mb-0 me-2"><?= $totalOffres ?></h4>
                           </div>
                           <p class="mb-0">Total offres</p>
                         </div>
@@ -578,12 +626,11 @@ $offres = $controller->listOffres()->fetchAll();
                     <div class="card-body">
                       <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                          <span>Publiées</span>
+                          <span>CDI</span>
                           <div class="d-flex align-items-end mt-2">
-                            <h4 class="mb-0 me-2">1,480</h4>
-                            <small class="text-success">(+14%)</small>
+                            <h4 class="mb-0 me-2"><?= $totalCDI ?></h4>
                           </div>
-                          <p class="mb-0">Analyse semaine</p>
+                          <p class="mb-0">Offres CDI</p>
                         </div>
                         <div class="avatar">
                           <span class="avatar-initial rounded bg-label-success">
@@ -599,12 +646,11 @@ $offres = $controller->listOffres()->fetchAll();
                     <div class="card-body">
                       <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                          <span>Brouillons</span>
+                          <span>CDD</span>
                           <div class="d-flex align-items-end mt-2">
-                            <h4 class="mb-0 me-2">312</h4>
-                            <small class="text-success">(+28%)</small>
+                            <h4 class="mb-0 me-2"><?= $totalCDD ?></h4>
                           </div>
-                          <p class="mb-0">Analyse semaine</p>
+                          <p class="mb-0">Offres CDD</p>
                         </div>
                         <div class="avatar">
                           <span class="avatar-initial rounded bg-label-warning">
@@ -620,12 +666,11 @@ $offres = $controller->listOffres()->fetchAll();
                     <div class="card-body">
                       <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                          <span>Archivées</span>
+                          <span>Stage</span>
                           <div class="d-flex align-items-end mt-2">
-                            <h4 class="mb-0 me-2">364</h4>
-                            <small class="text-danger">(-4%)</small>
+                            <h4 class="mb-0 me-2"><?= $totalStage ?></h4>
                           </div>
-                          <p class="mb-0">Analyse semaine</p>
+                          <p class="mb-0">Offres Stage</p>
                         </div>
                         <div class="avatar">
                           <span class="avatar-initial rounded bg-label-danger">
@@ -641,20 +686,18 @@ $offres = $controller->listOffres()->fetchAll();
               <div class="card">
                 <div class="card-header border-bottom">
                   <h5 class="card-title">Filtres de recherche</h5>
-                  <div class="d-flex justify-content-between align-items-center row py-3 gap-3 gap-md-0">
-                    <div class="col-md-4">
-                      <select class="form-select text-capitalize" id="filter-type">
-                        <option value="">Tous les types</option>
-                        <option value="CDI">CDI</option>
-                        <option value="CDD">CDD</option>
-                        <option value="Stage">Stage</option>
-                        <option value="Freelance">Freelance</option>
-                      </select>
-                    </div>
-                    <div class="col-md-4">
-                      <input type="date" class="form-control" id="filter-date-offre" placeholder="Filtrer par date de publication">
-                    </div>
-                    <div class="col-md-4"></div>
+                  <div class="d-flex align-items-center gap-3 py-3 flex-wrap">
+                    <input type="text" class="form-control" id="search-offre" placeholder="Rechercher par titre, type..." style="max-width:280px;">
+                    <input type="date" class="form-control" id="filter-date-offre" style="max-width:200px;">
+                    <select class="form-select" id="sort-order-offre" style="max-width:160px;">
+                      <option value="">Trier par ordre</option>
+                      <option value="asc">A → Z</option>
+                      <option value="desc">Z → A</option>
+                    </select>
+                    <button type="button" class="btn btn-danger" id="btn-export-pdf-offre">
+                      <i class="bx bxs-file-pdf me-1"></i> Export PDF
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-reset-offre">Réinitialiser</button>
                   </div>
                 </div>
                 <div class="card-datatable table-responsive">
@@ -665,9 +708,6 @@ $offres = $controller->listOffres()->fetchAll();
                       </div>
                       <div class="col-md-10">
                         <div class="dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-end flex-md-row flex-column gap-3">
-                          <div class="dataTables_filter">
-                            <input type="search" class="form-control" placeholder="Rechercher par titre d'offre..." id="search-offre" />
-                          </div>
                           <div class="dt-buttons btn-group flex-wrap">
                     
     <!-- BUTTON ADD -->
@@ -682,6 +722,7 @@ $offres = $controller->listOffres()->fetchAll();
                     <table class="table border-top dataTable" id="offre-table">
                  <thead>
         <tr>
+            <th>Image</th>
             <th>Titre</th>
             <th>Description</th>
             <th>Type</th>
@@ -695,11 +736,20 @@ $offres = $controller->listOffres()->fetchAll();
             <tr
               data-titre="<?= htmlspecialchars(strtolower($o['titre']), ENT_QUOTES, 'UTF-8') ?>"
               data-type="<?= htmlspecialchars(strtolower($o['type'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
-              data-date="<?= htmlspecialchars($o['datePublication'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+              data-date="<?= htmlspecialchars($o['dateExpiration'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                <td>
+                    <?php if (!empty($o['image'])): ?>
+                        <img src="../../../<?= htmlspecialchars($o['image']) ?>"
+                             style="width:50px;height:50px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;"
+                             alt="<?= htmlspecialchars($o['titre']) ?>">
+                    <?php else: ?>
+                        <span class="text-muted" style="font-size:12px;">—</span>
+                    <?php endif; ?>
+                </td>
                 <td><?= htmlspecialchars($o['titre']) ?></td>
                 <td><?= htmlspecialchars($o['description']) ?></td>
                 <td><?= htmlspecialchars($o['type']) ?></td>
-                <td><?= htmlspecialchars($o['datePublication']) ?></td>
+                <td><?= htmlspecialchars($o['dateExpiration'] ?? '') ?></td>
 
                 <td>
                     <!-- EDIT -->
@@ -728,14 +778,14 @@ $offres = $controller->listOffres()->fetchAll();
   <div class="modal-dialog">
     <div class="modal-content">
 
-      <form method="POST" id="offreForm" novalidate>
+      <form method="POST" id="offreForm" enctype="multipart/form-data" novalidate>
 
         <div class="modal-header">
           <h5 class="modal-title">Offre</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
-        <div class="modal-body">
+        <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
 
             <input type="hidden" name="id" id="id">
             <input type="hidden" name="action" id="action" value="create">
@@ -764,9 +814,21 @@ $offres = $controller->listOffres()->fetchAll();
             </div>
 
             <div class="mb-2">
-                <label>Date</label>
-                <input type="text" name="datePublication" id="datePublication" class="form-control" placeholder="AAAA-MM-JJ" novalidate>
+                <label>Date d'expiration <span class="text-danger">*</span></label>
+                <input type="date" name="datePublication" id="datePublication" class="form-control"
+                       min="<?= date('Y-m-d', strtotime('+7 days')) ?>">
+                <small class="text-muted">L'offre sera supprimée automatiquement après cette date (minimum 7 jours à partir d'aujourd'hui)</small>
                 <div class="invalid-feedback" id="datePublication-error"></div>
+            </div>
+
+            <div class="mb-2">
+                <label>Image de l'offre</label>
+                <input type="file" name="image" id="image" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp">
+                <small class="text-muted">Formats : JPG, PNG, GIF, WEBP — optionnel</small>
+                <div id="image-preview" class="mt-2" style="display:none;">
+                    <img id="preview-img" src="" alt="Aperçu" style="max-width:120px;max-height:80px;border-radius:6px;border:1px solid #e5e7eb;">
+                    <br><small class="text-muted">Laisser vide pour garder l'image actuelle</small>
+                </div>
             </div>
 
         </div>
@@ -793,8 +855,19 @@ function editOffre(o) {
     document.getElementById('description').value = o.description;
     document.getElementById('type').value = o.type;
     document.getElementById('datePublication').value = o.datePublication;
-
     document.getElementById('action').value = 'update';
+
+    // Afficher l'image actuelle si elle existe
+    var preview = document.getElementById('image-preview');
+    var previewImg = document.getElementById('preview-img');
+    if (o.image) {
+        previewImg.src = '../../../' + o.image;
+        preview.style.display = 'block';
+        preview.querySelector('small') && (preview.querySelector('small').textContent = 'Image actuelle (laisser vide pour garder)');
+    } else {
+        preview.style.display = 'none';
+        previewImg.src = '';
+    }
 
     let modal = new bootstrap.Modal(document.getElementById('offreModal'));
     modal.show();
@@ -805,6 +878,8 @@ document.querySelector('[data-bs-target="#offreModal"]').addEventListener('click
     document.getElementById('offreForm').reset();
     document.getElementById('action').value = 'create';
     document.getElementById('id').value = '';
+    document.getElementById('image-preview').style.display = 'none';
+    document.getElementById('preview-img').src = '';
     clearErrors();
 });
 
@@ -854,6 +929,21 @@ function fillEditModal(data) {
 
 // ================= CLIENT VALIDATION JS =================
 
+// Aperçu image avant upload
+document.getElementById('image').addEventListener('change', function () {
+    var file = this.files[0];
+    if (file) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            document.getElementById('preview-img').src = e.target.result;
+            document.getElementById('image-preview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        document.getElementById('image-preview').style.display = 'none';
+    }
+});
+
 function clearErrors() {
     ['titre', 'description', 'type', 'datePublication'].forEach(function(field) {
         var el = document.getElementById(field);
@@ -871,11 +961,18 @@ function showError(fieldId, message) {
 }
 
 function isValidDate(str) {
-    // Accepte le format AAAA-MM-JJ
     var regex = /^\d{4}-\d{2}-\d{2}$/;
     if (!regex.test(str)) return false;
     var d = new Date(str);
     return d instanceof Date && !isNaN(d);
+}
+
+function isAtLeast7Days(str) {
+    var selected = new Date(str);
+    var minDate  = new Date();
+    minDate.setDate(minDate.getDate() + 7);
+    minDate.setHours(0, 0, 0, 0);
+    return selected >= minDate;
 }
 
 document.getElementById("offreForm").addEventListener("submit", function(e) {
@@ -910,10 +1007,13 @@ document.getElementById("offreForm").addEventListener("submit", function(e) {
     }
 
     if (date.length === 0) {
-        showError('datePublication', 'La date est obligatoire.');
+        showError('datePublication', 'La date d\'expiration est obligatoire.');
         valid = false;
     } else if (!isValidDate(date)) {
-        showError('datePublication', 'Format de date invalide (AAAA-MM-JJ attendu).');
+        showError('datePublication', 'Date invalide.');
+        valid = false;
+    } else if (!isAtLeast7Days(date)) {
+        showError('datePublication', 'La date doit être au minimum 7 jours à partir d\'aujourd\'hui.');
         valid = false;
     }
 
@@ -942,79 +1042,171 @@ document.getElementById("offreForm").addEventListener("submit", function(e) {
 </script>
 
 <script>
-// ===== FILTRAGE OFFRES =====
+// ===== FILTRAGE OFFRES (recherche + date) =====
 (function () {
-    var tbody      = document.querySelector('#offre-table tbody');
+    var tbody  = document.querySelector('#offre-table tbody');
     if (!tbody) return;
-    var allRows    = Array.from(tbody.querySelectorAll('tr[data-titre]'));
-    var perPageSel = document.getElementById('filter-perpage-offre');
+    var allRows = Array.from(tbody.querySelectorAll('tr[data-titre]'));
 
     function applyFilters() {
-        var type    = document.getElementById('filter-type').value.toLowerCase();
-        var date    = document.getElementById('filter-date-offre').value;
-        var search  = document.getElementById('search-offre').value.toLowerCase().trim();
-        var perPage = parseInt(perPageSel.value) || 0;
+        var search = document.getElementById('search-offre').value.toLowerCase().trim();
+        var date   = document.getElementById('filter-date-offre').value;
 
-        var visible = 0;
         allRows.forEach(function (row) {
-            var matchType   = !type   || row.dataset.type === type;
-            var matchDate   = !date   || row.dataset.date === date;
-            var matchSearch = !search || row.dataset.titre.includes(search);
-
-            var show = matchType && matchDate && matchSearch;
-            row.style.display = show ? '' : 'none';
-            if (show) visible++;
+            var matchSearch = !search || row.textContent.toLowerCase().includes(search);
+            var matchDate   = !date   || (row.dataset.date && row.dataset.date === date);
+            row.style.display = (matchSearch && matchDate) ? '' : 'none';
         });
-
-        if (perPage > 0) {
-            var shown = 0;
-            allRows.forEach(function (row) {
-                if (row.style.display !== 'none') {
-                    shown++;
-                    if (shown > perPage) row.style.display = 'none';
-                }
-            });
-        }
     }
 
-    document.getElementById('filter-type').addEventListener('change', applyFilters);
-    document.getElementById('filter-date-offre').addEventListener('change', applyFilters);
     document.getElementById('search-offre').addEventListener('input', applyFilters);
-    perPageSel.addEventListener('change', applyFilters);
+    document.getElementById('filter-date-offre').addEventListener('change', applyFilters);
 
-    // Bouton reset
-    var btnReset = document.createElement('button');
-    btnReset.className = 'btn btn-outline-secondary btn-sm ms-2';
-    btnReset.textContent = 'Réinitialiser';
-    btnReset.type = 'button';
-    btnReset.addEventListener('click', function () {
-        document.getElementById('filter-type').value = '';
-        document.getElementById('filter-date-offre').value = '';
+    // Tri A→Z / Z→A (colonne 0 = Titre)
+    document.getElementById('sort-order-offre').addEventListener('change', function () {
+        var order = this.value;
+        if (!order) return;
+        var tbody = document.getElementById('offre-table').tBodies[0];
+        var rows  = Array.from(tbody.rows);
+        rows.sort(function (a, b) {
+            var va = a.cells[0] ? a.cells[0].textContent.trim() : '';
+            var vb = b.cells[0] ? b.cells[0].textContent.trim() : '';
+            return order === 'asc'
+                ? va.localeCompare(vb, 'fr', { sensitivity: 'base' })
+                : vb.localeCompare(va, 'fr', { sensitivity: 'base' });
+        });
+        rows.forEach(function (r) { tbody.appendChild(r); });
+    });
+
+    document.getElementById('btn-reset-offre').addEventListener('click', function () {
         document.getElementById('search-offre').value = '';
-        perPageSel.value = '10';
+        document.getElementById('filter-date-offre').value = '';
+        document.getElementById('sort-order-offre').value = '';
         applyFilters();
     });
-    document.getElementById('filter-date-offre').parentNode.appendChild(btnReset);
+
+    // Export PDF
+    document.getElementById('btn-export-pdf-offre').addEventListener('click', function () {
+        var table = document.getElementById('offre-table');
+        var rows  = Array.from(table.querySelectorAll('tbody tr')).filter(function(r){ return r.style.display !== 'none'; });
+
+        // Colonnes : ignorer Image (index 0) et Actions (dernière)
+        var allHeads = Array.from(table.querySelectorAll('thead th'));
+        var heads = allHeads.slice(1, -1).map(function(th){ return th.textContent.trim(); });
+
+        var body = rows.map(function(row) {
+            return Array.from(row.cells).slice(1, -1).map(function(td){ return td.textContent.trim(); });
+        });
+
+        var now = new Date();
+        var dateStr = now.toLocaleDateString('fr-FR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+        // En-têtes stylisés
+        var styledHeads = heads.map(function(h) {
+            return { text: h, style: 'tableHeader' };
+        });
+
+        // Lignes alternées
+        var styledBody = body.map(function(row, i) {
+            return row.map(function(cell) {
+                return {
+                    text: cell,
+                    style: i % 2 === 0 ? 'rowEven' : 'rowOdd'
+                };
+            });
+        });
+
+        var docDef = {
+            pageOrientation: 'landscape',
+            pageMargins: [30, 50, 30, 40],
+            background: function() {
+                return {
+                    canvas: [
+                        { type: 'rect', x: 0, y: 0, w: 842, h: 60, color: '#5b21b6' }
+                    ]
+                };
+            },
+            content: [
+                // Espace pour le bandeau
+                { text: '', margin: [0, 0, 0, 10] },
+                // Titre principal
+                {
+                    columns: [
+                        {
+                            stack: [
+                                { text: 'TAKWINIBOT', style: 'brand' },
+                                { text: 'Plateforme de gestion d\'offres d\'emploi', style: 'brandSub' }
+                            ]
+                        },
+                        {
+                            stack: [
+                                { text: 'RAPPORT DES OFFRES', style: 'reportTitle', alignment: 'right' },
+                                { text: dateStr, style: 'reportDate', alignment: 'right' }
+                            ]
+                        }
+                    ],
+                    margin: [0, 0, 0, 20]
+                },
+                // Ligne séparatrice
+                { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 782, y2: 0, lineWidth: 2, lineColor: '#7c3aed' }], margin: [0, 0, 0, 16] },
+                // Résumé
+                {
+                    columns: [
+                        { text: 'Total des offres : ' + rows.length, style: 'summary' },
+                        { text: 'Généré le : ' + now.toLocaleTimeString('fr-FR'), style: 'summary', alignment: 'right' }
+                    ],
+                    margin: [0, 0, 0, 16]
+                },
+                // Tableau
+                {
+                    table: {
+                        headerRows: 1,
+                        widths: Array(heads.length).fill('*'),
+                        body: [styledHeads].concat(styledBody)
+                    },
+                    layout: {
+                        hLineWidth: function(i) { return i === 0 || i === 1 ? 0 : 0.5; },
+                        vLineWidth: function() { return 0; },
+                        hLineColor: function() { return '#e5e7eb'; },
+                        fillColor: function(i) {
+                            if (i === 0) return '#5b21b6';
+                            return i % 2 === 0 ? '#f5f3ff' : '#ffffff';
+                        },
+                        paddingLeft: function() { return 10; },
+                        paddingRight: function() { return 10; },
+                        paddingTop: function() { return 8; },
+                        paddingBottom: function() { return 8; }
+                    }
+                },
+                // Pied de page
+                { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 782, y2: 0, lineWidth: 1, lineColor: '#e5e7eb' }], margin: [0, 20, 0, 8] },
+                { text: 'Takwinibot © ' + now.getFullYear() + ' — Document confidentiel', style: 'footer', alignment: 'center' }
+            ],
+            styles: {
+                brand:       { fontSize: 18, bold: true, color: '#ffffff', margin: [0, 8, 0, 2] },
+                brandSub:    { fontSize: 9,  color: '#c4b5fd', margin: [0, 0, 0, 0] },
+                reportTitle: { fontSize: 14, bold: true, color: '#ffffff', margin: [0, 8, 0, 2] },
+                reportDate:  { fontSize: 9,  color: '#c4b5fd' },
+                summary:     { fontSize: 10, color: '#6b7280', bold: false },
+                tableHeader: { fontSize: 11, bold: true, color: '#ffffff' },
+                rowEven:     { fontSize: 10, color: '#1f2937' },
+                rowOdd:      { fontSize: 10, color: '#374151' },
+                footer:      { fontSize: 8,  color: '#9ca3af', italics: true }
+            },
+            defaultStyle: { font: 'Roboto' }
+        };
+        pdfMake.createPdf(docDef).download('takwinibot-offres-' + now.toISOString().slice(0,10) + '.pdf');
+    });
 })();
 </script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
-
-            <!-- / Content -->
-
-            <!-- Footer -->
-            <footer class="content-footer footer bg-footer-theme">
-              <div class="container-xxl">
-                <div
-                  class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
-                  <div class="mb-2 mb-md-0">
-                    ©
-                    <script>
-                      document.write(new Date().getFullYear());
-                    </script>
-                    , made with ❤️ by
-                    <a href="https://themeselection.com" target="_blank" class="footer-link">ThemeSelection</a>
-                  </div>
+    <!-- Place this tag before closing body tag for github widget button. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+  </body>
+</html>
                   <div class="d-none d-lg-inline-block">
                     <a
                       href="https://themeselection.com/item/category/admin-templates/"
@@ -1088,6 +1280,72 @@ document.getElementById("offreForm").addEventListener("submit", function(e) {
 
     <script src="../assets/js/main.js"></script>
     <script src="../assets/js/navbar-extras.js"></script>
+
+    <!-- Tri alphabétique -->
+    <script>
+    (function () {
+        var table   = document.getElementById('offre-table');
+        var selCol  = document.getElementById('sort-col-offre');
+        var btnDir  = document.getElementById('sort-dir-offre');
+        if (!table || !selCol || !btnDir) return;
+
+        var asc = true;
+
+        function doSort() {
+            var colIndex = parseInt(selCol.value);
+            var tbody    = table.tBodies[0];
+            var rows     = Array.from(tbody.rows);
+
+            rows.sort(function (a, b) {
+                var va = a.cells[colIndex] ? a.cells[colIndex].textContent.trim() : '';
+                var vb = b.cells[colIndex] ? b.cells[colIndex].textContent.trim() : '';
+                return asc
+                    ? va.localeCompare(vb, 'fr', { sensitivity: 'base' })
+                    : vb.localeCompare(va, 'fr', { sensitivity: 'base' });
+            });
+
+            rows.forEach(function (r) { tbody.appendChild(r); });
+            btnDir.textContent = asc ? 'A→Z' : 'Z→A';
+        }
+
+        selCol.addEventListener('change', doSort);
+        btnDir.addEventListener('click', function () { asc = !asc; doSort(); });
+        doSort(); // tri initial
+    })();
+    </script>
+
+    <!-- Filtre alphabet offres (colonne 0 = Titre) -->
+    <script>
+    (function () {
+        var table    = document.getElementById('offre-table');
+        var colIndex = 0; // Titre
+        if (!table) return;
+
+        document.querySelectorAll('.alpha-btn-offre').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var letter = this.dataset.letter.toUpperCase();
+
+                // Mettre à jour le bouton actif
+                document.querySelectorAll('.alpha-btn-offre').forEach(function (b) {
+                    b.classList.remove('active', 'btn-primary');
+                    b.classList.add('btn-outline-secondary');
+                });
+                this.classList.add('active', 'btn-primary');
+                this.classList.remove('btn-outline-secondary');
+
+                // Filtrer les lignes
+                Array.from(table.tBodies[0].rows).forEach(function (row) {
+                    if (!letter) {
+                        row.style.display = '';
+                        return;
+                    }
+                    var val = row.cells[colIndex] ? row.cells[colIndex].textContent.trim().toUpperCase() : '';
+                    row.style.display = val.startsWith(letter) ? '' : 'none';
+                });
+            });
+        });
+    })();
+    </script>
 
 
     <!-- Place this tag before closing body tag for github widget button. -->

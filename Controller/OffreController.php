@@ -1,6 +1,6 @@
 <?php
 
-include __DIR__ . '/../config.php';
+require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../Model/Offre.php';
 
 class OffreController
@@ -11,13 +11,14 @@ class OffreController
         echo "Description : "      . $offre->getDescription()     . "<br>";
         echo "Type : "             . $offre->getType()            . "<br>";
         echo "Date publication : " . $offre->getDatePublication() . "<br>";
+        echo "Image : "            . $offre->getImage()           . "<br>";
     }
 
     public function listOffres(): mixed
     {
         $db = config::getConnexion();
         try {
-            $liste = $db->query('SELECT * FROM offre');
+            $liste = $db->query('SELECT * FROM offre ORDER BY dateExpiration DESC');
             return $liste;
         } catch (Exception $e) {
             die('Erreur : ' . $e->getMessage());
@@ -29,13 +30,15 @@ class OffreController
         $db = config::getConnexion();
         try {
             $req = $db->prepare(
-                'INSERT INTO offre VALUES(NULL, :titre, :description, :type, :datePublication)'
+                'INSERT INTO offre (titre, description, type, dateExpiration, image)
+                 VALUES (:titre, :description, :type, :datePublication, :image)'
             );
             $req->execute([
                 'titre'           => $offre->getTitre(),
                 'description'     => $offre->getDescription(),
                 'type'            => $offre->getType(),
                 'datePublication' => $offre->getDatePublication(),
+                'image'           => $offre->getImage(),
             ]);
         } catch (Exception $e) {
             die('Erreur : ' . $e->getMessage());
@@ -50,6 +53,16 @@ class OffreController
             $req->execute(['id' => $id]);
         } catch (Exception $e) {
             die('Erreur : ' . $e->getMessage());
+        }
+    }
+
+    public function deleteExpiredOffres(): void
+    {
+        $db = config::getConnexion();
+        try {
+            $db->exec("DELETE FROM offre WHERE dateExpiration < CURDATE()");
+        } catch (Exception $e) {
+            // Silencieux — ne pas bloquer la page
         }
     }
 
@@ -74,7 +87,8 @@ class OffreController
                     titre           = :titre,
                     description     = :description,
                     type            = :type,
-                    datePublication = :datePublication
+                    dateExpiration  = :datePublication,
+                    image           = :image
                  WHERE id = :id'
             );
             $req->execute([
@@ -83,6 +97,7 @@ class OffreController
                 'description'     => $offre->getDescription(),
                 'type'            => $offre->getType(),
                 'datePublication' => $offre->getDatePublication(),
+                'image'           => $offre->getImage(),
             ]);
         } catch (Exception $e) {
             die('Erreur : ' . $e->getMessage());

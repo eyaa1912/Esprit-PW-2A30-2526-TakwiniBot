@@ -25,29 +25,36 @@ class Postuler
         $this->offreId         = $offreId;
         $this->cvPath          = $cvPath;
         $this->statut          = $statut;
-        $this->datePostulation = $datePostulation ?: date('Y-m-d H:i:s');
+        $this->datePostulation = $datePostulation;
     }
 
     // Getters
-    public function getNom(): string            { return $this->nom; }
-    public function getPrenom(): string         { return $this->prenom; }
-    public function getEmail(): string          { return $this->email; }
-    public function getOffreId(): int           { return $this->offreId; }
-    public function getCvPath(): string         { return $this->cvPath; }
-    public function getStatut(): string         { return $this->statut; }
+    public function getNom(): string             { return $this->nom; }
+    public function getPrenom(): string          { return $this->prenom; }
+    public function getEmail(): string           { return $this->email; }
+    public function getOffreId(): int            { return $this->offreId; }
+    public function getCvPath(): string          { return $this->cvPath; }
+    public function getStatut(): string          { return $this->statut; }
     public function getDatePostulation(): string { return $this->datePostulation; }
 
     // Setters
-    public function setNom(string $nom): void       { $this->nom = $nom; }
-    public function setPrenom(string $prenom): void { $this->prenom = $prenom; }
-    public function setEmail(string $email): void   { $this->email = $email; }
-    public function setOffreId(int $offreId): void  { $this->offreId = $offreId; }
-    public function setCvPath(string $cvPath): void { $this->cvPath = $cvPath; }
-    public function setStatut(string $statut): void
+    public function setNom(string $nom): void                       { $this->nom = $nom; }
+    public function setPrenom(string $prenom): void                 { $this->prenom = $prenom; }
+    public function setEmail(string $email): void                   { $this->email = $email; }
+    public function setOffreId(int $offreId): void                  { $this->offreId = $offreId; }
+    public function setCvPath(string $cvPath): void                 { $this->cvPath = $cvPath; }
+    public function setStatut(string $statut): void                 { $this->statut = $statut; }
+    public function setDatePostulation(string $date): void          { $this->datePostulation = $date; }
+
+    public function show(): void
     {
-        $allowed = ['en_attente', 'acceptee', 'refusee'];
-        $this->statut = in_array($statut, $allowed) ? $statut : 'en_attente';
+        echo "Nom : $this->nom <br>";
+        echo "Prénom : $this->prenom <br>";
+        echo "Email : $this->email <br>";
+        echo "Offre ID : $this->offreId <br>";
+        echo "CV : $this->cvPath <br>";
+        echo "Statut : $this->statut <br>";
+        echo "Date postulation : $this->datePostulation <br>";
     }
-    public function setDatePostulation(string $date): void { $this->datePostulation = $date; }
 }
 ?>

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../Controller/OffreController.php';
@@ -6,6 +6,8 @@ require_once __DIR__ . '/../Controller/ContratController.php';
 require_once __DIR__ . '/../Controller/PostulerController.php';
 
 $controller       = new OffreController();
+// Supprimer les offres expirées avant d'afficher
+$controller->deleteExpiredOffres();
 $offres           = $controller->listOffres()->fetchAll();
 $contratStats     = ['count' => 0, 'highlight_new' => false];
 $derniersContrats = [];
@@ -14,7 +16,7 @@ try {
     $contratStats     = $cc->getPublicStats();
     $derniersContrats = $cc->getLatestContrats(4);
 } catch (Throwable $e) {
-    // désactivé si table non migrée
+    // Décommenter pour déboguer : echo $e->getMessage();
 }
 
 // ── Traitement du formulaire Postuler ──
@@ -32,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'postu
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $flashError = 'Adresse email invalide.';
     } elseif ($offreId === 0) {
-        $flashError = 'Offre invalide.';
+        $flashError = 'Offre invalide — veuillez réessayer en cliquant sur "Postuler" depuis la liste des offres.';
     } elseif (empty($_FILES['cv']['name'])) {
         $flashError = 'Veuillez joindre votre CV.';
     } else {
@@ -50,12 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'postu
                 require_once __DIR__ . '/../Controller/PostulerController.php';
                 $postuler = new Postuler($nom, $prenom, $email, $offreId, $cvPath);
                 $postCtrl = new PostulerController();
-                $res      = $postCtrl->createCandidature($postuler);
-                if ($res['success']) {
-                    $flashSuccess = 'Votre candidature a été envoyée avec succès !';
-                } else {
-                    $flashError = $res['message'] ?? 'Erreur lors de l\'envoi.';
-                }
+                $res      = $postCtrl->addPostuler($postuler);
+                $flashSuccess = 'Votre candidature a été envoyée avec succès !';
             } else {
                 $flashError = 'Erreur lors de l\'upload du CV.';
             }
@@ -84,6 +82,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'postu
     <link rel="stylesheet" href="assets/css/menu.css">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/responsive.css">
+    <!-- PDF.js pour extraction texte côté navigateur -->
+    <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <script>
+        window.addEventListener('load', function() {
+            if (typeof pdfjsLib !== 'undefined') {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+            }
+        });
+    </script>
+    <!-- Mammoth.js pour extraction DOCX -->
+    <script src="https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js"></script>
+    <link rel="stylesheet" href="assets/css/accessibility.css">
 </head>
 <body data-spy="scroll" data-offset="80">
 
@@ -113,25 +123,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'postu
             <div class="col-12 col-md-10 d-none d-xl-block">
                 <nav class="site-navigation position-relative text-right" role="navigation">
                     <ul class="site-menu main-menu js-clone-nav mr-auto d-none d-lg-block">
-                        <li><a href="index.php" class="nav-link">Home</a></li>
-                        <li><a class="nav-link" href="about.html">About</a></li>
-                        <li class="has-children">
-                            <a href="formation.html" class="nav-link">Formations</a>
-                            <ul class="dropdown">
-                                <li><a href="formation-details.html" class="nav-link">Détails de la Formation</a></li>
-                            </ul>
-                        </li>
-                        <li><a href="gallery.html" class="nav-link">Produits</a></li>
-                        <li class="has-children">
-                            <a href="blog.html" class="nav-link">Entretien</a>
-                            <ul class="dropdown">
-                                <li><a href="blog.html" class="nav-link">Blog Post</a></li>
-                                <li><a href="blog-post.html" class="nav-link">Blog Single</a></li>
-                            </ul>
-                        </li>
+                        <li><a href="index.php" class="nav-link">Accueil</a></li>
+                        <li><a class="nav-link" href="about.html">À propos</a></li>
+                        <li><a href="formation.html" class="nav-link">Formations</a></li>
+                        <li><a href="blog.html" class="nav-link">Entretiens</a></li>
                         <li class="active"><a class="nav-link" href="offres.php">Offres</a></li>
                         <li class="nav-reclamation-login">
-                            <a class="nav-link" href="front_mes_reclamations.html">Réclamations</a>
+                            <a class="nav-link" href="front_formulaire_reclamation.html">Contact</a>
                             <a href="login.php" class="login-pill">
                                 <?php if (!empty($_SESSION['user_id'])): ?>
                                     <?= htmlspecialchars($_SESSION['user_nom']) ?>
@@ -182,13 +180,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'postu
                     <?php foreach ($offres as $offre) : ?>
                         <div class="job-card" style="background:transparent;margin-bottom:20px;padding:25px 0;border-bottom:1px solid #ebebeb;display:flex;align-items:center;justify-content:space-between;">
                             <div class="job-info d-flex align-items-center">
-                                <div class="job-logo mr-4" style="width:80px;height:80px;border:1px solid #e1e1e1;display:flex;justify-content:center;align-items:center;background:#fff;">
-                                    <img src="assets/img/offres/logo1.jpg" style="max-width:60px;">
+                                <div class="job-logo mr-4" style="width:80px;height:80px;border:1px solid #e1e1e1;display:flex;justify-content:center;align-items:center;background:#fff;border-radius:8px;overflow:hidden;">
+                                    <?php if (!empty($offre['image'])): ?>
+                                        <img src="../<?= htmlspecialchars($offre['image']) ?>" style="width:80px;height:80px;object-fit:cover;" alt="<?= htmlspecialchars($offre['titre']) ?>">
+                                    <?php else: ?>
+                                        <img src="assets/img/offres/logo1.jpg" style="max-width:60px;" alt="">
+                                    <?php endif; ?>
                                 </div>
                                 <div class="job-details">
                                     <h3 style="font-size:20px;font-weight:500;margin-bottom:8px;color:#333;"><?= htmlspecialchars($offre['titre']) ?></h3>
-                                    <div style="color:#888;font-size:14px;"><?= htmlspecialchars($offre['type']) ?></div>
-                                    <div style="color:#aaa;font-size:13px;"><?= htmlspecialchars($offre['description']) ?></div>
+                                    <div style="color:#888;font-size:14px;" data-type-badge="<?= htmlspecialchars($offre['type']) ?>"><?= htmlspecialchars($offre['type']) ?></div>
+                                    <div class="job-description" style="color:#aaa;font-size:13px;"><?= htmlspecialchars($offre['description']) ?></div>
+                                    <button class="btn-voir-plus" style="display:none;background:none;border:none;color:#7c3aed;font-size:12px;padding:4px 0;cursor:pointer;text-decoration:underline;">Voir la description ▼</button>
                                 </div>
                             </div>
                             <div class="job-action text-right">
@@ -201,7 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'postu
                                     data-offre-titre="<?= htmlspecialchars($offre['titre'], ENT_QUOTES) ?>">
                                     Postuler
                                 </button>
-                                <p style="margin:0;color:#888;font-size:13px;"><?= htmlspecialchars($offre['datePublication']) ?></p>
+                                <p style="margin:0;color:#888;font-size:13px;">Expire le : <?= htmlspecialchars($offre['dateExpiration'] ?? '') ?></p>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -351,6 +354,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'postu
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
+
+        <!-- Indicateur de progression (mode concentration uniquement) -->
+        <div id="form-progress" style="display:none;padding:14px 20px 0;background:#f8f9fa;border-bottom:1px solid #e5e7eb;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <div id="dot-1" style="width:30px;height:30px;border-radius:50%;background:#7c3aed;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">1</div>
+            <div style="flex:1;height:3px;background:#e5e7eb;border-radius:2px;"><div id="fill-1-2" style="height:100%;background:#7c3aed;width:0%;transition:width .4s;border-radius:2px;"></div></div>
+            <div id="dot-2" style="width:30px;height:30px;border-radius:50%;background:#e5e7eb;color:#aaa;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">2</div>
+            <div style="flex:1;height:3px;background:#e5e7eb;border-radius:2px;"><div id="fill-2-3" style="height:100%;background:#7c3aed;width:0%;transition:width .4s;border-radius:2px;"></div></div>
+            <div id="dot-3" style="width:30px;height:30px;border-radius:50%;background:#e5e7eb;color:#aaa;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">3</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:8px;">
+            <span>Identité</span><span style="margin-left:20px;">Contact</span><span>CV</span>
+          </div>
+          <p id="step-label" style="font-size:13px;font-weight:600;color:#7c3aed;margin:0 0 8px;"></p>
+        </div>
+
         <div class="modal-body" style="padding:28px;">
           <?php if (!empty($flashError)): ?>
             <div class="alert alert-danger"><?= htmlspecialchars($flashError) ?></div>
@@ -358,38 +377,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'postu
           <?php if (!empty($flashSuccess)): ?>
             <div class="alert alert-success"><?= htmlspecialchars($flashSuccess) ?></div>
           <?php endif; ?>
-          <div class="form-group">
-            <label class="font-weight-bold">Nom <span class="text-danger">*</span></label>
-            <input type="text" name="nom" id="postuler-nom" class="form-control" placeholder="Votre nom">
-            <div class="invalid-feedback" id="postuler-nom-error"></div>
+
+          <!-- ÉTAPE 1 : Identité -->
+          <div class="form-step" id="step-1">
+            <p class="msg-anxiete" style="display:none;font-size:13px;color:#2563eb;font-weight:500;margin-bottom:12px;">Bienvenue ! Ce formulaire est simple et rapide. Commençons par votre nom.</p>
+            <div class="form-group">
+              <label class="font-weight-bold">Nom <span class="text-danger">*</span></label>
+              <input type="text" name="nom" id="postuler-nom" class="form-control" placeholder="Votre nom">
+              <div class="invalid-feedback" id="postuler-nom-error"></div>
+            </div>
+            <div class="form-group">
+              <label class="font-weight-bold">Prénom <span class="text-danger">*</span></label>
+              <input type="text" name="prenom" id="postuler-prenom" class="form-control" placeholder="Votre prénom">
+              <div class="invalid-feedback" id="postuler-prenom-error"></div>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="font-weight-bold">Prénom <span class="text-danger">*</span></label>
-            <input type="text" name="prenom" id="postuler-prenom" class="form-control" placeholder="Votre prénom">
-            <div class="invalid-feedback" id="postuler-prenom-error"></div>
+
+          <!-- ÉTAPE 2 : Contact (masquée par défaut) -->
+          <div class="form-step" id="step-2" style="display:none;">
+            <div class="form-group">
+              <label class="font-weight-bold">Email <span class="text-danger">*</span></label>
+              <input type="email" name="email" id="postuler-email" class="form-control" placeholder="votre@email.com">
+              <div class="invalid-feedback" id="postuler-email-error"></div>
+            </div>
+            <p class="msg-normal" style="font-size:13px;color:#6b7280;margin-top:8px;">Votre email sera utilisé uniquement pour vous contacter au sujet de votre candidature.</p>
+            <p class="msg-anxiete" style="display:none;font-size:13px;color:#2563eb;font-weight:500;margin-top:8px;">Très bien ! Une seule information encore — votre email pour qu'on puisse vous recontacter.</p>
           </div>
-          <div class="form-group">
-            <label class="font-weight-bold">Email <span class="text-danger">*</span></label>
-            <input type="email" name="email" id="postuler-email" class="form-control" placeholder="votre@email.com">
-            <div class="invalid-feedback" id="postuler-email-error"></div>
+
+          <!-- ÉTAPE 3 : CV (masquée par défaut) -->
+          <div class="form-step" id="step-3" style="display:none;">
+            <div class="form-group">
+              <label class="font-weight-bold">CV <span class="text-danger">*</span></label>
+              <input type="file" name="cv" id="postuler-cv" class="form-control-file mt-1" accept=".pdf,.doc,.docx">
+              <div class="invalid-feedback" id="postuler-cv-error"></div>
+              <small class="text-muted">Formats acceptés : PDF, DOC, DOCX — max 5 Mo</small>
+            </div>
+            <p class="msg-normal" style="font-size:13px;color:#10b981;font-weight:600;margin-top:8px;">Dernière étape — votre candidature sera envoyée après l'upload de votre CV.</p>
+            <p class="msg-anxiete" style="display:none;font-size:13px;color:#2563eb;font-weight:600;margin-top:8px;">Presque terminé ! Joignez votre CV et votre candidature sera envoyée. Vous faites très bien.</p>
           </div>
-          <div class="form-group">
-            <label class="font-weight-bold">CV <span class="text-danger">*</span></label>
-            <input type="file" name="cv" id="postuler-cv" class="form-control-file mt-1" accept=".pdf,.doc,.docx">
-            <div class="invalid-feedback" id="postuler-cv-error"></div>
-            <small class="text-muted">Formats acceptés : PDF, DOC, DOCX — max 5 Mo</small>
+
+          <!-- Zone analyse IA -->
+          <div id="cv-analyse-zone" style="display:none;margin-top:16px;">
+            <div id="cv-analyse-loading" style="display:none;text-align:center;padding:16px;">
+              <div class="spinner-border spinner-border-sm" role="status" style="color:#2c3e50;"></div>
+              <span style="margin-left:8px;font-size:13px;color:#555;">Analyse de votre CV en cours...</span>
+            </div>
+            <div id="cv-analyse-result" style="display:none;">
+              <div style="border:1px solid #dde3ea;border-radius:6px;overflow:hidden;margin-top:8px;">
+                <div style="background:#2c3e50;padding:10px 16px;">
+                  <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;">Rapport d'analyse — CV</span>
+                </div>
+                <div id="cv-analyse-content" style="padding:16px;font-size:13px;line-height:1.8;color:#2c3e50;max-height:320px;overflow-y:auto;background:#fff;"></div>
+              </div>
+            </div>
+            <div id="cv-analyse-error" style="display:none;font-size:13px;color:#666;background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:10px 14px;margin-top:8px;"></div>
           </div>
         </div>
-        <div class="modal-footer" style="border-top:1px solid #f0f0f0;">
-          <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Annuler</button>
-          <button type="submit" class="btn btn-primary" style="background:#7c3aed;border-color:#7c3aed;">
-            Envoyer ma candidature
-          </button>
+
+        <div class="modal-footer" style="border-top:1px solid #f0f0f0;justify-content:space-between;">
+          <button type="button" id="btn-prev-step" class="btn btn-outline-secondary" style="display:none;">← Retour</button>
+          <div>
+            <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Annuler</button>
+            <button type="button" id="btn-next-step" class="btn btn-primary" style="background:#7c3aed;border-color:#7c3aed;margin-left:8px;display:none;">
+              Suivant →
+            </button>
+            <button type="submit" id="btn-soumettre" class="btn btn-primary" style="background:#7c3aed;border-color:#7c3aed;margin-left:8px;">
+              <span id="btn-soumettre-text">Envoyer ma candidature</span>
+            </button>
+          </div>
         </div>
       </form>
     </div>
   </div>
 </div>
+
+<!-- WIDGET ACCESSIBILITÉ -->
+<?php include __DIR__ . '/includes/accessibility.php'; ?>
 
 <!-- FOOTER -->
 <footer class="footer-area">
@@ -413,16 +476,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'postu
 <script src="assets/js/scripts.js"></script>
 
 <script>
-// Bootstrap 4 : injecter offre_id et titre dans le modal
-$('#modalPostuler').on('show.bs.modal', function (e) {
-    var btn = $(e.relatedTarget);
-    $('#modal-offre-id').val(btn.data('offre-id'));
-    $('#modal-offre-titre').text(btn.data('offre-titre'));
-    // Réinitialiser les erreurs à chaque ouverture
-    $('#modalPostuler .is-invalid').removeClass('is-invalid');
-    $('#modalPostuler .invalid-feedback').text('').hide();
-});
-
 // ── Validation formulaire Postuler ──
 $('#formPostuler').on('submit', function (e) {
     var valid = true;
@@ -481,7 +534,331 @@ $('#formPostuler').on('submit', function (e) {
     }
 });
 
-// Effacer l'erreur dès que l'utilisateur corrige
+// ── Extraction PDF côté navigateur avec PDF.js + Analyse IA ──
+document.getElementById('postuler-cv').addEventListener('change', function () {
+    var file = this.files[0];
+    if (!file) return;
+
+    var ext = file.name.split('.').pop().toLowerCase();
+
+    // Réinitialiser la zone
+    var zone    = document.getElementById('cv-analyse-zone');
+    var loading = document.getElementById('cv-analyse-loading');
+    var result  = document.getElementById('cv-analyse-result');
+    var content = document.getElementById('cv-analyse-content');
+    var errDiv  = document.getElementById('cv-analyse-error');
+    var btnSoumettre     = document.getElementById('btn-soumettre');
+    var btnSoumettreText = document.getElementById('btn-soumettre-text');
+
+    zone.style.display    = 'block';
+    loading.style.display = 'block';
+    result.style.display  = 'none';
+    errDiv.style.display  = 'none';
+    btnSoumettre.disabled = true;
+    btnSoumettreText.textContent = '⏳ Extraction en cours...';
+
+    console.log('PDF.js disponible:', typeof pdfjsLib !== 'undefined', '| Extension:', ext);
+
+    if (ext === 'pdf' && typeof pdfjsLib !== 'undefined') {
+        // ── Extraction PDF avec PDF.js ──
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            var typedArray = new Uint8Array(e.target.result);
+            pdfjsLib.getDocument({ data: typedArray }).promise.then(function (pdf) {
+                var textPromises = [];
+                for (var i = 1; i <= pdf.numPages; i++) {
+                    textPromises.push(
+                        pdf.getPage(i).then(function (page) {
+                            return page.getTextContent().then(function (tc) {
+                                return tc.items.map(function (item) { return item.str; }).join(' ');
+                            });
+                        })
+                    );
+                }
+                Promise.all(textPromises).then(function (pages) {
+                    var fullText = pages.join('\n').trim();
+                    console.log('Texte extrait PDF (' + fullText.length + ' chars):', fullText.substring(0, 200));
+                    if (fullText.length > 30) {
+                        lancerAnalyse(fullText, loading, result, content, errDiv, btnSoumettre, btnSoumettreText);
+                    } else {
+                        afficherErreurExtraction(loading, errDiv, btnSoumettre, btnSoumettreText);
+                    }
+                });
+            }).catch(function (err) {
+                console.log('Erreur PDF.js:', err);
+                afficherErreurExtraction(loading, errDiv, btnSoumettre, btnSoumettreText);
+            });
+        };
+        reader.readAsArrayBuffer(file);
+
+    } else if ((ext === 'docx') && typeof mammoth !== 'undefined') {
+        // ── Extraction DOCX avec Mammoth.js ──
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            mammoth.extractRawText({ arrayBuffer: e.target.result })
+                .then(function (res) {
+                    var fullText = res.value.trim();
+                    console.log('Texte extrait DOCX (' + fullText.length + ' chars):', fullText.substring(0, 200));
+                    if (fullText.length > 30) {
+                        lancerAnalyse(fullText, loading, result, content, errDiv, btnSoumettre, btnSoumettreText);
+                    } else {
+                        afficherErreurExtraction(loading, errDiv, btnSoumettre, btnSoumettreText);
+                    }
+                })
+                .catch(function (err) {
+                    console.log('Erreur Mammoth:', err);
+                    afficherErreurExtraction(loading, errDiv, btnSoumettre, btnSoumettreText);
+                });
+        };
+        reader.readAsArrayBuffer(file);
+
+    } else {
+        // Format non supporté ou librairie non chargée
+        afficherErreurExtraction(loading, errDiv, btnSoumettre, btnSoumettreText);
+    }
+});
+
+function lancerAnalyse(cvText, loading, result, content, errDiv, btnSoumettre, btnSoumettreText) {
+    btnSoumettreText.textContent = '⏳ Analyse IA en cours...';
+
+    var formData = new FormData();
+    formData.append('cv_text', cvText.substring(0, 3000));
+    formData.append('offre_titre', $('#modal-offre-titre').text() || '');
+    formData.append('offre_type',  '');
+
+    $.ajax({
+        url: 'api_analyse_cv.php',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        timeout: 35000,
+        success: function (data) {
+            loading.style.display = 'none';
+            if (data.success) {
+                var texte = data.analyse;
+
+                // Supprimer les emojis résiduels
+                texte = texte.replace(/[\u{1F300}-\u{1FAFF}]/gu, '');
+
+                // Formater les sections en titres
+                texte = texte.replace(/^(POINTS FORTS|AXES D'AMELIORATION|EVALUATION|RECOMMANDATION)$/gm,
+                    '<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2c3e50;border-bottom:1px solid #e5e7eb;padding-bottom:4px;margin:14px 0 8px;">$1</div>');
+
+                // Formater les listes
+                texte = texte.replace(/^- (.+)$/gm,
+                    '<div style="padding:3px 0 3px 12px;border-left:2px solid #2c3e50;margin-bottom:4px;color:#374151;">$1</div>');
+
+                // Formater les items numérotés
+                texte = texte.replace(/^(\d+)\. \*\*(.+?)\*\* : (.+)$/gm,
+                    '<div style="margin-bottom:8px;"><span style="font-weight:600;color:#2c3e50;">$1. $2</span> <span style="color:#555;">— $3</span></div>');
+                texte = texte.replace(/^(\d+)\. (.+?) : (.+)$/gm,
+                    '<div style="margin-bottom:8px;"><span style="font-weight:600;color:#2c3e50;">$1. $2</span> <span style="color:#555;">— $3</span></div>');
+
+                // Score
+                texte = texte.replace(/^Score : (\d+)\/10$/gm,
+                    '<div style="display:inline-block;background:#2c3e50;color:#fff;padding:4px 14px;border-radius:3px;font-weight:700;font-size:14px;margin:4px 0;">$1 / 10</div>');
+
+                // Gras markdown
+                texte = texte.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                // Sauts de ligne
+                texte = texte.replace(/\n/g, '<br>');
+
+                content.innerHTML = texte;
+                result.style.display = 'block';
+            } else {
+                errDiv.textContent   = data.message || 'Erreur lors de l\'analyse.';
+                errDiv.style.display = 'block';
+            }
+            btnSoumettre.disabled = false;
+            btnSoumettreText.textContent = 'Envoyer ma candidature';
+        },
+        error: function () {
+            loading.style.display = 'none';
+            errDiv.textContent    = '⚠ Service d\'analyse indisponible.';
+            errDiv.style.display  = 'block';
+            btnSoumettre.disabled = false;
+            btnSoumettreText.textContent = 'Envoyer ma candidature';
+        }
+    });
+}
+
+function afficherErreurExtraction(loading, errDiv, btnSoumettre, btnSoumettreText) {
+    loading.style.display = 'none';
+    errDiv.textContent   = 'Analyse non disponible pour ce format de fichier.';
+    errDiv.style.display = 'block';
+    btnSoumettre.disabled = false;
+    btnSoumettreText.textContent = 'Envoyer ma candidature';
+}
+
+// Activer bouton analyser quand textarea rempli - SUPPRIME
+
+// ── Gestion des étapes du formulaire (toujours actif) ──
+var currentStep = 1;
+
+function initSteps() {
+    var isAccessMode = document.body.classList.contains('mode-concentration') ||
+                       document.body.classList.contains('mode-anxiete');
+
+    if (isAccessMode) {
+        // Mode accessibilité — formulaire en 3 étapes
+        document.getElementById('step-2').style.display = 'none';
+        document.getElementById('step-3').style.display = 'none';
+        document.getElementById('form-progress').style.display = 'block';
+        document.getElementById('btn-next-step').style.display = 'inline-block';
+        document.getElementById('btn-soumettre').style.display = 'none';
+        document.getElementById('btn-prev-step').style.display = 'none';
+        updateStepUI(1);
+    } else {
+        // Mode normal — tout visible en une seule étape
+        document.getElementById('step-1').style.display = 'block';
+        document.getElementById('step-2').style.display = 'block';
+        document.getElementById('step-3').style.display = 'block';
+        document.getElementById('form-progress').style.display = 'none';
+        document.getElementById('btn-next-step').style.display = 'none';
+        document.getElementById('btn-prev-step').style.display = 'none';
+        document.getElementById('btn-soumettre').style.display = 'inline-block';
+    }
+}
+
+function updateStepUI(step) {
+    var labels = ['', 'Étape 1/3 — Votre identité', 'Étape 2/3 — Vos coordonnées', 'Étape 3/3 — Votre CV'];
+    document.getElementById('step-label').textContent = labels[step];
+
+    [1,2,3].forEach(function(i) {
+        var dot = document.getElementById('dot-' + i);
+        if (i < step)        { dot.style.background = '#10b981'; dot.style.color = '#fff'; }
+        else if (i === step) { dot.style.background = '#7c3aed'; dot.style.color = '#fff'; }
+        else                 { dot.style.background = '#e5e7eb'; dot.style.color = '#aaa'; }
+    });
+
+    document.getElementById('fill-1-2').style.width = step >= 2 ? '100%' : '0%';
+    document.getElementById('fill-2-3').style.width = step >= 3 ? '100%' : '0%';
+    document.getElementById('btn-prev-step').style.display  = step > 1 ? 'inline-block' : 'none';
+    document.getElementById('btn-next-step').style.display  = step < 3 ? 'inline-block' : 'none';
+    document.getElementById('btn-soumettre').style.display  = step === 3 ? 'inline-block' : 'none';
+
+    // Messages anxiété
+    var isAnxiete = document.body.classList.contains('mode-anxiete');
+    document.querySelectorAll('.msg-anxiete').forEach(function(el) {
+        el.style.display = isAnxiete ? 'block' : 'none';
+    });
+    document.querySelectorAll('.msg-normal').forEach(function(el) {
+        el.style.display = isAnxiete ? 'none' : 'block';
+    });
+
+    // Couleur barre de progression en mode anxiété
+    var color = isAnxiete ? '#2563eb' : '#7c3aed';
+    document.getElementById('fill-1-2').style.background = color;
+    document.getElementById('fill-2-3').style.background = color;
+    if (step === document.getElementById('dot-' + step)) {
+        document.getElementById('dot-' + step).style.background = color;
+    }
+}
+
+$('#btn-next-step').on('click', function () {
+    var valid = true;
+
+    if (currentStep === 1) {
+        var nom    = $.trim($('#postuler-nom').val());
+        var prenom = $.trim($('#postuler-prenom').val());
+        if (!nom || nom.length < 2) {
+            $('#postuler-nom').addClass('is-invalid');
+            $('#postuler-nom-error').text('Nom obligatoire (min 2 caractères).').show();
+            valid = false;
+        } else { $('#postuler-nom').removeClass('is-invalid'); $('#postuler-nom-error').hide(); }
+        if (!prenom || prenom.length < 2) {
+            $('#postuler-prenom').addClass('is-invalid');
+            $('#postuler-prenom-error').text('Prénom obligatoire (min 2 caractères).').show();
+            valid = false;
+        } else { $('#postuler-prenom').removeClass('is-invalid'); $('#postuler-prenom-error').hide(); }
+    } else if (currentStep === 2) {
+        var email = $.trim($('#postuler-email').val());
+        var re    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !re.test(email)) {
+            $('#postuler-email').addClass('is-invalid');
+            $('#postuler-email-error').text('Adresse email invalide.').show();
+            valid = false;
+        } else { $('#postuler-email').removeClass('is-invalid'); $('#postuler-email-error').hide(); }
+    }
+
+    if (!valid) return;
+
+    $('#step-' + currentStep).hide();
+    currentStep++;
+    $('#step-' + currentStep).show();
+    updateStepUI(currentStep);
+});
+
+$('#btn-prev-step').on('click', function () {
+    if (currentStep <= 1) return;
+    $('#step-' + currentStep).hide();
+    currentStep--;
+    $('#step-' + currentStep).show();
+    updateStepUI(currentStep);
+});
+
+// Réinitialiser à l'ouverture du modal
+$('#modalPostuler').on('show.bs.modal', function (e) {
+    var btn        = $(e.relatedTarget);
+    var offreId    = btn.attr('data-offre-id');
+    var offreTitre = btn.attr('data-offre-titre');
+    $('#modal-offre-id').val(offreId);
+    $('#modal-offre-titre').text(offreTitre);
+    $('#modalPostuler .is-invalid').removeClass('is-invalid');
+    $('#modalPostuler .invalid-feedback').text('').hide();
+    $('#btn-soumettre').prop('disabled', false);
+    $('#btn-soumettre-text').text('Envoyer ma candidature');
+    $('#cv-analyse-zone').hide();
+    $('#postuler-cv').val('');
+    // Réinitialiser les étapes
+    currentStep = 1;
+    $('#step-1').show(); $('#step-2').hide(); $('#step-3').hide();
+    initSteps();
+});
+
+// ── Description masquée en mode concentration ──
+function applyConcentrationDescriptions() {
+    if (!document.body.classList.contains('mode-concentration')) return;
+    document.querySelectorAll('.job-description').forEach(function(desc) {
+        desc.style.display = 'none';
+        var btn = desc.nextElementSibling;
+        if (btn && btn.classList.contains('btn-voir-plus')) {
+            btn.style.display = 'inline-block';
+            btn.addEventListener('click', function() {
+                if (desc.style.display === 'none') {
+                    desc.style.display = 'block';
+                    btn.textContent = 'Masquer ▲';
+                } else {
+                    desc.style.display = 'none';
+                    btn.textContent = 'Voir la description ▼';
+                }
+            });
+        }
+    });
+}
+
+// Appliquer quand le mode change
+var origSet = window.AccessWidget ? window.AccessWidget.set : null;
+if (origSet) {
+    window.AccessWidget.set = function(mode) {
+        origSet(mode);
+        if (mode === 'concentration') {
+            setTimeout(applyConcentrationDescriptions, 100);
+        } else {
+            // Restaurer les descriptions
+            document.querySelectorAll('.job-description').forEach(function(d) { d.style.display = 'block'; });
+            document.querySelectorAll('.btn-voir-plus').forEach(function(b) { b.style.display = 'none'; });
+        }
+    };
+}
+
+// Si déjà en mode concentration au chargement
+if (document.body.classList.contains('mode-concentration')) {
+    applyConcentrationDescriptions();
+}
+
 ['postuler-nom','postuler-prenom','postuler-email','postuler-cv'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) {
@@ -534,5 +911,6 @@ $('#formPostuler').on('submit', function (e) {
 })();
 </script>
 
+<script src="assets/js/accessibility.js"></script>
 </body>
 </html>
