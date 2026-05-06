@@ -107,7 +107,13 @@ $initiales = strtoupper(substr($user['nom'],0,1) . substr($user['prenom']??'',0,
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
-body{background:linear-gradient(135deg,#e8f5e9,#f1f8e9);min-height:100vh;padding:32px 16px;color:#1a2e1c;}
+body{background:#000;min-height:100vh;padding:32px 16px;color:#1a2e1c;position:relative;}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.glow-orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:1;}
+.glow-1{width:500px;height:500px;background:radial-gradient(circle,rgba(34,197,94,.15) 0%,transparent 70%);top:-80px;left:-80px;animation:drift1 12s ease-in-out infinite;}
+.glow-2{width:400px;height:400px;background:radial-gradient(circle,rgba(16,163,74,.12) 0%,transparent 70%);bottom:-60px;right:-60px;animation:drift2 15s ease-in-out infinite;}
+@keyframes drift1{0%,100%{transform:translate(0,0);}50%{transform:translate(30px,20px);}}
+@keyframes drift2{0%,100%{transform:translate(0,0);}50%{transform:translate(-20px,-30px);}}
 .back-link{display:inline-flex;align-items:center;gap:6px;color:#4caf50;text-decoration:none;font-size:.9rem;font-weight:600;margin-bottom:20px;}
 .back-link:hover{color:#2e7d32;}
 .profil-wrap{max-width:700px;margin:0 auto;}
@@ -145,7 +151,10 @@ body{background:linear-gradient(135deg,#e8f5e9,#f1f8e9);min-height:100vh;padding
 </style>
 </head>
 <body>
-<div class="profil-wrap">
+<canvas id="bg-canvas"></canvas>
+<div class="glow-orb glow-1"></div>
+<div class="glow-orb glow-2"></div>
+<div class="profil-wrap" style="position:relative;z-index:2;">
     <a href="formations/index.php" class="back-link">← Retour a l'accueil</a>
     <div class="card">
         <div class="card-header"><h1>Mon Profil</h1></div>
@@ -228,11 +237,169 @@ body{background:linear-gradient(135deg,#e8f5e9,#f1f8e9);min-height:100vh;padding
 
                 <button type="submit" class="btn-save">Enregistrer les modifications</button>
             </form>
+
+            <!-- ── SECTION FACE ID ─────────────────────────────────────── -->
+            <div class="section-title" style="margin-top:28px;">Connexion par reconnaissance faciale</div>
+
+            <?php
+            // Vérifier si un descripteur facial existe déjà
+            $faceStmt = $db->prepare('SELECT id FROM face_descriptors WHERE user_id = :uid LIMIT 1');
+            $faceStmt->execute(['uid' => $userId]);
+            $hasFace = (bool) $faceStmt->fetch();
+            ?>
+
+            <div style="background:#f9fdf9;border:1.5px solid #e0e0e0;border-radius:14px;padding:18px 20px;margin-bottom:8px;">
+                <?php if ($hasFace): ?>
+                <p style="font-size:14px;color:#2e7d32;font-weight:600;margin-bottom:14px;">
+                    ✓ Visage enregistré — vous pouvez vous connecter avec votre visage.
+                </p>
+                <?php else: ?>
+                <p style="font-size:14px;color:#888;margin-bottom:14px;">
+                    Aucun visage enregistré. Ajoutez votre visage pour vous connecter sans mot de passe.
+                </p>
+                <?php endif; ?>
+
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <button type="button" onclick="ouvrirCameraFace()"
+                            style="flex:1;padding:12px 20px;background:linear-gradient(135deg,#4caf50,#2e7d32);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;min-width:160px;">
+                        <?= $hasFace ? 'Mettre à jour mon visage' : 'Ajouter mon visage' ?>
+                    </button>
+                    <?php if ($hasFace): ?>
+                    <button type="button" onclick="supprimerFace()"
+                            style="flex:1;padding:12px 20px;background:#fff;color:#e53935;border:1.5px solid #e53935;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;min-width:160px;">
+                        Supprimer mon visage
+                    </button>
+                    <?php endif; ?>
+                </div>
+                <div id="face-status" style="font-size:13px;margin-top:10px;min-height:18px;font-weight:600;"></div>
+            </div>
+
+            <!-- Modal caméra Face ID -->
+            <div id="face-modal-profil" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;">
+                <div style="background:#fff;border-radius:20px;padding:28px;width:420px;max-width:95vw;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.3);">
+                    <h3 style="margin-bottom:8px;font-size:18px;font-weight:800;color:#1a1a2e;">Scanner votre visage</h3>
+                    <p style="font-size:13px;color:#888;margin-bottom:16px;">Placez votre visage dans le cercle</p>
+                    <div style="position:relative;border-radius:16px;overflow:hidden;background:#000;margin-bottom:16px;">
+                        <video id="face-video-profil" autoplay muted playsinline style="width:100%;display:block;border-radius:16px;"></video>
+                        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:180px;height:180px;border:3px solid #4caf50;border-radius:50%;box-shadow:0 0 0 9999px rgba(0,0,0,.4);pointer-events:none;"></div>
+                    </div>
+                    <div id="face-modal-msg-profil" style="font-size:13px;color:#888;margin-bottom:14px;min-height:18px;font-weight:600;"></div>
+                    <button onclick="fermerCameraFace()" style="background:#f5f5f5;border:none;padding:10px 24px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
+// ── Face ID profil ───────────────────────────────────────────────────────────
+const MODEL_URL_P = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+let faceModelsLoadedP = false;
+let faceStreamP = null;
+
+async function chargerModelesFaceP() {
+    if (faceModelsLoadedP) return true;
+    try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL_P);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL_P);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL_P);
+        faceModelsLoadedP = true;
+        return true;
+    } catch(e) { return false; }
+}
+
+async function ouvrirCameraFace() {
+    const status = document.getElementById('face-status');
+    status.style.color = '#888';
+    status.textContent = 'Chargement des modèles IA...';
+
+    const ok = await chargerModelesFaceP();
+    if (!ok) { status.style.color = '#e53935'; status.textContent = 'Erreur chargement modèles.'; return; }
+
+    const modal = document.getElementById('face-modal-profil');
+    modal.style.display = 'flex';
+    const msg = document.getElementById('face-modal-msg-profil');
+    msg.textContent = 'Démarrage de la caméra...';
+
+    try {
+        faceStreamP = await navigator.mediaDevices.getUserMedia({ video: { width: 400, height: 300, facingMode: 'user' } });
+        const video = document.getElementById('face-video-profil');
+        video.srcObject = faceStreamP;
+        video.addEventListener('loadeddata', async () => {
+            msg.textContent = 'Placez votre visage dans le cercle...';
+            setTimeout(async () => {
+                msg.textContent = 'Analyse en cours...';
+                try {
+                    const det = await faceapi
+                        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.6 }))
+                        .withFaceLandmarks()
+                        .withFaceDescriptor();
+
+                    if (!det) {
+                        msg.style.color = '#e53935';
+                        msg.textContent = 'Aucun visage détecté. Réessayez.';
+                        setTimeout(() => fermerCameraFace(), 2000);
+                        return;
+                    }
+
+                    msg.style.color = '#4caf50';
+                    msg.textContent = 'Visage détecté ! Enregistrement...';
+                    const descriptor = Array.from(det.descriptor);
+
+                    // Envoyer au serveur
+                    const res = await fetch('face-save.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ descriptor })
+                    });
+                    const data = await res.json();
+                    fermerCameraFace();
+
+                    const st = document.getElementById('face-status');
+                    if (data.success) {
+                        st.style.color = '#2e7d32';
+                        st.textContent = '✓ Visage enregistré avec succès !';
+                        setTimeout(() => location.reload(), 1200);
+                    } else {
+                        st.style.color = '#e53935';
+                        st.textContent = data.error || 'Erreur enregistrement.';
+                    }
+                } catch(e) {
+                    fermerCameraFace();
+                    document.getElementById('face-status').style.color = '#e53935';
+                    document.getElementById('face-status').textContent = 'Erreur : ' + e.message;
+                }
+            }, 2000);
+        });
+    } catch(e) {
+        fermerCameraFace();
+        status.style.color = '#e53935';
+        status.textContent = 'Caméra non accessible.';
+    }
+}
+
+function fermerCameraFace() {
+    if (faceStreamP) { faceStreamP.getTracks().forEach(t => t.stop()); faceStreamP = null; }
+    document.getElementById('face-modal-profil').style.display = 'none';
+    document.getElementById('face-modal-msg-profil').textContent = '';
+    document.getElementById('face-modal-msg-profil').style.color = '#888';
+}
+
+async function supprimerFace() {
+    if (!confirm('Supprimer votre visage enregistré ?')) return;
+    const res = await fetch('face-delete.php', { method: 'POST' });
+    const data = await res.json();
+    const st = document.getElementById('face-status');
+    if (data.success) {
+        st.style.color = '#2e7d32';
+        st.textContent = 'Visage supprimé.';
+        setTimeout(() => location.reload(), 1000);
+    } else {
+        st.style.color = '#e53935';
+        st.textContent = data.error || 'Erreur suppression.';
+    }
+}
+
 function previewAvatar(input) {
     const msg = document.getElementById('avatar-msg');
     if (!input.files || !input.files[0]) return;
@@ -250,6 +417,39 @@ function previewAvatar(input) {
     reader.readAsDataURL(file);
 }
 function toggleHandicap(cb) { document.getElementById('handicap-wrap').style.display = cb.checked ? 'block' : 'none'; }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+    const canvas=document.getElementById('bg-canvas');
+    if(!canvas||!window.THREE) return;
+    const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
+    camera.position.z=30;
+    const count=1500;
+    const geo=new THREE.BufferGeometry();
+    const pos=new Float32Array(count*3);
+    const col=new Float32Array(count*3);
+    for(let i=0;i<count;i++){
+        pos[i*3]=(Math.random()-.5)*120;
+        pos[i*3+1]=(Math.random()-.5)*120;
+        pos[i*3+2]=(Math.random()-.5)*80;
+        const g=.5+Math.random()*.5;
+        col[i*3]=0;col[i*3+1]=g;col[i*3+2]=g*.2;
+    }
+    geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+    const mat=new THREE.PointsMaterial({size:.22,vertexColors:true,transparent:true,opacity:.7});
+    const points=new THREE.Points(geo,mat);
+    scene.add(points);
+    function animate(){requestAnimationFrame(animate);points.rotation.y+=.0005;points.rotation.x+=.0002;renderer.render(scene,camera);}
+    animate();
+    window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
+})();
 </script>
 </body>
 </html>

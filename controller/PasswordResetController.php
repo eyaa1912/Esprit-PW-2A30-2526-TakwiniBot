@@ -53,7 +53,7 @@ class PasswordResetController
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
-            $mail->SMTPDebug  = 0; // Mettre à 2 pour voir les logs SMTP en cas de problème
+            $mail->SMTPDebug  = 0;
             $mail->SMTPAuth   = true;
             $mail->Host       = 'smtp.gmail.com';
             $mail->Port       = 587;
@@ -63,7 +63,7 @@ class PasswordResetController
             $mail->CharSet    = 'UTF-8';
 
             $mail->isHTML(true);
-            $mail->setFrom('teya5466@gmail.com', 'Takwini'); // From doit correspondre au compte SMTP
+            $mail->setFrom('teya5466@gmail.com', 'Takwini');
             $mail->addAddress($email);
             $mail->Subject = 'Votre code de réinitialisation - Takwini';
             $mail->Body    = "
@@ -79,11 +79,10 @@ class PasswordResetController
                     <p style='color:#bbb;font-size:12px;text-align:center;margin-top:20px;'>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
                 </div>
             ";
-            $mail->AltBody = "Votre code de réinitialisation Takwini : {$code} (expire dans 15 minutes)";
-
+            $mail->AltBody = "Votre code Takwini : {$code} (expire dans 15 minutes)";
             $mail->send();
+
         } catch (\Exception $e) {
-            // Retourner l'erreur réelle pour faciliter le débogage
             return ['success' => false, 'message' => 'Erreur envoi email : ' . $mail->ErrorInfo];
         }
 

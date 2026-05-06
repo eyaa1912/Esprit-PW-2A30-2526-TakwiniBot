@@ -1,13 +1,18 @@
 <?php
 session_start();
 require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../controller/UtilisateurController.php';
 
+// Mettre le statut inactif si l'utilisateur est connecté
 if (isset($_SESSION['user']['id'])) {
-    $controller = new UtilisateurController();
-    $controller->logout((int) $_SESSION['user']['id']);
+    try {
+        $db = config::getConnexion();
+        $db->prepare("UPDATE users SET statut = 'inactif' WHERE id = :id")
+           ->execute(['id' => (int)$_SESSION['user']['id']]);
+    } catch (Exception $e) {
+        // Silencieux — on déconnecte quand même
+    }
 }
 
 session_destroy();
-header('Location: ../view/frontoffice/login.php');
+header('Location: /gestion_utilisateur_v5/gestion_utilisateur1/view/frontoffice/formations/index.php');
 exit;

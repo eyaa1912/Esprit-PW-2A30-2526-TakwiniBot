@@ -89,6 +89,7 @@ $__navAvatar = !empty($__av) ? '../../../../../view/frontoffice/' . $__av : '../
                 <li class="menu-item"><a href="email-boite.html" class="menu-link"><i class="menu-icon tf-icons bx bx-envelope"></i><div class="text-truncate">Email</div></a></li>
                 <li class="menu-item"><a href="app-chat-local.html" class="menu-link"><i class="menu-icon tf-icons bx bx-chat"></i><div class="text-truncate">Discuter</div></a></li>
                 <li class="menu-item"><a href="app-calendrier-local.html" class="menu-link"><i class="menu-icon tf-icons bx bx-calendar"></i><div class="text-truncate">Calendrier</div></a></li>
+                <li class="menu-item"><a href="/gestion_utilisateur_v5/gestion_utilisateur1/view/frontoffice/formations/index.php" class="menu-link" target="_blank"><i class="menu-icon tf-icons bx bx-globe"></i><div class="text-truncate">Voir le site</div></a></li>
                 <li class="menu-item"><a href="../../../../../controller/logout.php" class="menu-link"><i class="menu-icon tf-icons bx bx-power-off"></i><div class="text-truncate">Déconnexion</div></a></li>
             </ul>
         </aside>

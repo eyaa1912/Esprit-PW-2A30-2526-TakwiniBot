@@ -5,8 +5,15 @@ require_once __DIR__ . '/../../controller/PasswordResetController.php';
 
 $message    = '';
 $success    = false;
-$step       = $_SESSION['reset_step'] ?? 'email'; // 'email' | 'code' | 'password'
+$step       = $_SESSION['reset_step'] ?? 'email';
 $resetEmail = $_SESSION['reset_email'] ?? '';
+
+// Si on arrive depuis login avec ?reset=1 → repartir de zéro
+if (isset($_GET['reset'])) {
+    unset($_SESSION['reset_step'], $_SESSION['reset_email'], $_SESSION['reset_code']);
+    $step       = 'email';
+    $resetEmail = '';
+}
 
 $controller = new PasswordResetController();
 
@@ -94,9 +101,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
-body{background:url('formations/assets/img/bg/home-bg.jpg') center/cover fixed;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;}
-body::before{content:'';position:fixed;inset:0;background:rgba(27,94,32,.55);z-index:0;pointer-events:none;}
-.card{background:#fff;border-radius:24px;box-shadow:0 8px 32px rgba(0,0,0,.15);padding:48px 40px;width:460px;max-width:100%;z-index:1;position:relative;}
+body{background:#000;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.glow-orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:1;}
+.glow-1{width:500px;height:500px;background:radial-gradient(circle,rgba(34,197,94,.15) 0%,transparent 70%);top:-80px;left:-80px;animation:drift1 12s ease-in-out infinite;}
+.glow-2{width:400px;height:400px;background:radial-gradient(circle,rgba(16,163,74,.12) 0%,transparent 70%);bottom:-60px;right:-60px;animation:drift2 15s ease-in-out infinite;}
+@keyframes drift1{0%,100%{transform:translate(0,0);}50%{transform:translate(30px,20px);}}
+@keyframes drift2{0%,100%{transform:translate(0,0);}50%{transform:translate(-20px,-30px);}}
+.card{background:#fff;border-radius:24px;box-shadow:0 8px 32px rgba(0,0,0,.15);padding:48px 40px;width:460px;max-width:100%;z-index:1;position:relative;overflow:visible;}
 .logo{text-align:center;margin-bottom:8px;}
 .logo svg{width:52px;height:52px;}
 h1{font-size:24px;font-weight:800;color:#1a1a2e;text-align:center;margin-bottom:6px;}
@@ -142,6 +154,10 @@ input[type=email]:focus,input[type=password]:focus{background:#d4edda;border-col
 </style>
 </head>
 <body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="glow-orb glow-1"></div>
+<div class="glow-orb glow-2"></div>
 
 <div class="card">
   <div class="logo">
@@ -256,9 +272,132 @@ input[type=email]:focus,input[type=password]:focus{background:#d4edda;border-col
   <?php endif; ?>
 
   <a href="login.php" class="back-link">← Retour à la connexion</a>
+
+  <!-- Bouton assistance vocale -->
+  <button type="button" onclick="activerVoix()"
+          style="width:100%;margin-top:16px;padding:14px;background:#1b5e20;color:#fff;
+                 border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;
+                 box-shadow:0 4px 16px rgba(27,94,32,.4);">
+    Je ne vois pas — Assistance vocale
+  </button>
 </div>
 
 <script>
+// ── Assistance vocale ────────────────────────────────────────────────────────
+function parler(texte, callback) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const msg = new SpeechSynthesisUtterance(texte);
+    msg.lang = 'fr-FR'; msg.rate = 0.9; msg.pitch = 1.1; msg.volume = 1;
+    if (callback) msg.onend = callback;
+    window.speechSynthesis.speak(msg);
+}
+
+// Texte à lire selon l'étape courante
+const step    = <?= json_encode($step) ?>;
+const message = <?= json_encode($message) ?>;
+const email   = <?= json_encode($resetEmail) ?>;
+
+function lireEtape() {
+    if (step === 'email') {
+        let texte = 'Page mot de passe oublié. ';
+        if (message) texte += 'Erreur : ' + message + '. ';
+        texte += 'Écrivez votre adresse email, puis appuyez sur Entrée.';
+        parler(texte, function() {
+            const el = document.getElementById('email');
+            if (el) el.focus();
+            activerAssistanceEmail();
+        });
+    }
+    else if (step === 'code') {
+        let texte = '';
+        if (message) texte = message + '. ';
+        texte += 'Un code à 6 chiffres a été envoyé à ' + email + '. Tapez les 6 chiffres un par un, puis appuyez sur Entrée.';
+        parler(texte, function() {
+            if (digits.length) digits[0].focus();
+        });
+    }
+    else if (step === 'password') {
+        let texte = '';
+        if (message) texte = message + '. ';
+        texte += 'Choisissez un nouveau mot de passe d\'au moins 6 caractères, puis appuyez sur Entrée.';
+        parler(texte, function() {
+            const el = document.getElementById('password');
+            if (el) el.focus();
+            activerAssistanceMdp();
+        });
+    }
+    else if (step === 'done') {
+        parler('Mot de passe mis à jour avec succès. Appuyez sur Entrée pour vous connecter.', function() {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') window.location.href = 'login.php';
+            }, { once: true });
+        });
+    }
+}
+
+// Bouton "Je ne vois pas" → déclenche la voix (contourne le blocage navigateur)
+function activerVoix() { lireEtape(); }
+
+// Tentative automatique au chargement (fonctionne si l'utilisateur vient de login.php)
+window.addEventListener('load', function() {
+    setTimeout(lireEtape, 800);
+});
+
+// Assistance étape email — Entrée soumet le formulaire directement
+function activerAssistanceEmail() {
+    const emailInput = document.getElementById('email');
+    if (emailInput) emailInput.focus();
+
+    document.addEventListener('keydown', function handler(e) {
+        if (e.key !== 'Enter') return;
+        const el  = document.getElementById('email');
+        const val = el ? el.value.trim() : '';
+        if (!val) {
+            e.preventDefault();
+            parler('Ce champ est obligatoire. Écrivez votre adresse email.');
+            return;
+        }
+        // Email rempli → laisser le formulaire se soumettre normalement
+        document.removeEventListener('keydown', handler);
+        // Ne pas appeler e.preventDefault() → le formulaire se soumet
+    });
+}
+
+// Assistance étape nouveau mot de passe
+function activerAssistanceMdp() {
+    let etapeMdp = 0;
+    document.addEventListener('keydown', function handler(e) {
+        if (e.key !== 'Enter') return;
+        if (etapeMdp === 0) {
+            const pw = document.getElementById('password');
+            if (!pw || pw.value.length < 6) {
+                e.preventDefault();
+                parler('Le mot de passe doit contenir au moins 6 caractères. Réessayez.');
+                return;
+            }
+            e.preventDefault();
+            etapeMdp = 1;
+            parler('Mot de passe enregistré. Confirmez votre mot de passe, puis appuyez sur Entrée.', function() {
+                const conf = document.getElementById('password_confirm');
+                if (conf) conf.focus();
+            });
+        } else if (etapeMdp === 1) {
+            const pw   = document.getElementById('password');
+            const conf = document.getElementById('password_confirm');
+            if (!conf || conf.value !== pw.value) {
+                e.preventDefault();
+                parler('Les mots de passe ne correspondent pas. Réécrivez la confirmation.');
+                return;
+            }
+            document.removeEventListener('keydown', handler);
+            parler('Confirmation correcte. Envoi en cours.', function() {
+                conf.closest('form').submit();
+            });
+        }
+    });
+}
+
 // ── Navigation entre les cases du code ──────────────────────────────────────
 const digits = document.querySelectorAll('.digit');
 if (digits.length) {
@@ -268,9 +407,22 @@ if (digits.length) {
             if (this.value && i < digits.length - 1) digits[i + 1].focus();
             updateHiddenCode();
             this.classList.toggle('filled', this.value !== '');
+            // Quand les 6 cases sont remplies, annoncer et soumettre
+            const code = Array.from(digits).map(d => d.value).join('');
+            if (code.length === 6) {
+                parler('Code saisi : ' + code.split('').join(', ') + '. Appuyez sur Entrée pour vérifier.');
+            }
         });
         input.addEventListener('keydown', function (e) {
             if (e.key === 'Backspace' && !this.value && i > 0) digits[i - 1].focus();
+            if (e.key === 'Enter') {
+                const code = Array.from(digits).map(d => d.value).join('');
+                if (code.length < 6) {
+                    e.preventDefault();
+                    parler('Veuillez saisir les 6 chiffres du code.');
+                }
+                // sinon laisser le formulaire se soumettre
+            }
         });
         input.addEventListener('paste', function (e) {
             e.preventDefault();
@@ -315,6 +467,37 @@ function checkStrength(val) {
     label.style.color     = colors[score - 1] || '#aaa';
 }
 </script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+    const canvas=document.getElementById('bg-canvas');
+    if(!canvas||!window.THREE) return;
+    const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
+    camera.position.z=30;
+    const count=1500;
+    const geo=new THREE.BufferGeometry();
+    const pos=new Float32Array(count*3);
+    const col=new Float32Array(count*3);
+    for(let i=0;i<count;i++){
+        pos[i*3]=(Math.random()-.5)*120;
+        pos[i*3+1]=(Math.random()-.5)*120;
+        pos[i*3+2]=(Math.random()-.5)*80;
+        const g=.5+Math.random()*.5;
+        col[i*3]=0;col[i*3+1]=g;col[i*3+2]=g*.2;
+    }
+    geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+    const mat=new THREE.PointsMaterial({size:.22,vertexColors:true,transparent:true,opacity:.7});
+    scene.add(new THREE.Points(geo,mat));
+    const points=scene.children[0];
+    function animate(){requestAnimationFrame(animate);points.rotation.y+=.0005;points.rotation.x+=.0002;renderer.render(scene,camera);}
+    animate();
+    window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
+})();
+</script>
 </body>
 </html>

@@ -96,18 +96,26 @@
 				<li><a href="about.html">A propos</a></li>
 				<!-- Spacer droit -->
 				<li class="spacer"></li>
-				<?php if (in_array($role, ['candidat','recruteur'])): ?>
+				<?php if (in_array($role, ['candidat','recruteur','admin'])): ?>
 				<li><a href="offres-emploi/offres-emploi.html">Offres</a></li>
 				<?php endif; ?>
-				<?php if ($role === 'candidat'): ?>
+				<?php if (in_array($role, ['candidat','admin'])): ?>
 				<li><a href="formation.html">Formations</a></li>
 				<?php endif; ?>
-				<?php if (in_array($role, ['candidat','recruteur'])): ?>
+				<?php if (in_array($role, ['candidat','recruteur','admin'])): ?>
 				<li><a href="front_mes_reclamations.html">Reclamations</a></li>
 				<li><a href="gallery.html">Produits</a></li>
 				<?php endif; ?>
-				<?php if ($role === 'candidat'): ?>
+				<?php if (in_array($role, ['candidat','admin'])): ?>
 				<li><a href="entretiens.html">Entretiens</a></li>
+				<?php endif; ?>
+				<?php if ($role === 'admin'): ?>
+				<li>
+					<a href="/gestion_utilisateur_v5/gestion_utilisateur1/view/backoffice/sneat-plateforme-finale/sneat-final/html/index.php"
+					   style="background:#e8f5e9;color:#2e7d32;border-radius:8px;font-weight:700;">
+						← Backoffice
+					</a>
+				</li>
 				<?php endif; ?>
 				<?php if ($user): ?>
 				<li class="tk-user-wrap">

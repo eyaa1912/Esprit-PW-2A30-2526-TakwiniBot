@@ -119,13 +119,25 @@ $isRegister = ($active_panel === 'register');
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Takwini - Connexion / Inscription</title>
+<title>Takwini — Connexion</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
-body{background:url('formations/assets/img/bg/home-bg.jpg') center/cover fixed;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;}
-body::before{content:'';position:fixed;inset:0;background:rgba(27,94,32,.55);z-index:0;pointer-events:none;}
-.container{background:#fff;border-radius:30px;box-shadow:0 8px 32px rgba(0,0,0,.12);position:relative;overflow:hidden;width:1100px;max-width:100%;min-height:700px;display:flex;z-index:1;}
+/* ── Reset & variables ── */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--green:#22c55e;--green-dark:#16a34a;--green-deep:#052e16;}
+html,body{height:100%;font-family:'DM Sans',sans-serif;}
+body{background:#000000;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;position:relative;}
+
+/* ── 3D Canvas background ── */
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;display:block;}
+
+/* ── Ambient glows ── */
+.glow-orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:1;}
+.glow-1{width:600px;height:600px;background:radial-gradient(circle,rgba(34,197,94,.18) 0%,transparent 70%);top:-100px;left:-100px;animation:drift1 12s ease-in-out infinite;}
+.glow-2{width:500px;height:500px;background:radial-gradient(circle,rgba(16,163,74,.14) 0%,transparent 70%);bottom:-80px;right:-80px;animation:drift2 15s ease-in-out infinite;}
+@keyframes drift1{0%,100%{transform:translate(0,0);}50%{transform:translate(40px,30px);}}
+@keyframes drift2{0%,100%{transform:translate(0,0);}50%{transform:translate(-30px,-40px);}}
+.container{background:#fff;border-radius:30px;box-shadow:0 8px 32px rgba(0,0,0,.12);position:relative;overflow:hidden;width:1100px;max-width:100%;min-height:700px;display:flex;z-index:2;}
 .form-container{position:absolute;top:0;left:0;width:50%;height:100%;overflow-y:auto;transition:transform .6s ease,opacity .6s ease;}
 .sign-in{z-index:2;transform:translateX(0);opacity:1;}
 .sign-up{z-index:1;transform:translateX(-100%);opacity:0;pointer-events:none;}
@@ -200,6 +212,16 @@ body::before{content:'';position:fixed;inset:0;background:rgba(27,94,32,.55);z-i
 </style>
 </head>
 <body>
+<!-- Canvas 3D background -->
+<canvas id="bg-canvas"></canvas>
+<div class="glow-orb glow-1"></div>
+<div class="glow-orb glow-2"></div>
+<!-- Skip link invisible sauf au focus clavier -->
+<a href="#main-form"
+   style="position:fixed;top:-60px;left:16px;background:#2e7d32;color:#fff;padding:10px 18px;border-radius:0 0 8px 8px;font-weight:700;font-size:14px;z-index:99999;transition:top .2s;text-decoration:none;"
+   onfocus="this.style.top='0'" onblur="this.style.top='-60px'">
+  Aller au formulaire
+</a>
 <?php $cls = 'container' . ($isRegister ? ' active' : ''); ?>
 <div class="<?= $cls ?>" id="container">
 
@@ -227,6 +249,12 @@ body::before{content:'';position:fixed;inset:0;background:rgba(27,94,32,.55);z-i
         </a>
       </div>
       <button type="submit" class="btn-main" id="btn-login" style="margin-top:20px;">Se connecter</button>
+
+      <!-- Bouton assistance vocale -->
+      <button type="button" onclick="activerAssistanceBouton('login')"
+              style="width:100%;margin-top:10px;padding:13px;background:#1b5e20;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.3px;">
+        Je ne vois pas — Assistance vocale
+      </button>
       <div style="display:flex;align-items:center;gap:10px;width:100%;margin:10px 0 4px;">
         <div style="flex:1;height:1px;background:#e0e0e0;"></div>
         <span style="font-size:11px;color:#aaa;font-weight:600;">OU</span>
@@ -336,6 +364,12 @@ body::before{content:'';position:fixed;inset:0;background:rgba(27,94,32,.55);z-i
       </button>
 
       <button type="submit" class="btn-main">S'inscrire</button>
+
+      <!-- Bouton assistance vocale inscription -->
+      <button type="button" id="btn-aveugle-register" onclick="activerAssistanceBouton('register')"
+              style="width:100%;margin-top:10px;padding:13px;background:#1b5e20;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.3px;">
+        Je ne vois pas — Assistance vocale
+      </button>
     </form>
   </div>
 
@@ -503,6 +537,228 @@ function fermerFaceModal() {
     document.getElementById('face-modal-msg').style.color='#888';
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// ASSISTANCE VOCALE POUR NON-VOYANTS
+// ══════════════════════════════════════════════════════════════════════════════
+let modeAveugle = false;
+let etapeActuelle = 0;
+let etapesCourantes = [];
+
+function parler(texte, callback) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const msg = new SpeechSynthesisUtterance(texte);
+    msg.lang = 'fr-FR'; msg.rate = 0.9; msg.pitch = 1.1; msg.volume = 1;
+    if (callback) msg.onend = callback;
+    window.speechSynthesis.speak(msg);
+}
+
+const etapesLogin = [
+    { id: 'login-email',    message: 'Écrivez votre adresse email, puis appuyez sur Entrée.' },
+    { id: 'login-password', message: 'Écrivez votre mot de passe, puis appuyez sur Entrée.' },
+    { id: 'btn-login',      message: 'Appuyez sur Entrée pour vous connecter.' }
+];
+
+const etapesRegister = [
+    { id: 'reg-nom',       message: 'Écrivez votre nom de famille, puis appuyez sur Entrée.' },
+    { id: 'reg-prenom',    message: 'Écrivez votre prénom, puis appuyez sur Entrée.' },
+    { id: 'reg-email',     message: 'Écrivez votre adresse email, puis appuyez sur Entrée.' },
+    { id: 'reg-password',  message: 'Choisissez un mot de passe d\'au moins 6 caractères, puis appuyez sur Entrée.' },
+    { id: 'reg-telephone', message: 'Écrivez votre numéro de téléphone. Optionnel. Appuyez sur Entrée pour continuer.' },
+    { id: 'reg-dob',       message: 'Écrivez votre date de naissance au format jour slash mois slash année, puis appuyez sur Entrée.' },
+    { id: 'sexe-homme',    message: 'Choisissez votre sexe. Appuyez sur H pour Homme, ou F pour Femme.' },
+    { id: 'reg-adresse',   message: 'Écrivez votre adresse. Optionnel. Appuyez sur Entrée pour continuer.' },
+    { id: 'btn-aveugle-register', message: 'Formulaire complet. Appuyez sur Entrée pour soumettre votre inscription.' }
+];
+
+function activerModeAveugle(mode) {
+    modeAveugle = true;
+    etapeActuelle = 0;
+    document.addEventListener('keydown', gererEntreeAveugle);
+
+    if (mode === 'register') {
+        // Basculer vers le panneau inscription
+        container.classList.add('active');
+        // Cocher automatiquement handicap visuel
+        setTimeout(function() {
+            const cbHandicap = document.getElementById('reg-handicap');
+            if (cbHandicap) { cbHandicap.checked = true; toggleHandicap(cbHandicap); }
+            const typeHandicap = document.getElementById('reg-type-handicap');
+            if (typeHandicap) typeHandicap.value = 'Visuel';
+            etapesCourantes = etapesRegister;
+            parler('Mode assistance activé. La case handicap visuel a été cochée automatiquement. ' + etapesRegister[0].message, function() {
+                const el = document.getElementById(etapesRegister[0].id);
+                if (el) el.focus();
+            });
+        }, 500);
+    } else {
+        etapesCourantes = etapesLogin;
+        parler('Mode assistance activé. ' + etapesLogin[0].message, function() {
+            const el = document.getElementById(etapesLogin[0].id);
+            if (el) el.focus();
+        });
+    }
+}
+
+function gererEntreeAveugle(e) {
+    if (!modeAveugle) return;
+
+    // Bloquer + pour qu'il ne s'écrive pas
+    if (e.key === '+') { e.preventDefault(); return; }
+
+    // Touche - → revenir au champ précédent
+    if (e.key === '-') {
+        e.preventDefault();
+        if (etapeActuelle > 0) {
+            etapeActuelle--;
+            const etape = etapesCourantes[etapeActuelle];
+            parler('Retour. ' + etape.message, function() {
+                const el = document.getElementById(etape.id);
+                if (el) { el.focus(); if(el.select) el.select(); }
+            });
+        } else {
+            parler('Vous êtes déjà au premier champ.');
+        }
+        return;
+    }
+
+    // Étape sexe : H ou F
+    const etapeCourante = etapesCourantes[etapeActuelle];
+    if (etapeCourante && etapeCourante.id === 'sexe-homme') {
+        if (e.key === 'h' || e.key === 'H') {
+            e.preventDefault();
+            const radioH = document.querySelector('input[name="sexe"][value="homme"]');
+            if (radioH) radioH.checked = true;
+            etapeActuelle++;
+            const prochaine = etapesCourantes[etapeActuelle];
+            parler('Homme sélectionné. ' + (prochaine ? prochaine.message : ''), function() {
+                if (prochaine) { const el = document.getElementById(prochaine.id); if (el) el.focus(); }
+            });
+            return;
+        }
+        if (e.key === 'f' || e.key === 'F') {
+            e.preventDefault();
+            const radioF = document.querySelector('input[name="sexe"][value="femme"]');
+            if (radioF) radioF.checked = true;
+            etapeActuelle++;
+            const prochaine = etapesCourantes[etapeActuelle];
+            parler('Femme sélectionnée. ' + (prochaine ? prochaine.message : ''), function() {
+                if (prochaine) { const el = document.getElementById(prochaine.id); if (el) el.focus(); }
+            });
+            return;
+        }
+        if (e.key !== 'Enter') return;
+    }
+
+    if (e.key !== 'Enter') return;
+
+    const etape = etapesCourantes[etapeActuelle];
+    if (!etape) return;
+    const el = document.getElementById(etape.id);
+
+    // Bouton final → soumettre
+    if (etape.id === 'btn-aveugle-register' || etape.id === 'btn-login') {
+        e.preventDefault();
+        parler('Envoi en cours.', function() { el.closest('form').submit(); });
+        return;
+    }
+
+    if (el && el.tagName === 'INPUT') {
+        const val = el.value.trim();
+        const optionnel = ['reg-telephone', 'reg-adresse'].includes(etape.id);
+        if (!val && !optionnel) { parler('Ce champ est obligatoire. ' + etape.message); return; }
+        e.preventDefault();
+
+        const confirmations = {
+            'reg-nom':       'Nom enregistré. ',
+            'reg-prenom':    'Prénom enregistré. ',
+            'reg-email':     'Email enregistré. ',
+            'reg-password':  'Mot de passe enregistré. ',
+            'reg-telephone': val ? 'Téléphone enregistré. ' : 'Téléphone ignoré. ',
+            'reg-dob':       'Date de naissance enregistrée. ',
+            'reg-adresse':   val ? 'Adresse enregistrée. ' : 'Adresse ignorée. ',
+            'login-email':   'Email enregistré. ',
+            'login-password':'Mot de passe enregistré. '
+        };
+        const confirmation = confirmations[etape.id] || 'Enregistré. ';
+        etapeActuelle++;
+
+        if (etapeActuelle < etapesCourantes.length) {
+            const prochaine = etapesCourantes[etapeActuelle];
+            parler(confirmation + prochaine.message, function() {
+                const elSuivant = document.getElementById(prochaine.id);
+                if (elSuivant) { elSuivant.focus(); if(elSuivant.select) elSuivant.select(); }
+            });
+        } else {
+            parler(confirmation + 'Formulaire complet. Appuyez sur Entrée pour valider.');
+        }
+    }
+}
+
+// ── Annonce au chargement ────────────────────────────────────────────────────
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        const erreurLogin    = <?= json_encode($error_login) ?>;
+        const erreurRegister = <?= json_encode($error_register) ?>;
+        const msgSucces      = <?= json_encode($success) ?>;
+
+        if (erreurLogin) {
+            parler('Erreur : ' + erreurLogin + '. Veuillez réessayer. Écrivez votre adresse email, puis appuyez sur Entrée.', function() {
+                modeAveugle = true; etapeActuelle = 0; etapesCourantes = etapesLogin;
+                const el = document.getElementById('login-email');
+                if (el) el.focus();
+                document.addEventListener('keydown', gererEntreeAveugle);
+            });
+            return;
+        }
+        if (erreurRegister) {
+            parler('Erreur : ' + erreurRegister + '. Veuillez corriger et réessayer.', function() {
+                modeAveugle = true; etapeActuelle = 0; etapesCourantes = etapesRegister;
+                const el = document.getElementById('reg-nom');
+                if (el) el.focus();
+                document.addEventListener('keydown', gererEntreeAveugle);
+            });
+            return;
+        }
+        if (msgSucces) { parler(msgSucces); return; }
+
+        // Message de bienvenue
+        parler(
+            'Bienvenue sur Takwini. ' +
+            'Appuyez sur Entrée pour vous connecter. ' +
+            'Si vous voulez vous inscrire, appuyez sur le signe plus. ' +
+            'Si vous avez oublié votre mot de passe, appuyez sur le signe moins.',
+            null
+        );
+
+        function activerAuChargement(e) {
+            if (e.key === '+') {
+                e.preventDefault();
+                document.removeEventListener('keydown', activerAuChargement);
+                container.classList.add('active');
+                setTimeout(() => activerModeAveugle('register'), 400);
+                return;
+            }
+            if (e.key === '-') {
+                e.preventDefault();
+                document.removeEventListener('keydown', activerAuChargement);
+                parler('Redirection vers mot de passe oublié.', function() {
+                    window.location.href = 'forgot-password.php?reset=1';
+                });
+                return;
+            }
+            if (e.key === 'Enter') {
+                document.removeEventListener('keydown', activerAuChargement);
+                activerModeAveugle('login');
+            }
+        }
+        document.addEventListener('keydown', activerAuChargement);
+    }, 800);
+});
+
+// Boutons "Je ne vois pas"
+function activerAssistanceBouton(mode) { activerModeAveugle(mode); }
+
 const btnFace=document.getElementById('btn-faceid');
 if(btnFace){
     btnFace.addEventListener('mouseenter',()=>{btnFace.style.borderColor='#4caf50';btnFace.style.color='#2e7d32';btnFace.style.background='#f1f8f2';});
@@ -510,5 +766,84 @@ if(btnFace){
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<!-- Three.js 3D background -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+    const canvas = document.getElementById('bg-canvas');
+    if(!canvas || !window.THREE) return;
+    const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera.position.z = 30;
+
+    // Particules vertes
+    const count = 1800;
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(count * 3);
+    const col = new Float32Array(count * 3);
+    for(let i=0;i<count;i++){
+        pos[i*3]   = (Math.random()-0.5)*120;
+        pos[i*3+1] = (Math.random()-0.5)*120;
+        pos[i*3+2] = (Math.random()-0.5)*80;
+        const g = 0.5 + Math.random()*0.5;
+        col[i*3]=0; col[i*3+1]=g; col[i*3+2]=g*0.2;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    geo.setAttribute('color',    new THREE.BufferAttribute(col,3));
+    const mat = new THREE.PointsMaterial({size:0.22, vertexColors:true, transparent:true, opacity:0.7});
+    const points = new THREE.Points(geo, mat);
+    scene.add(points);
+
+    // Anneaux flottants
+    const rings = [];
+    for(let i=0;i<4;i++){
+        const r = new THREE.Mesh(
+            new THREE.TorusGeometry(6+i*3, 0.04, 8, 60),
+            new THREE.MeshBasicMaterial({color:0x22c55e, transparent:true, opacity:0.05+i*0.01})
+        );
+        r.rotation.x = Math.random()*Math.PI;
+        r.rotation.y = Math.random()*Math.PI;
+        r.position.set((Math.random()-0.5)*20,(Math.random()-0.5)*20,-10);
+        scene.add(r); rings.push(r);
+    }
+
+    // Tilt 3D de la carte au mouvement souris
+    const card = document.getElementById('container');
+    let mx=0, my=0;
+    document.addEventListener('mousemove', e=>{
+        mx = (e.clientX/window.innerWidth - 0.5)*2;
+        my = (e.clientY/window.innerHeight - 0.5)*2;
+        if(card){
+            const rx = -(e.clientY/window.innerHeight - 0.5)*6;
+            const ry =  (e.clientX/window.innerWidth  - 0.5)*6;
+            card.style.transform = `perspective(1200px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+            card.style.transition = 'transform .1s ease';
+        }
+    });
+    document.addEventListener('mouseleave', ()=>{
+        if(card) card.style.transform = 'perspective(1200px) rotateX(0) rotateY(0)';
+    });
+
+    function animate(){
+        requestAnimationFrame(animate);
+        points.rotation.y += 0.0005;
+        points.rotation.x += 0.0002;
+        camera.position.x += (mx*3 - camera.position.x)*0.02;
+        camera.position.y += (-my*3 - camera.position.y)*0.02;
+        rings.forEach((r,i)=>{ r.rotation.x += 0.002*(i%2===0?1:-1); r.rotation.z += 0.001; });
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize',()=>{
+        camera.aspect = window.innerWidth/window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+})();
+</script>
 </body>
 </html>
