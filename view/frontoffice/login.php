@@ -703,12 +703,39 @@ window.addEventListener('load', function() {
         const msgSucces      = <?= json_encode($success) ?>;
 
         if (erreurLogin) {
-            parler('Erreur : ' + erreurLogin + '. Veuillez réessayer. Écrivez votre adresse email, puis appuyez sur Entrée.', function() {
+            parler('Erreur : ' + erreurLogin + '. Veuillez réessayer. Écrivez votre adresse email, puis appuyez sur Entrée. Ou appuyez sur le signe plus pour vous inscrire.', function() {
                 modeAveugle = true; etapeActuelle = 0; etapesCourantes = etapesLogin;
                 const el = document.getElementById('login-email');
                 if (el) el.focus();
                 document.addEventListener('keydown', gererEntreeAveugle);
+                // Permettre + pour basculer vers inscription même en mode erreur
+                document.addEventListener('keydown', function gererPlusErreur(e) {
+                    if (e.key === '+') {
+                        e.preventDefault();
+                        modeAveugle = false;
+                        window.speechSynthesis.cancel();
+                        document.removeEventListener('keydown', gererEntreeAveugle);
+                        document.removeEventListener('keydown', gererPlusErreur);
+                        container.classList.add('active');
+                        setTimeout(() => activerModeAveugle('register'), 400);
+                    }
+                });
             });
+            // Annuler la voix si l'utilisateur tape ou clique
+            function stopErreurLogin() {
+                window.speechSynthesis.cancel();
+                document.removeEventListener('mousedown', stopErreurLogin);
+                document.removeEventListener('keydown', stopErreurLoginKey);
+            }
+            function stopErreurLoginKey(e) {
+                if (e.key !== '+' && e.key !== '-' && e.key !== 'Enter') {
+                    window.speechSynthesis.cancel();
+                    document.removeEventListener('mousedown', stopErreurLogin);
+                    document.removeEventListener('keydown', stopErreurLoginKey);
+                }
+            }
+            document.addEventListener('mousedown', stopErreurLogin);
+            document.addEventListener('keydown', stopErreurLoginKey);
             return;
         }
         if (erreurRegister) {
@@ -722,7 +749,7 @@ window.addEventListener('load', function() {
         }
         if (msgSucces) { parler(msgSucces); return; }
 
-        // Message de bienvenue
+        // Message de bienvenue automatique
         parler(
             'Bienvenue sur Takwini. ' +
             'Appuyez sur Entrée pour vous connecter. ' +
@@ -731,28 +758,52 @@ window.addEventListener('load', function() {
             null
         );
 
-        function activerAuChargement(e) {
+        // Si l'utilisateur clique avec la souris ou tape directement
+        // dans un champ → annuler la voix (utilisateur voyant)
+        function annulerVoix() {
+            window.speechSynthesis.cancel();
+            document.removeEventListener('mousedown', annulerVoix);
+            document.removeEventListener('keydown', gererTouches);
+        }
+
+        function gererTouches(e) {
+            // + → inscription
             if (e.key === '+') {
                 e.preventDefault();
-                document.removeEventListener('keydown', activerAuChargement);
+                document.removeEventListener('mousedown', annulerVoix);
+                document.removeEventListener('keydown', gererTouches);
                 container.classList.add('active');
                 setTimeout(() => activerModeAveugle('register'), 400);
                 return;
             }
+            // - → mot de passe oublié
             if (e.key === '-') {
                 e.preventDefault();
-                document.removeEventListener('keydown', activerAuChargement);
+                document.removeEventListener('mousedown', annulerVoix);
+                document.removeEventListener('keydown', gererTouches);
                 parler('Redirection vers mot de passe oublié.', function() {
                     window.location.href = 'forgot-password.php?reset=1';
                 });
                 return;
             }
+            // Entrée → connexion guidée
             if (e.key === 'Enter') {
-                document.removeEventListener('keydown', activerAuChargement);
+                document.removeEventListener('mousedown', annulerVoix);
+                document.removeEventListener('keydown', gererTouches);
                 activerModeAveugle('login');
+                return;
+            }
+            // Lettre ou chiffre tapé → utilisateur voyant → annuler la voix
+            if (e.key.length === 1 && !e.ctrlKey && !e.altKey) {
+                window.speechSynthesis.cancel();
+                document.removeEventListener('mousedown', annulerVoix);
+                document.removeEventListener('keydown', gererTouches);
+                return;
             }
         }
-        document.addEventListener('keydown', activerAuChargement);
+
+        document.addEventListener('mousedown', annulerVoix);
+        document.addEventListener('keydown', gererTouches);
     }, 800);
 });
 
