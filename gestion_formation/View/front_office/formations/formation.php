@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../../Controller/FormationController.php';
 require_once __DIR__ . '/../../../Controller/Inscriptioncontroller .php';
 require_once __DIR__ . '/../../../Model/Inscription.php';
@@ -161,7 +161,7 @@ $images = ['assets/img/property/1.jpg','assets/img/property/2.jpg','assets/img/p
             }
           ?>
           <div class="col-md-4 col-sm-12 col-xs-12">
-            <div class="single_property">
+            <div class="single_property" data-formation-id="<?= $f['id'] ?>" data-formation-titre="<?= htmlspecialchars(strtolower($f['titre']), ENT_QUOTES) ?>">
               <img src="<?= $imgPath ?>" class="img-fluid" alt="<?= htmlspecialchars($f['titre']) ?>" />
               <div class="single_property_description text-center">
                 <span><i class="fa fa-graduation-cap"></i> Niveau : <?= htmlspecialchars($f['niveau']) ?></span>
@@ -201,44 +201,48 @@ $images = ['assets/img/property/1.jpg','assets/img/property/2.jpg','assets/img/p
                     
                     <div class="form-group" style="text-align:left;">
                       <label>ID Utilisateur <span style="color:red;">*</span></label>
-                      <input type="number" name="user_id" class="form-control" placeholder="Votre ID utilisateur" required min="1">
+                      <input type="number" name="user_id" id="f<?= $f['id'] ?>_user_id" class="form-control" placeholder="Votre ID utilisateur" required min="1">
                       <small class="form-text text-muted">Entrez votre identifiant utilisateur</small>
                     </div>
                     
                     <div class="form-group" style="text-align:left;">
                       <label>Nom <span style="color:red;">*</span></label>
-                      <input type="text" name="nom" class="form-control" placeholder="Votre nom" required maxlength="100">
+                      <input type="text" name="nom" id="f<?= $f['id'] ?>_nom" class="form-control" placeholder="Votre nom" required maxlength="100">
                     </div>
                     
                     <div class="form-group" style="text-align:left;">
                       <label>Prénom <span style="color:red;">*</span></label>
-                      <input type="text" name="prenom" class="form-control" placeholder="Votre prénom" required maxlength="100">
+                      <input type="text" name="prenom" id="f<?= $f['id'] ?>_prenom" class="form-control" placeholder="Votre prénom" required maxlength="100">
                     </div>
                     
                     <div class="form-group" style="text-align:left;">
                       <label>Email <span style="color:red;">*</span></label>
-                      <input type="email" name="email" class="form-control" placeholder="votre.email@exemple.com" required maxlength="150">
+                      <input type="email" name="email" id="f<?= $f['id'] ?>_email" class="form-control" placeholder="votre.email@exemple.com" required maxlength="150">
                     </div>
                     
                     <div class="form-group" style="text-align:left;">
                       <label>Niveau</label>
-                      <input type="text" name="niveau" class="form-control" placeholder="Ex: Débutant, Intermédiaire, Avancé" maxlength="100">
+                      <input type="text" name="niveau" id="f<?= $f['id'] ?>_niveau" class="form-control" placeholder="Ex: Débutant, Intermédiaire, Avancé" maxlength="100">
                     </div>
                     
                     <div class="form-group" style="text-align:left;">
                       <label>Mode de formation</label>
-                      <select name="mode_formation" class="form-control">
+                      <select name="mode_formation" id="f<?= $f['id'] ?>_mode" class="form-control">
                         <option value="">-- Sélectionner --</option>
                         <option value="En ligne">En ligne</option>
                         <option value="Présentiel">Présentiel</option>
                         <option value="Hybride">Hybride</option>
                       </select>
                     </div>
+                    <!-- Indicateur vocal -->
+                    <div id="f<?= $f['id'] ?>_hint" style="display:none;margin-top:8px;padding:8px 12px;background:#e8f5e9;border-radius:8px;font-size:12px;color:#2e7d32;">
+                      🎤 <strong>Mode vocal actif</strong> — Dites : <em>"id utilisateur 1"</em> · <em>"nom Seif"</em> · <em>"prénom Ahmed"</em> · <em>"email x@x.com"</em> · <em>"niveau débutant"</em> · <em>"mode en ligne"</em> · <em>"s'inscrire"</em> ou <em>"annuler"</em>
+                    </div>
                   </form>
                 </div>
                 <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
-                  <button type="submit" form="inscriptionForm<?= $f['id'] ?>" class="btn btn-serach-bg" style="background-color:#3bafda;color:#fff;">S'inscrire</button>
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal" id="f<?= $f['id'] ?>_annuler">Annuler</button>
+                  <button type="submit" form="inscriptionForm<?= $f['id'] ?>" class="btn btn-serach-bg" id="f<?= $f['id'] ?>_submit" style="background-color:#3bafda;color:#fff;">S'inscrire</button>
                 </div>
               </div>
             </div>
@@ -301,8 +305,14 @@ $images = ['assets/img/property/1.jpg','assets/img/property/2.jpg','assets/img/p
   
   <!-- Commandes Vocales -->
   <script src="assets/js/voice-commands.js"></script>
+  <!-- Chatbot Takwinibot -->
+  <script src="assets/js/chatbot.js"></script>
+<!-- Hand Tracking -->
+<script src="assets/js/hand-tracking.js"></script>
   
   <!-- Validation Inscription -->
   <script src="assets/js/validationinscription.js"></script>
 </body>
 </html>
+
+

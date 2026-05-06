@@ -1,205 +1,218 @@
 /**
  * Assistant Vocal - Text to Speech
  * Lit le texte lorsque le curseur passe sur un mot
+ * Corrigé : activation manuelle obligatoire + gestion async des voix
  */
 
 class VoiceAssistant {
     constructor() {
         this.synth = window.speechSynthesis;
-        this.isEnabled = true;
+        this.isEnabled = false;   // Désactivé par défaut — attend un clic utilisateur
         this.currentUtterance = null;
         this.voices = [];
         this.selectedVoice = null;
-        
-        // Charger les voix disponibles
+        this.userInteracted = false;
+
         this.loadVoices();
-        
-        // Initialiser l'assistant
-        this.init();
-    }
-    
-    loadVoices() {
-        this.voices = this.synth.getVoices();
-        
-        // Chercher une voix française
-        this.selectedVoice = this.voices.find(voice => voice.lang.startsWith('fr')) || this.voices[0];
-        
-        // Les voix peuvent se charger de manière asynchrone
-        if (this.synth.onvoiceschanged !== undefined) {
-            this.synth.onvoiceschanged = () => {
-                this.voices = this.synth.getVoices();
-                this.selectedVoice = this.voices.find(voice => voice.lang.startsWith('fr')) || this.voices[0];
-            };
+        this.createControlButton();
+        // Attacher les listeners APRÈS que le DOM soit prêt
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.attachListeners());
+        } else {
+            this.attachListeners();
         }
     }
-    
-    init() {
-        // Ajouter un bouton de contrôle pour activer/désactiver
-        this.createControlButton();
-        
-        // Ajouter les écouteurs d'événements sur tous les éléments textuels
-        this.attachListeners();
+
+    loadVoices() {
+        const setVoice = () => {
+            this.voices = this.synth.getVoices();
+            // Préférer une voix française, sinon la première disponible
+            this.selectedVoice =
+                this.voices.find(v => v.lang === 'fr-FR') ||
+                this.voices.find(v => v.lang.startsWith('fr')) ||
+                this.voices[0] ||
+                null;
+        };
+
+        setVoice();
+        // Les voix se chargent de façon asynchrone dans Chrome
+        if (typeof this.synth.onvoiceschanged !== 'undefined') {
+            this.synth.onvoiceschanged = setVoice;
+        }
     }
-    
+
     createControlButton() {
         const button = document.createElement('button');
         button.id = 'voice-assistant-toggle';
-        button.innerHTML = '<i class="fa fa-volume-up"></i>';
-        button.title = 'Activer/Désactiver l\'assistant vocal';
+        button.innerHTML = '<i class="fa fa-volume-off"></i>';
+        button.title = 'Activer l\'assistant vocal (lecture au survol)';
+        button.setAttribute('aria-label', 'Activer/Désactiver l\'assistant vocal');
         button.style.cssText = `
             position: fixed;
-            bottom: 20px;
+            bottom: 80px;
             right: 20px;
             width: 60px;
             height: 60px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #6c757d;
             color: white;
-            border: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 3px solid transparent;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
             cursor: pointer;
             z-index: 9999;
-            font-size: 24px;
+            font-size: 22px;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         `;
-        
+
         button.addEventListener('click', () => {
+            this.userInteracted = true;
             this.isEnabled = !this.isEnabled;
+
             if (this.isEnabled) {
                 button.innerHTML = '<i class="fa fa-volume-up"></i>';
                 button.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                this.speak('Assistant vocal activé');
+                button.style.border = '3px solid rgba(255,255,255,0.4)';
+                button.title = 'Désactiver l\'assistant vocal';
+                // Confirmation vocale après le clic (interaction utilisateur garantie)
+                this.speakNow('Assistant vocal activé');
             } else {
                 button.innerHTML = '<i class="fa fa-volume-off"></i>';
                 button.style.background = '#6c757d';
+                button.style.border = '3px solid transparent';
+                button.title = 'Activer l\'assistant vocal';
                 this.stop();
             }
         });
-        
-        button.addEventListener('mouseenter', () => {
-            button.style.transform = 'scale(1.1)';
-        });
-        
-        button.addEventListener('mouseleave', () => {
-            button.style.transform = 'scale(1)';
-        });
-        
+
+        button.addEventListener('mouseenter', () => { button.style.transform = 'scale(1.1)'; });
+        button.addEventListener('mouseleave', () => { button.style.transform = 'scale(1)'; });
+
         document.body.appendChild(button);
+        this.button = button;
     }
-    
+
     attachListeners() {
-        // Sélectionner tous les éléments textuels
-        const textElements = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, span, a, li, td, th, label, button, div');
-        
-        textElements.forEach(element => {
-            // Ignorer les éléments vides ou qui contiennent d'autres éléments
-            if (element.childNodes.length === 1 && element.childNodes[0].nodeType === Node.TEXT_NODE) {
-                element.style.cursor = 'pointer';
-                
-                element.addEventListener('mouseenter', (e) => {
-                    if (this.isEnabled) {
-                        const text = element.textContent.trim();
-                        if (text.length > 0) {
-                            // Ajouter un effet visuel
-                            element.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
-                            element.style.transition = 'background-color 0.2s';
-                            
-                            this.speak(text);
-                        }
-                    }
-                });
-                
-                element.addEventListener('mouseleave', (e) => {
-                    element.style.backgroundColor = '';
-                });
-            } else {
-                // Pour les éléments avec plusieurs enfants, écouter les mots individuels
-                this.wrapWordsInSpans(element);
-            }
-        });
-    }
-    
-    wrapWordsInSpans(element) {
-        // Ne traiter que les nœuds texte directs
-        const walker = document.createTreeWalker(
-            element,
-            NodeFilter.SHOW_TEXT,
-            null,
-            false
-        );
-        
-        const textNodes = [];
-        let node;
-        
-        while (node = walker.nextNode()) {
-            if (node.textContent.trim().length > 0) {
-                textNodes.push(node);
-            }
-        }
-        
-        textNodes.forEach(textNode => {
-            const words = textNode.textContent.split(/(\s+)/);
-            const fragment = document.createDocumentFragment();
-            
-            words.forEach(word => {
-                if (word.trim().length > 0) {
-                    const span = document.createElement('span');
-                    span.textContent = word;
-                    span.style.cursor = 'pointer';
-                    span.className = 'voice-word';
-                    
-                    span.addEventListener('mouseenter', () => {
-                        if (this.isEnabled) {
-                            span.style.backgroundColor = 'rgba(102, 126, 234, 0.2)';
-                            span.style.transition = 'background-color 0.2s';
-                            this.speak(word);
-                        }
-                    });
-                    
-                    span.addEventListener('mouseleave', () => {
-                        span.style.backgroundColor = '';
-                    });
-                    
-                    fragment.appendChild(span);
-                } else {
-                    fragment.appendChild(document.createTextNode(word));
+        // Sélectionner les éléments textuels pertinents (pas les scripts/styles)
+        const selector = 'p, h1, h2, h3, h4, h5, h6, li, td, th, label, .card-title, .card-text, .section-title, [data-speak]';
+        const elements = document.querySelectorAll(selector);
+
+        elements.forEach(el => {
+            // Éviter les éléments déjà traités
+            if (el.dataset.voiceAttached) return;
+            el.dataset.voiceAttached = '1';
+
+            el.addEventListener('mouseenter', () => {
+                if (!this.isEnabled || !this.userInteracted) return;
+                const text = el.innerText?.trim() || el.textContent?.trim() || '';
+                if (text.length > 1) {
+                    el.style.outline = '2px solid rgba(102,126,234,0.35)';
+                    el.style.borderRadius = '3px';
+                    this.speak(text);
                 }
             });
-            
-            textNode.parentNode.replaceChild(fragment, textNode);
+
+            el.addEventListener('mouseleave', () => {
+                el.style.outline = '';
+                el.style.borderRadius = '';
+                // Ne pas couper la lecture au mouseleave — laisser finir le mot
+            });
+        });
+
+        // Lecture mot par mot sur les spans .voice-word déjà présents
+        document.querySelectorAll('.voice-word').forEach(span => {
+            if (span.dataset.voiceAttached) return;
+            span.dataset.voiceAttached = '1';
+            span.addEventListener('mouseenter', () => {
+                if (!this.isEnabled || !this.userInteracted) return;
+                const word = span.textContent.trim();
+                if (word.length > 0) {
+                    span.style.backgroundColor = 'rgba(102,126,234,0.2)';
+                    this.speak(word);
+                }
+            });
+            span.addEventListener('mouseleave', () => {
+                span.style.backgroundColor = '';
+            });
         });
     }
-    
+
     speak(text) {
-        // Arrêter la lecture en cours
+        if (!this.isEnabled || !this.userInteracted || !text) return;
+        this.speakNow(text);
+    }
+
+    speakNow(text) {
+        // Annuler la lecture en cours
         this.stop();
-        
-        if (!this.isEnabled || !text) return;
-        
-        // Créer une nouvelle utterance
+
+        if (!text) return;
+
+        // Recharger les voix si nécessaire
+        if (!this.selectedVoice) this.loadVoices();
+
         this.currentUtterance = new SpeechSynthesisUtterance(text);
-        this.currentUtterance.voice = this.selectedVoice;
-        this.currentUtterance.rate = 1.0; // Vitesse normale
-        this.currentUtterance.pitch = 1.0; // Ton normal
-        this.currentUtterance.volume = 1.0; // Volume maximum
-        
-        // Lire le texte
+
+        if (this.selectedVoice) {
+            this.currentUtterance.voice = this.selectedVoice;
+        }
+
+        this.currentUtterance.lang   = 'fr-FR';
+        this.currentUtterance.rate   = 0.95;   // Légèrement plus lent pour la clarté
+        this.currentUtterance.pitch  = 1.0;
+        this.currentUtterance.volume = 1.0;
+
+        // Workaround Chrome : bug où speechSynthesis se bloque après ~15s
+        this.currentUtterance.onstart = () => {
+            clearInterval(this._resumeTimer);
+            this._resumeTimer = setInterval(() => {
+                if (this.synth.speaking && this.synth.paused) {
+                    this.synth.resume();
+                }
+            }, 5000);
+        };
+
+        this.currentUtterance.onend = () => {
+            clearInterval(this._resumeTimer);
+        };
+
+        this.currentUtterance.onerror = (e) => {
+            clearInterval(this._resumeTimer);
+            // Ignorer l'erreur "interrupted" (normale quand on change de mot)
+            if (e.error !== 'interrupted') {
+                console.warn('VoiceAssistant error:', e.error);
+            }
+        };
+
         this.synth.speak(this.currentUtterance);
     }
-    
+
     stop() {
-        if (this.synth.speaking) {
+        clearInterval(this._resumeTimer);
+        if (this.synth.speaking || this.synth.pending) {
             this.synth.cancel();
         }
     }
 }
 
-// Initialiser l'assistant vocal quand le DOM est chargé
-document.addEventListener('DOMContentLoaded', () => {
-    // Vérifier si le navigateur supporte la synthèse vocale
-    if ('speechSynthesis' in window) {
-        window.voiceAssistant = new VoiceAssistant();
-    } else {
-        console.warn('La synthèse vocale n\'est pas supportée par ce navigateur.');
+// Initialiser quand le DOM est prêt
+(function () {
+    if (!('speechSynthesis' in window)) {
+        console.warn('VoiceAssistant : Web Speech API non supportée par ce navigateur.');
+        return;
     }
-});
+
+    const start = () => {
+        if (!window.voiceAssistant) {
+            window.voiceAssistant = new VoiceAssistant();
+        }
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', start);
+    } else {
+        start();
+    }
+})();

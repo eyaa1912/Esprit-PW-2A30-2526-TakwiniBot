@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . "/../../../Controller/FormationController.php";
 $fc = new FormationController();
 
@@ -222,5 +222,15 @@ $similaires = array_slice($similaires, 0, 2);
   <script src="assets/js/scrolltopcontrol.js"></script>
   <script src="assets/js/wow.min.js"></script>
   <script src="assets/js/scripts.js"></script>
+  <!-- Assistant Vocal -->
+  <script src="assets/js/voice-assistant.js"></script>
+  <!-- Commandes Vocales -->
+  <script src="assets/js/voice-commands.js"></script>
+  <!-- Chatbot Takwinibot -->
+  <script src="assets/js/chatbot.js"></script>
+<!-- Hand Tracking -->
+<script src="assets/js/hand-tracking.js"></script>
 </body>
 </html>
+
+
