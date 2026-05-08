@@ -293,6 +293,20 @@ function parler(texte, callback) {
     window.speechSynthesis.speak(msg);
 }
 
+// Clic souris ou frappe clavier → utilisateur voyant → arrêter la voix
+document.addEventListener('mousedown', function() {
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    // Si une lettre ou chiffre est tapé → arrêter la voix
+    if (e.key.length === 1 && !e.ctrlKey && !e.altKey && window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+    }
+});
+
 // Texte à lire selon l'étape courante
 const step    = <?= json_encode($step) ?>;
 const message = <?= json_encode($message) ?>;

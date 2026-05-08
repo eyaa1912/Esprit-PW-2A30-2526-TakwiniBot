@@ -4,9 +4,12 @@ require_once __DIR__ . '/../../../../../config.php';
 
 header('Content-Type: application/json');
 
+// Debug temporaire — à supprimer après test
+// echo json_encode(['debug' => $_SESSION['user'] ?? 'NO SESSION']); exit;
+
 // Sécurité : admin uniquement
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    echo json_encode(['success' => false, 'message' => 'Non autorisé.']);
+    echo json_encode(['success' => false, 'message' => 'Non autorisé. Role: ' . ($_SESSION['user']['role'] ?? 'aucun')]);
     exit;
 }
 

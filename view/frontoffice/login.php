@@ -544,6 +544,14 @@ let modeAveugle = false;
 let etapeActuelle = 0;
 let etapesCourantes = [];
 
+// ── Arrêt global : clic souris = utilisateur voyant → tout stopper ───────────
+document.addEventListener('mousedown', function() {
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        modeAveugle = false;
+    }
+});
+
 function parler(texte, callback) {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
