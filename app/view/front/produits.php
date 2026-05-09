@@ -16,90 +16,93 @@ try {
 }
 
 // ============================================================
-//  DELETE ORDER
+//  OTP SEND
 // ============================================================
-if (isset($_GET['delete_order']) && is_numeric($_GET['delete_order'])) {
-    $order_id = intval($_GET['delete_order']);
-    
-    try {
-        // Start transaction
-        $pdo->beginTransaction();
-        
-        // First, get all items in this order to restore stock
-        $stmt = $pdo->prepare("SELECT produit_id, quantite FROM ligne_commande WHERE commande_id = ?");
-        $stmt->execute([$order_id]);
-        $items = $stmt->fetchAll();
-        
-        // Restore stock for each product
-        foreach ($items as $item) {
-            $stmt = $pdo->prepare("UPDATE produit SET stock = stock + ? WHERE id = ?");
-            $stmt->execute([$item['quantite'], $item['produit_id']]);
-        }
-        
-        // Delete from ligne_commande first (foreign key constraint)
-        $stmt = $pdo->prepare("DELETE FROM ligne_commande WHERE commande_id = ?");
-        $stmt->execute([$order_id]);
-        
-        // Then delete from commande
-        $stmt = $pdo->prepare("DELETE FROM commande WHERE id = ?");
-        $stmt->execute([$order_id]);
-        
-        $pdo->commit();
-        
-        $_SESSION['order_success'] = "Commande #$order_id supprimée avec succès!";
-    } catch (Exception $e) {
-        $pdo->rollBack();
-        $_SESSION['order_error'] = "Erreur lors de la suppression: " . $e->getMessage();
-    }
-    
-    header("Location: produits.php");
+function sendOTPByEmail($to_email, $to_name, $otp_code) {
+    $subject = "🔐 Votre code de confirmation Takwinibot";
+    $message = "Bonjour $to_name,\n\nVotre code de confirmation est : $otp_code\n\nCe code expire dans 5 minutes.\n\nCordialement,\nTakwinibot";
+    $headers = "From: no-reply@takwinibot.com\r\nReply-To: support@takwinibot.com\r\n";
+    return mail($to_email, $subject, $message, $headers);
+}
+
+if (isset($_POST['action']) && $_POST['action'] === 'send_otp') {
+    header('Content-Type: application/json');
+    $email = $_POST['email'] ?? '';
+    $nom   = $_POST['nom'] ?? '';
+    if (empty($email)) { echo json_encode(['success'=>false,'message'=>'Email requis']); exit(); }
+    $otp_code = rand(100000, 999999);
+    $_SESSION['payment_otp'] = ['code'=>$otp_code,'expires'=>time()+300,'email'=>$email];
+    $sent = sendOTPByEmail($email, $nom, $otp_code);
+    echo json_encode($sent ? ['success'=>true,'message'=>'Code envoyé'] : ['success'=>false,'message'=>'Erreur envoi email']);
+    exit();
+}
+
+if (isset($_POST['action']) && $_POST['action'] === 'verify_otp') {
+    header('Content-Type: application/json');
+    $user_code = $_POST['otp_code'] ?? '';
+    if (!isset($_SESSION['payment_otp'])) { echo json_encode(['success'=>false,'message'=>'Aucun code demandé']); exit(); }
+    $stored = $_SESSION['payment_otp'];
+    if (time() > $stored['expires']) { unset($_SESSION['payment_otp']); echo json_encode(['success'=>false,'message'=>'Code expiré']); exit(); }
+    if ($user_code == $stored['code']) { unset($_SESSION['payment_otp']); echo json_encode(['success'=>true,'message'=>'Code valide']); }
+    else { echo json_encode(['success'=>false,'message'=>'Code incorrect']); }
     exit();
 }
 
 // ============================================================
-//  ORDER PROCESSING (when form is submitted)
+//  DELETE ORDER
+// ============================================================
+if (isset($_GET['delete_order']) && is_numeric($_GET['delete_order'])) {
+    $order_id = intval($_GET['delete_order']);
+    try {
+        $pdo->beginTransaction();
+        $stmt = $pdo->prepare("SELECT produit_id, quantite FROM ligne_commande WHERE commande_id = ?");
+        $stmt->execute([$order_id]);
+        foreach ($stmt->fetchAll() as $item) {
+            $pdo->prepare("UPDATE produit SET stock = stock + ? WHERE id = ?")->execute([$item['quantite'],$item['produit_id']]);
+        }
+        $pdo->prepare("DELETE FROM ligne_commande WHERE commande_id = ?")->execute([$order_id]);
+        $pdo->prepare("DELETE FROM commande WHERE id = ?")->execute([$order_id]);
+        $pdo->commit();
+        $_SESSION['order_success'] = "Commande #$order_id supprimée avec succès!";
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        $_SESSION['order_error'] = "Erreur: " . $e->getMessage();
+    }
+    header("Location: produits.php"); exit();
+}
+
+// ============================================================
+//  ORDER PROCESSING
 // ============================================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_order'])) {
-    $produit_id = intval($_POST['produit_id']);
-    $quantite = intval($_POST['quantite']);
-    $nom_complet = trim($_POST['nom_complet']);
-    $email = trim($_POST['email']);
-    $telephone = trim($_POST['telephone']);
-    $adresse = trim($_POST['adresse']);
-    
+    $produit_id     = intval($_POST['produit_id']);
+    $quantite       = intval($_POST['quantite']);
+    $nom_complet    = trim($_POST['nom_complet']);
+    $email          = trim($_POST['email']);
+    $telephone      = trim($_POST['telephone']);
+    $adresse        = trim($_POST['adresse']);
+    $payment_method = trim($_POST['payment_method'] ?? 'non specifie');
+    $payment_phone  = trim($_POST['payment_phone'] ?? '');
+    $statut_initial = ($payment_method === 'flouci' || $payment_method === 'd17') ? 'en attente paiement' : 'en attente';
+
     if ($produit_id > 0 && $quantite > 0 && !empty($nom_complet) && !empty($email) && !empty($telephone) && !empty($adresse)) {
         try {
-            // Get product details
             $stmt = $pdo->prepare("SELECT * FROM produit WHERE id = ?");
             $stmt->execute([$produit_id]);
             $product = $stmt->fetch();
-            
             if ($product && $product['stock'] >= $quantite) {
                 $total = $product['prix'] * $quantite;
-                
                 $pdo->beginTransaction();
-                
-                // Insert into commande table
-                $stmt = $pdo->prepare("INSERT INTO commande (date_commande, statut, total, nom_client, email_client, telephone_client, adresse_livraison) 
-                                       VALUES (NOW(), 'en attente', ?, ?, ?, ?, ?)");
-                $stmt->execute([$total, $nom_complet, $email, $telephone, $adresse]);
+                $stmt = $pdo->prepare("INSERT INTO commande (date_commande,statut,total,nom_client,email_client,telephone_client,adresse_livraison,payment_method,payment_phone) VALUES (NOW(),?,?,?,?,?,?,?,?)");
+                $stmt->execute([$statut_initial,$total,$nom_complet,$email,$telephone,$adresse,$payment_method,$payment_phone]);
                 $commande_id = $pdo->lastInsertId();
-                
-                // Insert into ligne_commande table
-                $stmt = $pdo->prepare("INSERT INTO ligne_commande (commande_id, produit_id, quantite, prix_unitaire) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$commande_id, $produit_id, $quantite, $product['prix']]);
-                
-                // Update product stock
-                $stmt = $pdo->prepare("UPDATE produit SET stock = stock - ? WHERE id = ?");
-                $stmt->execute([$quantite, $produit_id]);
-                
+                $pdo->prepare("INSERT INTO ligne_commande (commande_id,produit_id,quantite,prix_unitaire) VALUES (?,?,?,?)")->execute([$commande_id,$produit_id,$quantite,$product['prix']]);
+                $pdo->prepare("UPDATE produit SET stock = stock - ? WHERE id = ?")->execute([$quantite,$produit_id]);
                 $pdo->commit();
-                
-                $_SESSION['order_success'] = "Commande #$commande_id créée avec succès!";
-                header("Location: produits.php");
-                exit();
+                $_SESSION['order_success'] = "Commande #$commande_id créée avec succès! Méthode: $payment_method";
+                header("Location: produits.php"); exit();
             } else {
-                $_SESSION['order_error'] = "Stock insuffisant! Seulement " . $product['stock'] . " disponible(s).";
+                $_SESSION['order_error'] = "Stock insuffisant! Seulement " . ($product['stock'] ?? 0) . " disponible(s).";
             }
         } catch (Exception $e) {
             $pdo->rollBack();
@@ -108,1457 +111,1080 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_order'])) {
     } else {
         $_SESSION['order_error'] = "Veuillez remplir tous les champs!";
     }
-    header("Location: produits.php");
-    exit();
+    header("Location: produits.php"); exit();
 }
 
 // ============================================================
-//  GET ALL ORDERS FOR DISPLAY
+//  GET ALL ORDERS
 // ============================================================
-$all_orders = [];
-$stmt = $pdo->query("SELECT c.*, 
-        (SELECT COUNT(*) FROM ligne_commande WHERE commande_id = c.id) as nb_products
-        FROM commande c 
-        ORDER BY c.date_commande DESC");
+$stmt = $pdo->query("SELECT c.*, (SELECT COUNT(*) FROM ligne_commande WHERE commande_id = c.id) as nb_products FROM commande c ORDER BY c.date_commande DESC");
 $all_orders = $stmt->fetchAll();
 
 // ============================================================
-//  AJAX - GET ORDER DETAILS
+//  AJAX ORDER DETAILS
 // ============================================================
 if (isset($_GET['get_order_details']) && is_numeric($_GET['get_order_details'])) {
     $order_id = intval($_GET['get_order_details']);
-    
     $stmt = $pdo->prepare("SELECT * FROM commande WHERE id = ?");
     $stmt->execute([$order_id]);
     $order = $stmt->fetch();
-    
     if ($order) {
-        $stmt = $pdo->prepare("
-            SELECT lc.*, p.nom as product_name, p.image 
-            FROM ligne_commande lc 
-            JOIN produit p ON lc.produit_id = p.id 
-            WHERE lc.commande_id = ?
-        ");
+        $stmt = $pdo->prepare("SELECT lc.*, p.nom as product_name, p.image FROM ligne_commande lc JOIN produit p ON lc.produit_id = p.id WHERE lc.commande_id = ?");
         $stmt->execute([$order_id]);
         $items = $stmt->fetchAll();
-        
         header('Content-Type: application/json');
-        echo json_encode([
-            'order' => $order,
-            'items' => $items
-        ]);
+        echo json_encode(['order'=>$order,'items'=>$items]);
         exit();
     }
 }
 
 // ============================================================
-//  HANDLE PRODUCT ADDITION
+//  ADD PRODUCT
 // ============================================================
-$add_success = null;
-$add_error = null;
+$add_success = null; $add_error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_product') {
-    $nom = trim($_POST['nom'] ?? '');
+    $nom         = trim($_POST['nom'] ?? '');
     $description = trim($_POST['description'] ?? '');
-    $prix = floatval($_POST['prix'] ?? 0);
-    $stock = intval($_POST['stock'] ?? 0);
-    $categorie_id = intval($_POST['categorie_id'] ?? 0);
-    
-    if (empty($nom) || $prix <= 0 || $categorie_id <= 0) {
-        $add_error = "Veuillez remplir tous les champs obligatoires (nom, prix, catégorie).";
+    $prix        = floatval($_POST['prix'] ?? 0);
+    $stock       = intval($_POST['stock'] ?? 0);
+    $cat_id      = intval($_POST['categorie_id'] ?? 0);
+    if (empty($nom) || $prix <= 0 || $cat_id <= 0) {
+        $add_error = "Veuillez remplir tous les champs obligatoires.";
     } else {
         try {
             $image_path = '';
             if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
                 $upload_dir = '../back/uploads/produits/';
-                if (!is_dir($upload_dir)) {
-                    mkdir($upload_dir, 0777, true);
-                }
+                if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
                 $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
                 $filename = uniqid() . '.' . $ext;
-                $destination = $upload_dir . $filename;
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $destination)) {
-                    $image_path = $filename;
-                }
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_dir . $filename)) $image_path = $filename;
             }
-            
-            $sql = "INSERT INTO produit (nom, description, prix, stock, categorie_id, image) VALUES (?, ?, ?, ?, ?, ?)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$nom, $description, $prix, $stock, $categorie_id, $image_path]);
-            $add_success = "Produit \"$nom\" ajouté avec succès !";
-        } catch (PDOException $e) {
-            $add_error = "Erreur lors de l'ajout : " . $e->getMessage();
-        }
+            $pdo->prepare("INSERT INTO produit (nom,description,prix,stock,categorie_id,image) VALUES (?,?,?,?,?,?)")->execute([$nom,$description,$prix,$stock,$cat_id,$image_path]);
+            $add_success = "Produit \"$nom\" ajouté avec succès!";
+        } catch (PDOException $e) { $add_error = "Erreur: " . $e->getMessage(); }
     }
 }
 
 // ============================================================
-//  GET PRODUCTS FOR DISPLAY
+//  GET PRODUCTS
 // ============================================================
 $categorie_id = isset($_GET['categorie']) ? (int)$_GET['categorie'] : 0;
-$search = isset($_GET['search']) ? trim($_GET['search']) : '';
-
-$sql = "SELECT p.*, c.nom AS categorie_nom 
-        FROM produit p 
-        LEFT JOIN categorie c ON p.categorie_id = c.id 
-        WHERE 1=1";
+$search       = isset($_GET['search']) ? trim($_GET['search']) : '';
+$sql    = "SELECT p.*, c.nom AS categorie_nom FROM produit p LEFT JOIN categorie c ON p.categorie_id = c.id WHERE 1=1";
 $params = [];
-
-if ($categorie_id > 0) {
-    $sql .= " AND p.categorie_id = ?";
-    $params[] = $categorie_id;
-}
-
-if (!empty($search)) {
-    $sql .= " AND (p.nom LIKE ? OR p.description LIKE ?)";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-}
-
+if ($categorie_id > 0) { $sql .= " AND p.categorie_id = ?"; $params[] = $categorie_id; }
+if (!empty($search))   { $sql .= " AND (p.nom LIKE ? OR p.description LIKE ?)"; $params[] = "%$search%"; $params[] = "%$search%"; }
 $sql .= " ORDER BY p.id DESC";
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$produits = $stmt->fetchAll();
-
+$stmt = $pdo->prepare($sql); $stmt->execute($params);
+$produits   = $stmt->fetchAll();
 $categories = $pdo->query("SELECT * FROM categorie ORDER BY nom")->fetchAll();
 
-// Icon + color map
 $cat_icons = [
-    'Food'             => ['icon' => '🍔', 'color' => '#ff6b6b'],
-    'Formation'        => ['icon' => '📚', 'color' => '#4ecdc4'],
-    'Accessories'      => ['icon' => '⌚', 'color' => '#45b7d1'],
-    'Informatique'     => ['icon' => '💻', 'color' => '#96ceb4'],
-    'Bureautique'      => ['icon' => '📎', 'color' => '#ffeaa7'],
-    'Logiciels'        => ['icon' => '💿', 'color' => '#dda0dd'],
-    'Matériel réseau'  => ['icon' => '🌐', 'color' => '#98d8c8'],
+    'Food'            => ['icon'=>'🍔','color'=>'#ff6b6b'],
+    'Formation'       => ['icon'=>'📚','color'=>'#4ecdc4'],
+    'Accessories'     => ['icon'=>'⌚','color'=>'#45b7d1'],
+    'Informatique'    => ['icon'=>'💻','color'=>'#96ceb4'],
+    'Bureautique'     => ['icon'=>'📎','color'=>'#f7b731'],
+    'Logiciels'       => ['icon'=>'💿','color'=>'#a55eea'],
+    'Matériel réseau' => ['icon'=>'🌐','color'=>'#2bcbba'],
 ];
 ?>
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Nos Produits - Takwinibot</title>
-    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Exo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
-    <link rel="stylesheet" href="assets/fonts/themify-icons.css">
-    <link rel="stylesheet" href="assets/owlcarousel/css/owl.carousel.css">
-    <link rel="stylesheet" href="assets/owlcarousel/css/owl.theme.css">
-    <link rel="stylesheet" href="assets/css/fonts.css">
-    <link href="assets/css/prettyPhoto.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/animate.css">
-    <link rel="stylesheet" href="assets/css/slick.css">
-    <link rel="stylesheet" href="assets/css/menu.css">
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/responsive.css">
-    <style>
-        /* ── Category Filter Bar ── */
-        .category-filter-section {
-            padding: 40px 0 20px;
-            background: #f8f9fa;
-        }
-        .category-filter-section h3 {
-            text-align: center;
-            font-weight: 700;
-            margin-bottom: 30px;
-            color: #333;
-        }
-        .cat-cards-row {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 16px;
-        }
-        .cat-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 110px;
-            height: 110px;
-            border-radius: 16px;
-            text-decoration: none;
-            color: #333;
-            font-weight: 600;
-            font-size: 13px;
-            text-align: center;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            background: #fff;
-            border: 2px solid transparent;
-            padding: 10px;
-        }
-        .cat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            color: #333;
-            text-decoration: none;
-        }
-        .cat-card.active {
-            border-color: #3bafda;
-            box-shadow: 0 4px 16px rgba(59,175,218,0.3);
-        }
-        .cat-card .cat-icon {
-            font-size: 36px;
-            margin-bottom: 8px;
-            display: block;
-        }
-        .cat-card-all {
-            background: linear-gradient(135deg, #3bafda, #2a8cbf);
-            color: #fff;
-        }
-        .cat-card-all:hover { color: #fff; }
-        .cat-card-all.active { border-color: #2a8cbf; }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Takwinibot — Boutique</title>
+<link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
+<link rel="stylesheet" href="assets/css/menu.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/responsive.css">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   DESIGN SYSTEM — TAKWINIBOT
+   Aesthetic: Clean luxury retail — dark navy
+   accents, warm whites, sharp type
+   ═══════════════════════════════════════════ */
+:root {
+    --navy:   #0f172a;
+    --navy2:  #1e293b;
+    --navy3:  #334155;
+    --accent: #3bafda;
+    --accent2:#0ea5e9;
+    --gold:   #f59e0b;
+    --white:  #ffffff;
+    --off:    #f8fafc;
+    --gray:   #94a3b8;
+    --light:  #e2e8f0;
+    --green:  #10b981;
+    --red:    #ef4444;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(15,23,42,.10);
+    --shadow-lg: 0 12px 40px rgba(15,23,42,.18);
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { font-family: 'DM Sans', sans-serif; background: var(--off); color: var(--navy); margin: 0; }
+h1,h2,h3,h4,h5,h6 { font-family: 'Syne', sans-serif; }
 
-        /* ── Product Cards ── */
-        .single_property {
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .single_property:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.14);
-        }
-        
-        /* ── Add Product Form Styles ── */
-        .add-product-section {
-            padding: 40px 0;
-            background: linear-gradient(135deg, #f0f7ff 0%, #e9f0fa 100%);
-            border-radius: 20px;
-            margin: 30px 0;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-        }
-        .add-product-card {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        .add-product-card h3 {
-            color: #3bafda;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-        .add-product-card .form-group label {
-            font-weight: 600;
-            color: #555;
-        }
-        .add-product-card .form-control {
-            border-radius: 10px;
-            border: 1px solid #ddd;
-            padding: 12px;
-        }
-        .add-product-card .form-control:focus {
-            border-color: #3bafda;
-            box-shadow: 0 0 0 0.2rem rgba(59,175,218,0.25);
-        }
-        .btn-submit-product {
-            background: linear-gradient(135deg, #3bafda, #2a8cbf);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 30px;
-            font-weight: 600;
-            transition: transform 0.2s;
-        }
-        .btn-submit-product:hover {
-            transform: translateY(-2px);
-            color: white;
-        }
-        .alert-custom {
-            border-radius: 12px;
-            padding: 15px 20px;
-            margin-bottom: 20px;
-        }
-        .choice-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        .choice-btn {
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid #3bafda;
-            background: white;
-            color: #3bafda;
-        }
-        .choice-btn.active {
-            background: #3bafda;
-            color: white;
-        }
-        .choice-btn:hover {
-            transform: translateY(-2px);
-        }
-        .section-toggle {
-            display: none;
-        }
-        .section-toggle.active-section {
-            display: block;
-        }
-        
-        /* Orders Section Styles */
-        .orders-section {
-            margin-top: 20px;
-            margin-bottom: 50px;
-        }
-        .order-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: all 0.3s;
-        }
-        .order-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
-        }
-        .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            display: inline-block;
-        }
-        .status-en-attente { background: #ffc107; color: #000; }
-        .status-validee { background: #28a745; color: #fff; }
-        .status-expediee { background: #17a2b8; color: #fff; }
-        .status-livree { background: #6c757d; color: #fff; }
-        .status-annulee { background: #dc3545; color: #fff; }
-        
-        .order-details-modal .modal-dialog {
-            max-width: 700px;
-        }
-        
-        .btn-delete {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .btn-delete:hover {
-            background: #c82333;
-            transform: scale(1.05);
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-        }
+/* ─── NAVBAR ─── */
+.tk-nav {
+    position: sticky; top: 0; z-index: 1000;
+    background: rgba(15,23,42,.97);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    padding: 0 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 68px;
+}
+.tk-nav .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+.tk-nav .logo img { height: 36px; }
+.tk-nav .logo span { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; color:#fff; letter-spacing:-.5px; }
+.tk-nav-links { display:flex; gap:8px; align-items:center; }
+.tk-nav-links a { color: rgba(255,255,255,.7); text-decoration:none; font-size:14px; font-weight:500; padding:8px 14px; border-radius:8px; transition:.2s; }
+.tk-nav-links a:hover, .tk-nav-links a.active { color:#fff; background:rgba(255,255,255,.1); }
+.tk-nav-right { display:flex; align-items:center; gap:12px; }
 
-/* Form validation styles */
-.form-control.is-invalid {
-    border-color: #dc3545;
-    background-image: url("data:image/svg+xml,...");
+/* Cart icon in navbar */
+.cart-nav-btn {
+    position:relative; background:var(--accent); color:#fff; border:none;
+    border-radius:10px; padding:8px 18px; font-size:14px; font-weight:600;
+    cursor:pointer; display:flex; align-items:center; gap:8px;
+    transition: background .2s, transform .15s;
+    font-family:'DM Sans',sans-serif;
+}
+.cart-nav-btn:hover { background:var(--accent2); transform:translateY(-1px); }
+.cart-nav-btn .cart-count {
+    background:var(--gold); color:var(--navy); border-radius:50%;
+    width:20px; height:20px; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:800; line-height:1;
 }
 
-.form-control.is-valid {
-    border-color: #28a745;
-}
-
-.invalid-feedback {
-    display: none;
-    color: #dc3545;
-    font-size: 12px;
-    margin-top: 5px;
-}
-
-.valid-feedback {
-    display: none;
-    color: #28a745;
-    font-size: 12px;
-    margin-top: 5px;
-}
-
-.form-control.is-invalid ~ .invalid-feedback {
-    display: block;
-}
-
-.form-control.is-valid ~ .valid-feedback {
-    display: block;
-}
-
-/* Price input styling */
-.price-input-wrapper {
+/* ─── HERO ─── */
+.tk-hero {
+    background: var(--navy);
+    padding: 72px 32px 64px;
+    text-align: center;
     position: relative;
+    overflow: hidden;
+}
+.tk-hero::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(59,175,218,.18) 0%, transparent 70%);
+    pointer-events:none;
+}
+.tk-hero h1 { font-size: clamp(32px,5vw,56px); color:#fff; font-weight:800; letter-spacing:-1.5px; margin:0 0 14px; }
+.tk-hero h1 span { color: var(--accent); }
+.tk-hero p { color: var(--gray); font-size:17px; max-width:520px; margin:0 auto; }
+
+/* ─── TAB BAR ─── */
+.tk-tabs {
+    background:#fff; border-bottom:1px solid var(--light);
+    display:flex; padding:0 32px; gap:4px;
+    position:sticky; top:68px; z-index:900;
+}
+.tk-tab {
+    padding:16px 22px; font-size:14px; font-weight:600; cursor:pointer;
+    border:none; background:none; color:var(--gray);
+    border-bottom:3px solid transparent; transition:.2s;
+    font-family:'DM Sans',sans-serif; display:flex; align-items:center; gap:7px;
+}
+.tk-tab:hover { color:var(--navy); }
+.tk-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.tk-section { display:none; }
+.tk-section.active { display:block; }
+
+/* ─── CATEGORY FILTER ─── */
+.tk-cats {
+    background:#fff; padding:28px 32px;
+    border-bottom:1px solid var(--light);
+}
+.tk-cats-inner { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.cat-pill {
+    display:flex; align-items:center; gap:8px;
+    padding:8px 18px; border-radius:50px;
+    font-size:13px; font-weight:600; text-decoration:none;
+    border:1.5px solid var(--light); background:#fff; color:var(--navy3);
+    transition:.2s;
+}
+.cat-pill:hover { border-color:var(--accent); color:var(--accent); text-decoration:none; }
+.cat-pill.active { background:var(--navy); border-color:var(--navy); color:#fff; }
+.cat-pill .cat-em { font-size:16px; }
+
+/* ─── SEARCH BAR ─── */
+.tk-search { background:#fff; padding:20px 32px; border-bottom:1px solid var(--light); }
+.tk-search-wrap {
+    max-width:480px; display:flex;
+    border:1.5px solid var(--light); border-radius:50px; overflow:hidden;
+    transition:border .2s;
+}
+.tk-search-wrap:focus-within { border-color:var(--accent); }
+.tk-search-wrap input {
+    flex:1; border:none; padding:11px 20px; font-size:14px; outline:none;
+    font-family:'DM Sans',sans-serif; background:transparent;
+}
+.tk-search-wrap button {
+    background:var(--accent); color:#fff; border:none;
+    padding:0 20px; font-size:14px; cursor:pointer;
+    font-family:'DM Sans',sans-serif; font-weight:600;
 }
 
-.price-input-wrapper::before {
-    content: "DT";
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #666;
-    pointer-events: none;
+/* ─── PRODUCT GRID ─── */
+.tk-products { padding:32px; }
+.tk-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:24px; }
+.tk-card {
+    background:#fff; border-radius:var(--radius);
+    border:1px solid var(--light);
+    overflow:hidden; transition:transform .2s, box-shadow .2s;
+    display:flex; flex-direction:column;
 }
-
-/* Stock input with increment/decrement */
-.stock-control {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.tk-card:hover { transform:translateY(-5px); box-shadow:var(--shadow-lg); }
+.tk-card-img {
+    height:200px; overflow:hidden; position:relative; flex-shrink:0;
 }
-
-.stock-control .form-control {
-    flex: 1;
+.tk-card-img img { width:100%; height:100%; object-fit:cover; transition:transform .4s; }
+.tk-card:hover .tk-card-img img { transform:scale(1.05); }
+.tk-card-img .placeholder {
+    width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+    font-size:72px;
 }
-
-.stock-buttons {
-    display: flex;
-    gap: 5px;
+.tk-card-badge {
+    position:absolute; top:12px; left:12px;
+    background:rgba(15,23,42,.75); color:#fff;
+    padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600;
+    backdrop-filter:blur(4px);
 }
-
-.stock-btn {
-    width: 36px;
-    height: 36px;
-    border: 1px solid #ddd;
-    background: #f8f9fa;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 18px;
-    font-weight: bold;
-    transition: all 0.2s;
+.tk-stock-badge {
+    position:absolute; top:12px; right:12px;
+    padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700;
 }
-
-.stock-btn:hover {
-    background: #e9ecef;
-    border-color: #3bafda;
+.tk-stock-badge.in  { background:rgba(16,185,129,.15); color:#059669; border:1px solid rgba(16,185,129,.3); }
+.tk-stock-badge.out { background:rgba(239,68,68,.12); color:#dc2626; border:1px solid rgba(239,68,68,.25); }
+.tk-card-body { padding:20px; flex:1; display:flex; flex-direction:column; }
+.tk-card-body h3 { font-size:16px; font-weight:700; margin:0 0 6px; color:var(--navy); line-height:1.3; }
+.tk-card-body p { font-size:13px; color:var(--gray); margin:0 0 16px; line-height:1.6; flex:1; }
+.tk-card-footer { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto; }
+.tk-price { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; color:var(--navy); }
+.tk-price small { font-size:13px; font-weight:500; color:var(--gray); }
+.tk-card-actions { display:flex; flex-direction:column; gap:6px; margin-top:14px; }
+.btn-cart {
+    width:100%; padding:11px; background:var(--navy); color:#fff;
+    border:none; border-radius:10px; font-size:14px; font-weight:600;
+    cursor:pointer; transition:.2s; font-family:'DM Sans',sans-serif;
+    display:flex; align-items:center; justify-content:center; gap:8px;
 }
-
-/* Image preview with controls */
-.image-preview-container {
-    position: relative;
-    display: inline-block;
+.btn-cart:hover { background:var(--accent); }
+.btn-cart:disabled { background:var(--light); color:var(--gray); cursor:not-allowed; }
+.btn-ai {
+    width:100%; padding:9px; background:transparent; color:var(--accent);
+    border:1.5px dashed var(--accent); border-radius:10px; font-size:13px;
+    font-weight:600; cursor:pointer; transition:.2s; font-family:'DM Sans',sans-serif;
 }
+.btn-ai:hover { background:var(--accent); color:#fff; }
 
-.image-preview {
-    width: 150px;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 12px;
-    border: 2px solid #ddd;
-    margin-top: 10px;
+/* ─── CART DRAWER ─── */
+.cart-overlay {
+    position:fixed; inset:0; background:rgba(15,23,42,.5);
+    z-index:1999; opacity:0; pointer-events:none; transition:opacity .3s;
 }
-
-.image-preview-actions {
-    margin-top: 10px;
-    display: flex;
-    gap: 10px;
+.cart-overlay.open { opacity:1; pointer-events:all; }
+.cart-drawer {
+    position:fixed; right:0; top:0; bottom:0; width:420px; max-width:100vw;
+    background:#fff; z-index:2000; transform:translateX(100%);
+    transition:transform .35s cubic-bezier(.4,0,.2,1);
+    display:flex; flex-direction:column; box-shadow:-8px 0 40px rgba(15,23,42,.2);
 }
-
-.btn-remove-image {
-    background: #dc3545;
-    color: white;
-    border: none;
-    padding: 5px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 12px;
+.cart-drawer.open { transform:translateX(0); }
+.cart-drawer-head {
+    padding:24px; border-bottom:1px solid var(--light);
+    display:flex; align-items:center; justify-content:space-between;
 }
-
-/* Character counter */
-.char-counter {
-    font-size: 11px;
-    color: #666;
-    text-align: right;
-    margin-top: 5px;
+.cart-drawer-head h2 { font-size:20px; font-weight:800; margin:0; }
+.cart-close { background:none; border:none; font-size:22px; cursor:pointer; color:var(--navy3); }
+.cart-items { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:14px; }
+.cart-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:40px; text-align:center; }
+.cart-empty .icon { font-size:64px; opacity:.3; }
+.cart-empty p { color:var(--gray); font-size:15px; }
+.cart-item {
+    display:flex; gap:14px; padding:14px;
+    border:1px solid var(--light); border-radius:12px;
+    background:var(--off); align-items:center;
 }
-
-.char-counter.warning {
-    color: #ffc107;
+.cart-item-img { width:62px; height:62px; border-radius:8px; overflow:hidden; flex-shrink:0; }
+.cart-item-img img { width:100%; height:100%; object-fit:cover; }
+.cart-item-img .ph { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:28px; background:#fff; }
+.cart-item-info { flex:1; min-width:0; }
+.cart-item-info h4 { font-size:14px; font-weight:700; margin:0 0 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cart-item-info .price { font-size:13px; color:var(--accent); font-weight:700; }
+.cart-item-qty { display:flex; align-items:center; gap:8px; margin-top:8px; }
+.qty-btn { width:26px; height:26px; background:var(--light); border:none; border-radius:6px; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; transition:.15s; font-weight:700; }
+.qty-btn:hover { background:var(--accent); color:#fff; }
+.qty-num { font-size:14px; font-weight:700; min-width:20px; text-align:center; }
+.cart-item-remove { background:none; border:none; color:var(--gray); cursor:pointer; font-size:17px; padding:4px; transition:.15s; flex-shrink:0; }
+.cart-item-remove:hover { color:var(--red); }
+.cart-footer { padding:20px 24px; border-top:1px solid var(--light); background:#fff; }
+.cart-total-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.cart-total-row .label { font-size:15px; color:var(--gray); }
+.cart-total-row .amount { font-family:'Syne',sans-serif; font-size:26px; font-weight:800; color:var(--navy); }
+.btn-checkout {
+    width:100%; padding:15px; background:var(--navy); color:#fff;
+    border:none; border-radius:12px; font-size:15px; font-weight:700;
+    cursor:pointer; transition:.2s; font-family:'DM Sans',sans-serif;
+    display:flex; align-items:center; justify-content:center; gap:10px;
 }
+.btn-checkout:hover { background:var(--accent); }
 
-.char-counter.danger {
-    color: #dc3545;
+/* ─── ORDERS SECTION ─── */
+.tk-orders { padding:32px; }
+.tk-section-head { margin-bottom:28px; }
+.tk-section-head h2 { font-size:28px; font-weight:800; margin:0 0 6px; }
+.tk-section-head p { color:var(--gray); margin:0; }
+.order-card {
+    background:#fff; border:1px solid var(--light); border-radius:var(--radius);
+    padding:20px 24px; margin-bottom:12px; transition:.2s;
+    display:flex; align-items:center; gap:20px; flex-wrap:wrap;
 }
+.order-card:hover { box-shadow:var(--shadow); border-color:#cbd5e1; }
+.order-num { font-family:'Syne',sans-serif; font-weight:800; font-size:15px; color:var(--navy); }
+.order-date { font-size:12px; color:var(--gray); margin-top:2px; }
+.status-badge { padding:5px 12px; border-radius:20px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:5px; }
+.status-en-attente { background:#fef3c7; color:#92400e; }
+.status-en-attente-paiement { background:#ffedd5; color:#9a3412; }
+.status-validee { background:#d1fae5; color:#065f46; }
+.status-expediee { background:#dbeafe; color:#1e40af; }
+.status-livree { background:#f1f5f9; color:#475569; }
+.status-annulee { background:#fee2e2; color:#991b1b; }
+.order-total { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; color:var(--accent); }
+.order-actions { display:flex; gap:8px; margin-left:auto; }
+.btn-icon { width:36px; height:36px; border-radius:8px; border:1px solid var(--light); background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; transition:.15s; }
+.btn-icon:hover { background:var(--off); border-color:#94a3b8; }
+.btn-icon.danger:hover { background:#fee2e2; border-color:var(--red); color:var(--red); }
 
-/* Real-time product name preview */
-.product-name-preview {
-    background: #f8f9fa;
-    padding: 10px;
-    border-radius: 8px;
-    margin-top: 10px;
-    display: none;
+/* ─── ADD PRODUCT SECTION ─── */
+.tk-add { padding:32px; }
+.tk-add-card {
+    background:#fff; border:1px solid var(--light); border-radius:var(--radius);
+    padding:36px; max-width:700px; margin:0 auto;
 }
-
-.product-name-preview.active {
-    display: block;
+.tk-add-card h2 { font-size:26px; font-weight:800; margin:0 0 6px; }
+.tk-add-card p { color:var(--gray); margin:0 0 28px; }
+.tk-form-group { margin-bottom:18px; }
+.tk-form-group label { display:block; font-size:13px; font-weight:600; color:var(--navy3); margin-bottom:7px; }
+.tk-form-group input,
+.tk-form-group select,
+.tk-form-group textarea {
+    width:100%; padding:11px 15px; border:1.5px solid var(--light);
+    border-radius:10px; font-size:14px; font-family:'DM Sans',sans-serif;
+    outline:none; transition:border .2s; background:#fff;
 }
+.tk-form-group input:focus,
+.tk-form-group select:focus,
+.tk-form-group textarea:focus { border-color:var(--accent); }
+.tk-form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.btn-primary-tk {
+    padding:13px 30px; background:var(--navy); color:#fff;
+    border:none; border-radius:10px; font-size:15px; font-weight:700;
+    cursor:pointer; font-family:'DM Sans',sans-serif; transition:.2s;
+    display:inline-flex; align-items:center; gap:8px;
+}
+.btn-primary-tk:hover { background:var(--accent); }
 
-    </style>
+/* ─── AI ASSISTANT ─── */
+.ai-bubble-wrap {
+    position:fixed; bottom:28px; right:28px; z-index:1500;
+}
+.ai-toggle-btn {
+    width:58px; height:58px; background:var(--navy); border:none;
+    border-radius:50%; color:#fff; font-size:22px; cursor:pointer;
+    box-shadow:0 4px 20px rgba(15,23,42,.4);
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .2s, background .2s;
+}
+.ai-toggle-btn:hover { background:var(--accent); transform:scale(1.08); }
+.ai-panel {
+    position:absolute; bottom:70px; right:0; width:320px;
+    background:#fff; border-radius:16px; border:1px solid var(--light);
+    box-shadow:var(--shadow-lg); overflow:hidden;
+    display:none; flex-direction:column;
+}
+.ai-panel.open { display:flex; }
+.ai-panel-head {
+    background:var(--navy); padding:14px 16px;
+    display:flex; align-items:center; gap:10px; color:#fff;
+}
+.ai-av { width:32px; height:32px; background:rgba(255,255,255,.15); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.ai-panel-head h5 { font-size:14px; font-weight:700; margin:0; color:#fff; }
+.ai-panel-head p { font-size:11px; color:rgba(255,255,255,.65); margin:0; }
+.ai-close { margin-left:auto; background:none; border:none; color:rgba(255,255,255,.7); font-size:18px; cursor:pointer; }
+.ai-msgs { padding:14px; height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; }
+.ai-msg-row { display:flex; gap:7px; align-items:flex-end; }
+.ai-msg-row.user { flex-direction:row-reverse; }
+.ai-bub { padding:9px 13px; border-radius:12px; font-size:13px; line-height:1.5; max-width:84%; }
+.ai-bub.bot { background:var(--off); color:var(--navy); }
+.ai-bub.user { background:var(--accent); color:#fff; }
+.ai-bub.typing { background:var(--off); color:var(--gray); font-style:italic; }
+.ai-chips { padding:0 14px 10px; display:flex; flex-wrap:wrap; gap:5px; }
+.ai-chip { background:var(--off); border:1px solid var(--accent); color:var(--accent); border-radius:20px; padding:4px 11px; font-size:11px; cursor:pointer; transition:.15s; font-family:'DM Sans',sans-serif; }
+.ai-chip:hover { background:var(--accent); color:#fff; }
+.ai-input-row { display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--light); }
+.ai-input-row input { flex:1; border:1px solid var(--light); border-radius:20px; padding:8px 14px; font-size:13px; outline:none; font-family:'DM Sans',sans-serif; }
+.ai-input-row input:focus { border-color:var(--accent); }
+.ai-send { width:34px; height:34px; background:var(--navy); border:none; border-radius:50%; color:#fff; font-size:13px; cursor:pointer; flex-shrink:0; transition:background .2s; display:flex; align-items:center; justify-content:center; }
+.ai-send:hover { background:var(--accent); }
+.ai-footer-note { text-align:center; font-size:10px; color:var(--gray); padding:4px 0 8px; }
+
+/* ─── MODALS ─── */
+.tk-modal-backdrop { position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px; }
+.tk-modal-backdrop.open { display:flex; }
+.tk-modal { background:#fff; border-radius:18px; width:100%; max-width:500px; overflow:hidden; max-height:90vh; overflow-y:auto; }
+.tk-modal-head { padding:22px 24px; border-bottom:1px solid var(--light); display:flex; align-items:center; justify-content:space-between; }
+.tk-modal-head h3 { font-size:18px; font-weight:800; margin:0; }
+.tk-modal-close { background:none; border:none; font-size:22px; cursor:pointer; color:var(--gray); }
+.tk-modal-body { padding:24px; }
+
+/* OTP */
+.otp-group { display:flex; gap:10px; justify-content:center; margin:20px 0; }
+.otp-box { width:50px; height:56px; border:2px solid var(--light); border-radius:10px; font-size:22px; text-align:center; font-weight:700; outline:none; transition:.2s; }
+.otp-box:focus { border-color:var(--accent); }
+.otp-box.filled { border-color:var(--green); background:#f0fdf4; color:var(--green); }
+
+/* ─── ALERTS ─── */
+.tk-alert { padding:14px 18px; border-radius:10px; margin-bottom:16px; font-size:14px; font-weight:500; }
+.tk-alert.success { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; }
+.tk-alert.error   { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+
+/* ─── EMPTY STATE ─── */
+.tk-empty { text-align:center; padding:80px 20px; }
+.tk-empty .icon { font-size:72px; opacity:.25; margin-bottom:16px; }
+.tk-empty h3 { font-size:22px; font-weight:800; margin:0 0 8px; }
+.tk-empty p { color:var(--gray); }
+
+/* ─── MISC ─── */
+.pm-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; background:var(--off); color:var(--navy3); border:1px solid var(--light); }
+.spinner { display:inline-block; width:18px; height:18px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:768px) {
+    .tk-nav { padding:0 16px; }
+    .tk-nav-links { display:none; }
+    .tk-products, .tk-orders, .tk-add { padding:16px; }
+    .tk-cats { padding:16px; }
+    .tk-form-row { grid-template-columns:1fr; }
+    .cart-drawer { width:100vw; }
+    .order-card { flex-wrap:wrap; }
+}
+</style>
 </head>
+<body>
 
-<body data-spy="scroll" data-offset="80">
-
-    <!-- START PRELOADER -->
-    <div class="preloader">
-        <div class="status"><div class="status-mes"></div></div>
+<!-- ═══════════ NAVBAR ═══════════ -->
+<nav class="tk-nav">
+    <a href="index.html" class="logo">
+        <img src="assets/img/logo.png" alt="Takwinibot" onerror="this.style.display='none'">
+        <span>Takwinibot</span>
+    </a>
+    <div class="tk-nav-links">
+        <a href="index.html">Accueil</a>
+        <a href="about.html">À propos</a>
+        <a href="produits.php" class="active">Boutique</a>
     </div>
-    <!-- END PRELOADER -->
-
-    <!-- START NAVBAR -->
-    <div class="site-mobile-menu site-navbar-target">
-        <div class="site-mobile-menu-header">
-            <div class="site-mobile-menu-close mt-3">
-                <span class="icon-close2 js-menu-toggle"></span>
-            </div>
-        </div>
-        <div class="site-mobile-menu-body"></div>
+    <div class="tk-nav-right">
+        <button class="cart-nav-btn" onclick="openCart()">
+            <i class="fa fa-shopping-bag"></i>
+            Panier
+            <span class="cart-count" id="cartCount">0</span>
+        </button>
     </div>
+</nav>
 
-    <header class="site-navbar js-sticky-header site-navbar-target" role="banner">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-6 col-xl-2">
-                    <h1 class="mb-0 site-logo"><a href="index.html"><img src="assets/img/logo.png" alt=""></a></h1>
-                </div>
-                <div class="col-12 col-md-10 d-none d-xl-block">
-                    <nav class="site-navigation position-relative text-right" role="navigation">
-                        <ul class="site-menu main-menu js-clone-nav mr-auto d-none d-lg-block">
-                            <li class="has-children">
-                                <a href="index.html" class="nav-link">Home</a>
-                                <ul class="dropdown">
-                                    <li><a href="index_map.html" class="nav-link">Home Map</a></li>
-                                    <li><a href="index_parallax.html" class="nav-link">Home Parallax</a></li>
-                                    <li><a href="index_slideshow.html" class="nav-link">Home Slider</a></li>
-                                    <li><a href="index_video.html" class="nav-link">Home video</a></li>
-                                </ul>
-                            </li>
-                            <li><a class="nav-link" href="about.html">about</a></li>
-                            <li class="has-children">
-                                <a href="formation.html" class="nav-link">Formations</a>
-                                <ul class="dropdown">
-                                    <li><a href="formation-details.html" class="nav-link">Détails de la Formation</a></li>
-                                </ul>
-                            </li>
-                            <li class="active"><a href="produits.php" class="nav-link">Produits</a></li>
-                            <li><a href="#" class="nav-link" onclick="$('.choice-btn[data-section=\'orders\']').click(); return false;">Mes Commandes</a></li>
-                            <li class="has-children">
-                                <a href="#" class="nav-link">Pages</a>
-                                <ul class="dropdown">
-                                    <li><a href="agent_profile.html" class="nav-link">agent profile</a></li>
-                                    <li><a href="login.html" class="nav-link">login page</a></li>
-                                    <li><a href="register.html" class="nav-link">register page</a></li>
-                                    <li><a href="faq.html" class="nav-link">Faqs</a></li>
-                                    <li><a href="404.html" class="nav-link">404 page</a></li>
-                                </ul>
-                            </li>
-                            <li class="has-children">
-                                <a href="blog.html" class="nav-link">Entretien</a>
-                                <ul class="dropdown">
-                                    <li><a href="blog.html" class="nav-link">Blog Post</a></li>
-                                    <li><a href="blog-post.html" class="nav-link">Blog Single</a></li>
-                                </ul>
-                            </li>
-                            <li><a class="nav-link" href="offres-emploi.html">Offres</a></li>
-                            <li class="nav-reclamation-login">
-                                <a class="nav-link" href="front_mes_reclamations.html">Réclamations</a>
-                                <a href="login.html" class="login-pill">Se connecter</a>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
-                <div class="col-6 d-inline-block d-xl-none ml-md-0 py-3" style="position: relative; top: 3px;">
-                    <a href="#" class="site-menu-toggle js-menu-toggle float-right"><span class="icon-menu h3"></span></a>
-                </div>
-            </div>
-        </div>
-    </header>
-    <!-- END NAVBAR -->
+<!-- ═══════════ HERO ═══════════ -->
+<div class="tk-hero">
+    <h1>Notre <span>Boutique</span></h1>
+    <p>Découvrez nos produits soigneusement sélectionnés pour vous</p>
+</div>
 
-    <!-- START HOME -->
-    <section id="home" class="home_bg" style="background-image: url(assets/img/bg/home-bg.jpg); background-size:cover; background-position: center center;">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-10 offset-lg-1 col-sm-12 col-xs-12 text-center">
-                    <div class="hero-text">
-                        <h2>Bienvenue sur Takwinibot</h2>
-                        <p>Parcourez nos produits, passez commande, ou ajoutez un produit</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- END HOME -->
+<!-- ═══════════ TABS ═══════════ -->
+<div class="tk-tabs">
+    <button class="tk-tab active" data-section="browse">
+        <i class="fa fa-th-large"></i> Produits
+    </button>
+    <button class="tk-tab" data-section="orders">
+        <i class="fa fa-list-alt"></i> Mes Commandes
+        <?php if(count($all_orders)>0): ?><span class="cart-count" style="background:var(--navy);color:#fff;margin-left:4px;"><?= count($all_orders) ?></span><?php endif; ?>
+    </button>
+    <button class="tk-tab" data-section="add">
+        <i class="fa fa-plus"></i> Ajouter un produit
+    </button>
+</div>
 
-    <!-- START CHOICE SECTION -->
-    <div class="container" style="margin-top: 30px;">
-        <div class="choice-buttons">
-            <button class="choice-btn active" data-section="browse">📋 Parcourir les produits</button>
-            <button class="choice-btn" data-section="orders">📦 Mes Commandes</button>
-            <button class="choice-btn" data-section="add">➕ Ajouter un produit</button>
+<!-- ═══════════════════════════════════════
+     BROWSE SECTION
+═══════════════════════════════════════════ -->
+<div id="browse-section" class="tk-section active">
+
+    <!-- Category filter -->
+    <div class="tk-cats">
+        <div class="tk-cats-inner">
+            <a href="produits.php" class="cat-pill <?= $categorie_id===0?'active':'' ?>">
+                <span class="cat-em">🛍️</span> Tous
+            </a>
+            <?php foreach($categories as $cat):
+                $info = $cat_icons[$cat['nom']] ?? ['icon'=>'📦','color'=>'#94a3b8'];
+            ?>
+            <a href="produits.php?categorie=<?= $cat['id'] ?>"
+               class="cat-pill <?= $categorie_id==$cat['id']?'active':'' ?>"
+               style="<?= $categorie_id==$cat['id']?'background:'.$info['color'].';border-color:'.$info['color'].';color:#fff;':'' ?>">
+                <span class="cat-em"><?= $info['icon'] ?></span>
+                <?= htmlspecialchars($cat['nom']) ?>
+            </a>
+            <?php endforeach; ?>
         </div>
     </div>
 
-    <!-- START BROWSE PRODUCTS SECTION -->
-    <div id="browse-section" class="section-toggle active-section">
-        <!-- START CATEGORY FILTER -->
-        <div class="category-filter-section">
-            <div class="container">
-                <h3>Parcourir par catégorie</h3>
-                <div class="cat-cards-row">
-                    <!-- All -->
-                    <a href="produits.php" class="cat-card cat-card-all <?= $categorie_id === 0 ? 'active' : '' ?>">
-                        <span class="cat-icon">🛍️</span>
-                        Tous
-                    </a>
-                    <!-- Dynamic categories -->
-                    <?php foreach ($categories as $cat): 
-                        $info  = $cat_icons[$cat['nom']] ?? ['icon' => '📦', 'color' => '#ddd'];
-                        $isActive = $categorie_id == $cat['id'];
-                    ?>
-                    <a href="produits.php?categorie=<?= $cat['id'] ?>"
-                       class="cat-card <?= $isActive ? 'active' : '' ?>"
-                       style="background-color: <?= $info['color'] ?>22; <?= $isActive ? 'border-color:' . $info['color'] . ';' : '' ?>">
-                        <span class="cat-icon"><?= $info['icon'] ?></span>
-                        <?= htmlspecialchars($cat['nom']) ?>
-                    </a>
-                    <?php endforeach; ?>
-                </div>
+    <!-- Search -->
+    <div class="tk-search">
+        <form method="GET" action="produits.php">
+            <?php if($categorie_id>0): ?><input type="hidden" name="categorie" value="<?= $categorie_id ?>"><?php endif; ?>
+            <div class="tk-search-wrap">
+                <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Rechercher un produit...">
+                <button type="submit"><i class="fa fa-search"></i></button>
             </div>
-        </div>
-        <!-- END CATEGORY FILTER -->
-
-        <!-- START PRODUCTS -->
-        <section class="template_property section-padding">
-            <div class="container">
-                <div class="section-title text-center wow zoomIn">
-                    <h2>
-                        <?php if ($categorie_id > 0):
-                            $activeCat = array_filter($categories, fn($c) => $c['id'] == $categorie_id);
-                            $activeCat = reset($activeCat);
-                            $info = $cat_icons[$activeCat['nom']] ?? ['icon' => '📦'];
-                            echo $info['icon'] . ' ' . htmlspecialchars($activeCat['nom']);
-                        else: ?>
-                            Tous les Produits
-                        <?php endif; ?>
-                    </h2>
-                    <div></div>
-                    <p class="mt-2"><?= count($produits) ?> produit(s) trouvé(s)</p>
-                </div>
-
-                <?php if (empty($produits)): ?>
-                    <div class="row">
-                        <div class="col-lg-12 text-center">
-                            <div style="padding: 60px 20px; background: #f8f9fa; border-radius: 12px;">
-                                <span style="font-size:64px;">📦</span>
-                                <h3 class="mt-3">Aucun produit trouvé</h3>
-                                <p>Cette catégorie ne contient pas encore de produits.</p>
-                                <a href="produits.php" class="btn btn-serach-bg">Voir tous les produits</a>
-                            </div>
-                        </div>
-                    </div>
-                <?php else: ?>
-                    <div class="row">
-                        <?php foreach ($produits as $p): 
-                            $categorie_nom = $p['categorie_nom'] ?? 'Produit';
-                            $info = $cat_icons[$categorie_nom] ?? ['icon' => '📦', 'color' => '#667eea'];
-                        ?>
-                            <div class="col-lg-4 col-sm-12 col-xs-12 mb-4">
-                                <div class="single_property">
-                                    <?php if (!empty($p['image'])): ?>
-                                        <img src="../back/uploads/produits/<?= htmlspecialchars($p['image']) ?>"
-                                             alt="<?= htmlspecialchars($p['nom']) ?>"
-                                             style="width:100%; height:200px; object-fit:cover;">
-                                    <?php else: ?>
-                                        <div style="height:200px; background:linear-gradient(135deg, <?= $info['color'] ?> 0%, <?= $info['color'] ?>99 100%); display:flex; align-items:center; justify-content:center; font-size:64px;">
-                                            <?= $info['icon'] ?>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <div class="single_property_description text-center">
-                                        <span><i class="fa fa-tag"></i> <?= htmlspecialchars($categorie_nom) ?></span>
-                                    </div>
-                                    <div class="single_property_content">
-                                        <h4><a href="#"><?= htmlspecialchars($p['nom']) ?></a></h4>
-                                        <p><?= htmlspecialchars(substr($p['description'] ?? '', 0, 100)) ?><?= strlen($p['description'] ?? '') > 100 ? '...' : '' ?></p>
-                                    </div>
-                                    <div class="single_property_price">
-                                        <?= number_format($p['prix'], 2) ?> DT
-                                        <?php if ($p['stock'] > 0): ?>
-                                            <span style="font-size:12px; color:#28a745; margin-left:10px;">
-                                                <i class="fa fa-check-circle"></i> En stock
-                                            </span>
-                                        <?php else: ?>
-                                            <span style="font-size:12px; color:#dc3545; margin-left:10px;">
-                                                <i class="fa fa-times-circle"></i> Rupture
-                                            </span>
-                                        <?php endif; ?>
-                                        <br>
-                                        <a href="#" data-toggle="modal" data-target="#commandeModal"
-                                           data-produit-id="<?= $p['id'] ?>"
-                                           data-produit-nom="<?= htmlspecialchars($p['nom']) ?>"
-                                           data-produit-prix="<?= $p['prix'] ?>"
-                                           class="btn btn-serach-bg"
-                                           style="display:inline-block; margin-top:15px; padding:5px 20px; font-size:14px; background-color:#3bafda; color:#fff; border-radius:4px;">
-                                            <i class="fa fa-shopping-cart"></i> Commander
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </section>
-        <!-- END PRODUCTS -->
+        </form>
     </div>
-    <!-- END BROWSE PRODUCTS SECTION -->
 
-    <!-- START ORDERS SECTION -->
-    <div id="orders-section" class="section-toggle">
-        <div class="container">
-            <div class="orders-section">
-                <div class="section-title text-center wow zoomIn">
-                    <h2>📦 Mes Commandes</h2>
-                    <div></div>
-                    <p>Historique de toutes vos commandes</p>
+    <!-- Products -->
+    <div class="tk-products">
+        <?php if(empty($produits)): ?>
+        <div class="tk-empty">
+            <div class="icon">📦</div>
+            <h3>Aucun produit trouvé</h3>
+            <p>Essayez une autre catégorie ou effacez votre recherche.</p>
+            <a href="produits.php" class="btn-primary-tk" style="text-decoration:none;margin-top:16px;">Voir tout</a>
+        </div>
+        <?php else: ?>
+        <div class="tk-grid">
+            <?php foreach($produits as $p):
+                $cat_nom = $p['categorie_nom'] ?? 'Produit';
+                $info    = $cat_icons[$cat_nom] ?? ['icon'=>'📦','color'=>'#94a3b8'];
+                $in_stock = $p['stock'] > 0;
+            ?>
+            <div class="tk-card">
+                <div class="tk-card-img">
+                    <?php if(!empty($p['image'])): ?>
+                        <img src="../back/uploads/produits/<?= htmlspecialchars($p['image']) ?>" alt="<?= htmlspecialchars($p['nom']) ?>">
+                    <?php else: ?>
+                        <div class="placeholder" style="background:<?= $info['color'] ?>18;"><?= $info['icon'] ?></div>
+                    <?php endif; ?>
+                    <span class="tk-card-badge"><?= $info['icon'] ?> <?= htmlspecialchars($cat_nom) ?></span>
+                    <span class="tk-stock-badge <?= $in_stock?'in':'out' ?>">
+                        <?= $in_stock ? '● En stock ('.$p['stock'].')' : '✕ Rupture' ?>
+                    </span>
                 </div>
-                
-                <?php if (isset($_SESSION['order_success'])): ?>
-                    <div class="alert alert-success alert-dismissible fade show">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        <i class="fa fa-check-circle"></i> <?= $_SESSION['order_success'] ?>
-                        <?php unset($_SESSION['order_success']); ?>
+                <div class="tk-card-body">
+                    <h3><?= htmlspecialchars($p['nom']) ?></h3>
+                    <p><?= htmlspecialchars(substr($p['description']??'',0,90)) ?><?= strlen($p['description']??'')>90?'…':'' ?></p>
+                    <div class="tk-card-footer">
+                        <div class="tk-price"><?= number_format($p['prix'],3) ?> <small>DT</small></div>
                     </div>
-                <?php endif; ?>
-                
-                <?php if (isset($_SESSION['order_error'])): ?>
-                    <div class="alert alert-danger alert-dismissible fade show">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        <i class="fa fa-exclamation-triangle"></i> <?= $_SESSION['order_error'] ?>
-                        <?php unset($_SESSION['order_error']); ?>
-                    </div>
-                <?php endif; ?>
-                
-                <?php if (empty($all_orders)): ?>
-                    <div class="text-center" style="padding: 60px 20px; background: #f8f9fa; border-radius: 12px;">
-                        <span style="font-size: 64px;">📦</span>
-                        <h3>Aucune commande pour le moment</h3>
-                        <p>Vous n'avez pas encore passé de commande.</p>
-                        <button class="btn btn-primary" onclick="$('.choice-btn[data-section=\'browse\']').click();">
-                            Commencer mes achats
+                    <div class="tk-card-actions">
+                        <button class="btn-cart" <?= !$in_stock?'disabled':'' ?>
+                            onclick="addToCart(<?= $p['id'] ?>, '<?= htmlspecialchars($p['nom'],ENT_QUOTES) ?>', <?= $p['prix'] ?>, '<?= htmlspecialchars($p['image']??'',ENT_QUOTES) ?>', '<?= $info['icon'] ?>', <?= $p['stock'] ?>)">
+                            <i class="fa fa-shopping-bag"></i>
+                            <?= $in_stock ? 'Ajouter au panier' : 'Rupture de stock' ?>
+                        </button>
+                        <button class="btn-ai" onclick="openAIChat('<?= htmlspecialchars($p['nom'],ENT_QUOTES) ?>','<?= htmlspecialchars($cat_nom,ENT_QUOTES) ?>',<?= $p['prix'] ?>,'<?= $p['stock'] ?>','<?= htmlspecialchars(substr($p['description']??'',0,200),ENT_QUOTES) ?>')">
+                            🤖 Demander à l'assistant
                         </button>
                     </div>
-                <?php else: ?>
-                    <?php foreach ($all_orders as $order): ?>
-                        <div class="order-card">
-                            <div class="row align-items-center">
-                                <div class="col-md-3">
-                                    <strong>Commande #<?= str_pad($order['id'], 6, '0', STR_PAD_LEFT) ?></strong><br>
-                                    <small class="text-muted"><?= date('d/m/Y H:i', strtotime($order['date_commande'])) ?></small>
-                                </div>
-                                <div class="col-md-3">
-                                    <span class="status-badge status-<?= str_replace(' ', '-', $order['statut']) ?>">
-                                        <?= ucfirst($order['statut']) ?>
-                                    </span>
-                                </div>
-                                <div class="col-md-2">
-                                    <strong style="color: #3bafda; font-size: 18px;"><?= number_format($order['total'], 2) ?> DT</strong>
-                                </div>
-                                <div class="col-md-2">
-                                    <small><i class="fa fa-boxes"></i> <?= $order['nb_products'] ?> article(s)</small>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="action-buttons">
-                                        <button class="btn btn-sm btn-info" onclick="viewOrderDetails(<?= $order['id'] ?>)">
-                                            <i class="fa fa-eye"></i> Détails
-                                        </button>
-                                        <button class="btn-delete" onclick="deleteOrder(<?= $order['id'] ?>, '<?= str_pad($order['id'], 6, '0', STR_PAD_LEFT) ?>')">
-                                            <i class="fa fa-trash"></i> Supprimer
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     ORDERS SECTION
+═══════════════════════════════════════════ -->
+<div id="orders-section" class="tk-section">
+    <div class="tk-orders">
+        <div class="tk-section-head">
+            <h2>Mes Commandes</h2>
+            <p>Historique complet de vos achats</p>
+        </div>
+
+        <?php if(isset($_SESSION['order_success'])): ?>
+            <div class="tk-alert success"><i class="fa fa-check-circle"></i> <?= $_SESSION['order_success'] ?><?php unset($_SESSION['order_success']); ?></div>
+        <?php endif; ?>
+        <?php if(isset($_SESSION['order_error'])): ?>
+            <div class="tk-alert error"><i class="fa fa-exclamation-triangle"></i> <?= $_SESSION['order_error'] ?><?php unset($_SESSION['order_error']); ?></div>
+        <?php endif; ?>
+
+        <?php if(empty($all_orders)): ?>
+        <div class="tk-empty">
+            <div class="icon">📋</div>
+            <h3>Aucune commande</h3>
+            <p>Vous n'avez pas encore passé de commande.</p>
+        </div>
+        <?php else: ?>
+        <?php foreach($all_orders as $order):
+            $pm = $order['payment_method'] ?? 'N/A';
+            $pmIcon = $pm==='flouci'?'📱':($pm==='d17'?'🏦':($pm==='livraison'?'🚚':'❓'));
+            $statusClass = 'status-'.str_replace([' ','é'],['-','e'],$order['statut']);
+        ?>
+        <div class="order-card">
+            <div>
+                <div class="order-num">#<?= str_pad($order['id'],6,'0',STR_PAD_LEFT) ?></div>
+                <div class="order-date"><?= date('d/m/Y H:i',strtotime($order['date_commande'])) ?></div>
+            </div>
+            <span class="status-badge <?= $statusClass ?>"><?= ucfirst($order['statut']) ?></span>
+            <div class="order-total"><?= number_format($order['total'],3) ?> DT</div>
+            <span class="pm-badge"><?= $pmIcon ?> <?= htmlspecialchars(ucfirst($pm)) ?></span>
+            <span style="font-size:13px;color:var(--gray);"><i class="fa fa-cube"></i> <?= $order['nb_products'] ?> article(s)</span>
+            <div class="order-actions">
+                <button class="btn-icon" onclick="viewOrderDetails(<?= $order['id'] ?>)" title="Détails"><i class="fa fa-eye"></i></button>
+                <button class="btn-icon danger" onclick="confirmDelete(<?= $order['id'] ?>, '<?= str_pad($order['id'],6,'0',STR_PAD_LEFT) ?>')" title="Supprimer"><i class="fa fa-trash"></i></button>
             </div>
         </div>
+        <?php endforeach; ?>
+        <?php endif; ?>
     </div>
-    <!-- END ORDERS SECTION -->
+</div>
 
-    <!-- START ADD PRODUCT SECTION -->
-<div id="add-section" class="section-toggle">
-    <div class="container">
-        <div class="add-product-section">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="add-product-card">
-                        <div class="text-center">
-                            <span style="font-size: 48px;">🛍️</span>
-                            <h3>Ajouter un nouveau produit</h3>
-                            <p>Partagez votre produit avec la communauté Takwinibot</p>
-                        </div>
-                        
-                        <?php if ($add_success): ?>
-                            <div class="alert alert-success alert-custom">
-                                <i class="fa fa-check-circle"></i> <?= htmlspecialchars($add_success) ?>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <?php if ($add_error): ?>
-                            <div class="alert alert-danger alert-custom">
-                                <i class="fa fa-exclamation-triangle"></i> <?= htmlspecialchars($add_error) ?>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <form method="POST" action="" enctype="multipart/form-data" id="addProductForm">
-                            <input type="hidden" name="action" value="add_product">
-                            
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label><i class="fa fa-tag"></i> Nom du produit *</label>
-                                        <input type="text" class="form-control" name="nom" id="productName" required 
-                                               placeholder="Ex: Ordinateur Portable" 
-                                               onkeyup="validateProductName()">
-                                        <div class="invalid-feedback">Le nom du produit est requis (minimum 3 caractères)</div>
-                                        <div class="valid-feedback">Nom du produit valide !</div>
-                                    </div>
-                                    <div id="namePreview" class="product-name-preview">
-                                        <small><i class="fa fa-eye"></i> Aperçu: <strong id="previewName"></strong></small>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label><i class="fa fa-folder"></i> Catégorie *</label>
-                                        <select class="form-control" name="categorie_id" id="categorySelect" required onchange="validateCategory()">
-                                            <option value="">-- Sélectionnez une catégorie --</option>
-                                            <?php foreach ($categories as $cat): ?>
-                                                <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nom']) ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <div class="invalid-feedback">Veuillez sélectionner une catégorie</div>
-                                        <div class="valid-feedback">Catégorie sélectionnée !</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label><i class="fa fa-money"></i> Prix (DT) *</label>
-                                        <div class="price-input-wrapper">
-                                            <input type="number" step="0.01" class="form-control" name="prix" id="productPrice" 
-                                                   required placeholder="0.00" min="0" oninput="validatePrice()">
-                                        </div>
-                                        <div class="invalid-feedback">Le prix doit être supérieur à 0</div>
-                                        <div class="valid-feedback">Prix valide !</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label><i class="fa fa-boxes"></i> Stock *</label>
-                                        <div class="stock-control">
-                                            <input type="number" class="form-control" name="stock" id="productStock" 
-                                                   required placeholder="0" min="0" value="0" oninput="validateStock()">
-                                            <div class="stock-buttons">
-                                                <button type="button" class="stock-btn" onclick="adjustStock(-1)">-</button>
-                                                <button type="button" class="stock-btn" onclick="adjustStock(1)">+</button>
-                                            </div>
-                                        </div>
-                                        <div class="invalid-feedback">Le stock doit être un nombre valide (0 ou plus)</div>
-                                        <div class="valid-feedback">Stock valide !</div>
-                                        <small id="stockWarning" class="text-muted"></small>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label><i class="fa fa-info-circle"></i> Statut stock</label>
-                                        <div id="stockStatus" class="mt-2">
-                                            <span class="badge" style="background: #28a745; color: white; padding: 5px 10px;">Disponible</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label><i class="fa fa-align-left"></i> Description</label>
-                                <textarea class="form-control" name="description" id="productDescription" 
-                                          rows="4" placeholder="Décrivez votre produit..." 
-                                          maxlength="500" oninput="updateCharCount()"></textarea>
-                                <div class="char-counter" id="charCount">0 / 500 caractères</div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label><i class="fa fa-image"></i> Image du produit</label>
-                                <input type="file" class="form-control-file" name="image" id="productImage" 
-                                       accept="image/*" onchange="previewImage(this)">
-                                <small class="form-text text-muted">Formats acceptés: JPG, PNG, GIF (max 5MB)</small>
-                                
-                                <div id="imagePreviewContainer" style="display: none;" class="text-center mt-3">
-                                    <div class="image-preview-container">
-                                        <img id="imagePreview" class="image-preview" src="#" alt="Aperçu">
-                                    </div>
-                                    <div class="image-preview-actions">
-                                        <button type="button" class="btn-remove-image" onclick="removeImage()">
-                                            <i class="fa fa-trash"></i> Supprimer l'image
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group" id="formSummary" style="display: none; background: #e8f4f8; padding: 15px; border-radius: 10px; margin-top: 20px;">
-                                <h6><i class="fa fa-check-circle"></i> Récapitulatif</h6>
-                                <p><strong>Produit:</strong> <span id="summaryName">-</span></p>
-                                <p><strong>Catégorie:</strong> <span id="summaryCategory">-</span></p>
-                                <p><strong>Prix:</strong> <span id="summaryPrice">-</span> DT</p>
-                                <p><strong>Stock:</strong> <span id="summaryStock">-</span> unités</p>
-                            </div>
-                            
-                            <div class="text-center">
-                                <button type="button" class="btn btn-secondary" onclick="resetForm()" style="margin-right: 10px;">
-                                    <i class="fa fa-refresh"></i> Réinitialiser
-                                </button>
-                                <button type="submit" class="btn btn-submit-product" id="submitBtn">
-                                    <i class="fa fa-plus-circle"></i> Ajouter le produit
-                                </button>
-                            </div>
-                        </form>
+<!-- ═══════════════════════════════════════
+     ADD PRODUCT SECTION
+═══════════════════════════════════════════ -->
+<div id="add-section" class="tk-section">
+    <div class="tk-add">
+        <div class="tk-add-card">
+            <h2>Ajouter un produit</h2>
+            <p>Remplissez le formulaire pour ajouter un nouveau produit au catalogue.</p>
+            <?php if($add_success): ?><div class="tk-alert success"><?= htmlspecialchars($add_success) ?></div><?php endif; ?>
+            <?php if($add_error):   ?><div class="tk-alert error"><?= htmlspecialchars($add_error) ?></div><?php endif; ?>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="add_product">
+                <div class="tk-form-group">
+                    <label>Nom du produit *</label>
+                    <input type="text" name="nom" required placeholder="Ex: Ordinateur Portable Dell XPS">
+                </div>
+                <div class="tk-form-row">
+                    <div class="tk-form-group">
+                        <label>Catégorie *</label>
+                        <select name="categorie_id" required>
+                            <option value="">-- Sélectionnez --</option>
+                            <?php foreach($categories as $cat): ?>
+                            <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nom']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="tk-form-group">
+                        <label>Prix (DT) *</label>
+                        <input type="number" step="0.001" name="prix" required placeholder="0.000">
                     </div>
                 </div>
+                <div class="tk-form-group">
+                    <label>Stock initial</label>
+                    <input type="number" name="stock" min="0" value="0">
+                </div>
+                <div class="tk-form-group">
+                    <label>Description</label>
+                    <textarea name="description" rows="3" placeholder="Décrivez le produit..."></textarea>
+                </div>
+                <div class="tk-form-group">
+                    <label>Image du produit</label>
+                    <input type="file" name="image" accept="image/*" style="padding:8px;">
+                </div>
+                <button type="submit" class="btn-primary-tk">
+                    <i class="fa fa-plus-circle"></i> Ajouter le produit
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     CART DRAWER
+═══════════════════════════════════════════ -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+    <div class="cart-drawer-head">
+        <h2>🛒 Mon panier</h2>
+        <button class="cart-close" onclick="closeCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems">
+        <div class="cart-empty">
+            <div class="icon">🛍️</div>
+            <p>Votre panier est vide.<br>Ajoutez des produits pour commencer.</p>
+        </div>
+    </div>
+    <div class="cart-footer" id="cartFooter" style="display:none;">
+        <div class="cart-total-row">
+            <span class="label">Total</span>
+            <span class="amount" id="cartTotal">0.000 DT</span>
+        </div>
+        <button class="btn-checkout" onclick="goToCheckout()">
+            <i class="fa fa-lock"></i> Passer au paiement
+        </button>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     ORDER DETAILS MODAL
+═══════════════════════════════════════════ -->
+<div class="tk-modal-backdrop" id="orderDetailsModal">
+    <div class="tk-modal">
+        <div class="tk-modal-head">
+            <h3>Détails de la commande</h3>
+            <button class="tk-modal-close" onclick="closeModal('orderDetailsModal')">✕</button>
+        </div>
+        <div class="tk-modal-body" id="orderDetailsContent">
+            <div style="text-align:center;padding:40px;color:var(--gray);">
+                <div class="spinner" style="border-color:rgba(59,175,218,.3);border-top-color:var(--accent);width:30px;height:30px;margin:0 auto 12px;"></div>
+                Chargement...
             </div>
         </div>
     </div>
 </div>
-<!-- END ADD PRODUCT SECTION -->
 
-    <!-- START FOOTER -->
-    <footer class="footer-area">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <div class="footer_social">
-                        <ul>
-                            <li><a data-toggle="tooltip" data-placement="top" title="Facebook" href="#"><i class="fa fa-facebook"></i></a></li>
-                            <li><a data-toggle="tooltip" data-placement="top" title="Twitter" href="#"><i class="fa fa-instagram"></i></a></li>
-                            <li><a data-toggle="tooltip" data-placement="top" title="Google Plus" href="#"><i class="fa fa-google-plus"></i></a></li>
-                            <li><a data-toggle="tooltip" data-placement="top" title="Linkedin" href="#"><i class="fa fa-linkedin"></i></a></li>
-                            <li><a data-toggle="tooltip" data-placement="top" title="Youtube" href="#"><i class="fa fa-youtube"></i></a></li>
-                            <li><a data-toggle="tooltip" data-placement="top" title="Skype" href="#"><i class="fa fa-skype"></i></a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="row footer-padding">
-                <div class="col-lg-3 col-sm-3 col-xs-12">
-                    <div class="single_footer">
-                        <h4>Contact Us</h4>
-                        <div class="footer_contact">
-                            <ul>
-                                <li><i class="fa fa-rocket"></i> <span>3481 Melrose Place, Beverly Hills, CA 90210</span></li>
-                                <li><i class="fa fa-phone"></i> <span>Call Us - (+1) 517 397 7100</span></li>
-                                <li><i class="fa fa-fax"></i> <span>Fax - (+12) 123 1234</span></li>
-                                <li><i class="fa fa-envelope"></i> <span>info@example.com</span></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-3 col-xs-12">
-                    <div class="single_footer">
-                        <h4>Customer service</h4>
-                        <div class="footer_contact">
-                            <ul>
-                                <li><a href="#">My Account</a></li>
-                                <li><a href="#">Order History</a></li>
-                                <li><a href="#">FAQ</a></li>
-                                <li><a href="#">Specials</a></li>
-                                <li><a href="#">Help Center</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-3 col-xs-12">
-                    <div class="single_footer">
-                        <h4>Helpful Link</h4>
-                        <div class="footer_contact">
-                            <ul>
-                                <li><a href="#">About us</a></li>
-                                <li><a href="#">Customer Service</a></li>
-                                <li><a href="#">Company</a></li>
-                                <li><a href="#">Investor Relations</a></li>
-                                <li><a href="#">Advanced Search</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-3 col-xs-12">
-                    <div class="single_footer">
-                        <h4>Why choose Us</h4>
-                        <div class="footer_contact">
-                            <ul>
-                                <li><a href="#">Shopping Guide</a></li>
-                                <li><a href="#">Blog</a></li>
-                                <li><a href="#">Company</a></li>
-                                <li><a href="#">Investor Relations</a></li>
-                                <li><a href="front_formulaire_reclamation.html">Contact Us</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row text-center">
-                <div class="col-lg-12 col-sm-12 col-xs-12 wow zoomIn">
-                    <p class="footer_copyright">Takwinibot &copy; 2026 All Rights Reserved.</p>
-                </div>
-            </div>
+<!-- Delete confirm modal -->
+<div class="tk-modal-backdrop" id="deleteModal">
+    <div class="tk-modal" style="max-width:380px;">
+        <div class="tk-modal-head">
+            <h3>Confirmer la suppression</h3>
+            <button class="tk-modal-close" onclick="closeModal('deleteModal')">✕</button>
         </div>
-    </footer>
-    <!-- END FOOTER -->
-
-    <!-- Modal Commande -->
-    <div class="modal fade" id="commandeModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 99999;">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Passer commande</h5>
-                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                </div>
-                <form method="POST" action="">
-                    <input type="hidden" name="submit_order" value="1">
-                    <div class="modal-body">
-                        <input type="hidden" name="produit_id" id="modal_produit_id">
-                        <div class="form-group" style="text-align:left;">
-                            <label>Produit</label>
-                            <input type="text" class="form-control" id="modal_produit_nom" readonly>
-                        </div>
-                        <div class="form-group" style="text-align:left;">
-                            <label>Prix (DT)</label>
-                            <input type="text" class="form-control" id="modal_produit_prix" readonly>
-                        </div>
-                        <div class="form-group" style="text-align:left;">
-                            <label>Quantité</label>
-                            <input type="number" class="form-control" name="quantite" value="1" min="1" required>
-                        </div>
-                        <div class="form-group" style="text-align:left;">
-                            <label>Nom complet</label>
-                            <input type="text" class="form-control" name="nom_complet" required>
-                        </div>
-                        <div class="form-group" style="text-align:left;">
-                            <label>Email</label>
-                            <input type="email" class="form-control" name="email" required>
-                        </div>
-                        <div class="form-group" style="text-align:left;">
-                            <label>Téléphone</label>
-                            <input type="tel" class="form-control" name="telephone" required>
-                        </div>
-                        <div class="form-group" style="text-align:left;">
-                            <label>Adresse de livraison</label>
-                            <textarea class="form-control" name="adresse" rows="2" required></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-serach-bg" style="background-color:#3bafda; color:#fff;">Confirmer la commande</button>
-                    </div>
-                </form>
+        <div class="tk-modal-body">
+            <p style="color:var(--gray);margin-bottom:20px;">Voulez-vous vraiment supprimer la commande <strong id="deleteOrderNum"></strong> ? Cette action est irréversible.</p>
+            <div style="display:flex;gap:10px;">
+                <button onclick="closeModal('deleteModal')" class="btn-primary-tk" style="background:var(--light);color:var(--navy);flex:1;">Annuler</button>
+                <a id="confirmDeleteLink" href="#" class="btn-primary-tk" style="background:var(--red);flex:1;text-decoration:none;justify-content:center;">Supprimer</a>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Order Details Modal -->
-    <div class="modal fade order-details-modal" id="orderDetailsModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header" style="background: #3bafda; color: white;">
-                    <h5 class="modal-title">Détails de la commande</h5>
-                    <button type="button" class="close" data-dismiss="modal" style="color: white;">&times;</button>
-                </div>
-                <div class="modal-body" id="orderDetailsContent">
-                    <div class="text-center">
-                        <i class="fa fa-spinner fa-spin"></i> Chargement...
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
-                </div>
+<!-- ═══════════════════════════════════════
+     AI ASSISTANT
+═══════════════════════════════════════════ -->
+<div class="ai-bubble-wrap" id="aiWrap" style="display:none;">
+    <div class="ai-panel" id="aiPanel">
+        <div class="ai-panel-head">
+            <div class="ai-av">🤖</div>
+            <div>
+                <h5 id="aiProdName">Assistant</h5>
+                <p>Posez vos questions sur ce produit</p>
             </div>
+            <button class="ai-close" onclick="closeAIChat()">✕</button>
         </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header" style="background: #dc3545; color: white;">
-                    <h5 class="modal-title">Confirmer la suppression</h5>
-                    <button type="button" class="close" data-dismiss="modal" style="color: white;">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p>Êtes-vous sûr de vouloir supprimer cette commande ?</p>
-                    <p class="text-danger"><strong>Attention:</strong> Cette action est irréversible et le stock des produits sera restauré.</p>
-                    <p><strong>Commande:</strong> <span id="deleteOrderNumber"></span></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
-                    <a href="#" id="confirmDeleteBtn" class="btn btn-danger">Supprimer</a>
-                </div>
-            </div>
+        <div class="ai-msgs" id="aiMsgs"></div>
+        <div class="ai-chips" id="aiChips"></div>
+        <div class="ai-input-row">
+            <input type="text" id="aiInput" placeholder="Votre question..." onkeydown="if(event.key==='Enter')sendAIMsg()">
+            <button class="ai-send" onclick="sendAIMsg()"><i class="fa fa-paper-plane"></i></button>
         </div>
+        <div class="ai-footer-note">Takwinibot Assistant ✨</div>
     </div>
+    <button class="ai-toggle-btn" onclick="toggleAI()" title="Assistant IA">🤖</button>
+</div>
 
-    <script src="assets/js/jquery-1.12.4.min.js"></script>
-    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
-    <script src="assets/js/modernizr-2.8.3.min.js"></script>
-    <script src="assets/js/jquery.stellar.min.js"></script>
-    <script src="assets/js/menu.js"></script>
-    <script src="assets/js/jquery.sticky.js"></script>
-    <script src="assets/owlcarousel/js/owl.carousel.min.js"></script>
-    <script src="assets/js/jquery.magnific-popup.min.js"></script>
-    <script src="assets/js/slick.min.js"></script>
-    <script src="assets/js/jquery.mixitup.js"></script>
-    <script src="assets/js/jquery.prettyPhoto.js"></script>
-    <script src="assets/js/scrolltopcontrol.js"></script>
-    <script src="assets/js/wow.min.js"></script>
-    <script src="assets/js/scripts.js"></script>
+<!-- Hidden form for order submission (kept from original) -->
+<form method="POST" action="" id="realOrderForm" style="display:none;">
+    <input type="hidden" name="submit_order" value="1">
+    <input type="hidden" name="produit_id"      id="form_produit_id">
+    <input type="hidden" name="quantite"         id="form_quantite">
+    <input type="hidden" name="nom_complet"      id="form_nom">
+    <input type="hidden" name="email"            id="form_email">
+    <input type="hidden" name="telephone"        id="form_telephone">
+    <input type="hidden" name="adresse"          id="form_adresse">
+    <input type="hidden" name="payment_method"   id="form_payment_method">
+    <input type="hidden" name="payment_phone"    id="form_payment_phone">
+</form>
 
-    <script>
-        // Toggle between sections
-        $('.choice-btn').on('click', function() {
-            var section = $(this).data('section');
-            $('.choice-btn').removeClass('active');
-            $(this).addClass('active');
-            $('.section-toggle').removeClass('active-section');
-            $('#' + section + '-section').addClass('active-section');
-        });
-        
-        // Modal commande
-        $('#commandeModal').on('show.bs.modal', function(event) {
-            var button = $(event.relatedTarget);
-            var modal = $(this);
-            modal.find('#modal_produit_id').val(button.data('produit-id'));
-            modal.find('#modal_produit_nom').val(button.data('produit-nom'));
-            modal.find('#modal_produit_prix').val(button.data('produit-prix') + ' DT');
-        });
-        
-        // View order details
-        function viewOrderDetails(orderId) {
-            $('#orderDetailsModal').modal('show');
-            $('#orderDetailsContent').html('<div class="text-center"><i class="fa fa-spinner fa-spin"></i> Chargement...</div>');
-            
-            $.ajax({
-                url: window.location.href,
-                type: 'GET',
-                data: { get_order_details: orderId },
-                dataType: 'json',
-                success: function(data) {
-                    var html = `
-                        <h6>Commande #${String(orderId).padStart(6, '0')}</h6>
-                        <p><strong>Date:</strong> ${new Date(data.order.date_commande).toLocaleString()}</p>
-                        <p><strong>Statut:</strong> <span class="status-badge status-${data.order.statut.replace(/ /g, '-')}">${data.order.statut}</span></p>
-                        <p><strong>Total:</strong> <strong style="color: #3bafda;">${parseFloat(data.order.total).toFixed(2)} DT</strong></p>
-                        
-                        <h6 class="mt-3">Articles commandés:</h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered">
-                                <thead style="background: #3bafda; color: white;">
-                                    <tr><th>Produit</th><th>Qté</th><th>Prix unit.</th><th>Total</th></tr>
-                                </thead>
-                                <tbody>
-                    `;
-                    
-                    data.items.forEach(function(item) {
-                        html += `
-                            <tr>
-                                <td>${item.product_name}</td>
-                                <td>${item.quantite}</td>
-                                <td>${parseFloat(item.prix_unitaire).toFixed(2)} DT</td>
-                                <td>${(item.quantite * item.prix_unitaire).toFixed(2)} DT</td>
-                            </tr>
-                        `;
-                    });
-                    
-                    html += `
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <h6>Informations de livraison:</h6>
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                            <p class="mb-1"><strong>Nom:</strong> ${data.order.nom_client}</p>
-                            <p class="mb-1"><strong>Email:</strong> ${data.order.email_client}</p>
-                            <p class="mb-1"><strong>Téléphone:</strong> ${data.order.telephone_client}</p>
-                            <p class="mb-0"><strong>Adresse:</strong><br>${data.order.adresse_livraison.replace(/\n/g, '<br>')}</p>
-                        </div>
-                    `;
-                    
-                    $('#orderDetailsContent').html(html);
-                },
-                error: function() {
-                    $('#orderDetailsContent').html('<div class="alert alert-danger">Erreur lors du chargement des détails</div>');
-                }
+<!-- ═══════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════ -->
+<footer style="background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padding:24px;font-size:13px;margin-top:60px;">
+    Takwinibot &copy; 2026 — Tous droits réservés.
+</footer>
+
+<!-- JS -->
+<script src="assets/js/jquery-1.12.4.min.js"></script>
+<script src="assets/bootstrap/js/bootstrap.min.js"></script>
+<script src="assets/js/menu.js"></script>
+<script src="assets/js/wow.min.js"></script>
+<script src="assets/js/scripts.js"></script>
+
+<script>
+// ═══════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════
+document.querySelectorAll('.tk-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+        document.querySelectorAll('.tk-tab').forEach(function(b){ b.classList.remove('active'); });
+        document.querySelectorAll('.tk-section').forEach(function(s){ s.classList.remove('active'); });
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.section + '-section').classList.add('active');
+    });
+});
+
+// ═══════════════════════════════════════
+//  CART STATE
+// ═══════════════════════════════════════
+var cart = [];
+
+function addToCart(id, nom, prix, image, icon, stock) {
+    var existing = cart.find(function(i){ return i.id === id; });
+    if (existing) {
+        if (existing.qty < stock) { existing.qty++; }
+        else { showToast('Stock maximum atteint!', 'warning'); return; }
+    } else {
+        cart.push({ id:id, nom:nom, prix:prix, image:image, icon:icon, stock:stock, qty:1 });
+    }
+    updateCartUI();
+    openCart();
+    showToast(nom + ' ajouté au panier!', 'success');
+}
+
+function removeFromCart(id) {
+    cart = cart.filter(function(i){ return i.id !== id; });
+    updateCartUI();
+}
+
+function changeQty(id, delta) {
+    var item = cart.find(function(i){ return i.id === id; });
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) { removeFromCart(id); return; }
+    if (item.qty > item.stock) { item.qty = item.stock; showToast('Stock maximum atteint!','warning'); }
+    updateCartUI();
+}
+
+function getCartTotal() {
+    return cart.reduce(function(sum, i){ return sum + (i.prix * i.qty); }, 0);
+}
+
+function getCartCount() {
+    return cart.reduce(function(sum, i){ return sum + i.qty; }, 0);
+}
+
+function updateCartUI() {
+    var count = getCartCount();
+    document.getElementById('cartCount').textContent = count;
+
+    var itemsEl = document.getElementById('cartItems');
+    var footerEl = document.getElementById('cartFooter');
+
+    if (cart.length === 0) {
+        itemsEl.innerHTML = '<div class="cart-empty"><div class="icon">🛍️</div><p>Votre panier est vide.<br>Ajoutez des produits pour commencer.</p></div>';
+        footerEl.style.display = 'none';
+        return;
+    }
+
+    footerEl.style.display = 'block';
+    document.getElementById('cartTotal').textContent = getCartTotal().toFixed(3) + ' DT';
+
+    itemsEl.innerHTML = cart.map(function(item){
+        var imgHtml = item.image
+            ? '<img src="../back/uploads/produits/'+item.image+'" alt="">'
+            : '<div class="ph">'+item.icon+'</div>';
+        return '<div class="cart-item">'+
+            '<div class="cart-item-img">'+imgHtml+'</div>'+
+            '<div class="cart-item-info">'+
+                '<h4>'+item.nom+'</h4>'+
+                '<div class="price">'+item.prix.toFixed(3)+' DT</div>'+
+                '<div class="cart-item-qty">'+
+                    '<button class="qty-btn" onclick="changeQty('+item.id+',-1)">−</button>'+
+                    '<span class="qty-num">'+item.qty+'</span>'+
+                    '<button class="qty-btn" onclick="changeQty('+item.id+',1)">+</button>'+
+                '</div>'+
+            '</div>'+
+            '<button class="cart-item-remove" onclick="removeFromCart('+item.id+')" title="Supprimer">✕</button>'+
+        '</div>';
+    }).join('');
+}
+
+function openCart() {
+    document.getElementById('cartDrawer').classList.add('open');
+    document.getElementById('cartOverlay').classList.add('open');
+}
+
+function closeCart() {
+    document.getElementById('cartDrawer').classList.remove('open');
+    document.getElementById('cartOverlay').classList.remove('open');
+}
+
+// ═══════════════════════════════════════
+//  CHECKOUT — pass cart to checkout.php
+// ═══════════════════════════════════════
+function goToCheckout() {
+    if (cart.length === 0) return;
+    sessionStorage.setItem('tk_cart', JSON.stringify(cart));
+    window.location.href = 'checkout.php';
+}
+
+// ═══════════════════════════════════════
+//  TOAST NOTIFICATION
+// ═══════════════════════════════════════
+function showToast(msg, type) {
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);'+
+        'background:'+(type==='success'?'#0f172a':'#f59e0b')+';color:#fff;'+
+        'padding:12px 24px;border-radius:50px;font-size:14px;font-weight:600;'+
+        'z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3);'+
+        'transition:opacity .3s;font-family:"DM Sans",sans-serif;';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.style.opacity='0'; setTimeout(function(){ t.remove(); },300); }, 2500);
+}
+
+// ═══════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════
+function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.tk-modal-backdrop').forEach(function(m){
+    m.addEventListener('click', function(e){ if(e.target===m) m.classList.remove('open'); });
+});
+
+function viewOrderDetails(orderId) {
+    var modal = document.getElementById('orderDetailsModal');
+    modal.classList.add('open');
+    document.getElementById('orderDetailsContent').innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray);">Chargement...</div>';
+    fetch('produits.php?get_order_details='+orderId)
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+            var pm = data.order.payment_method || 'N/A';
+            var pmIcon = pm==='flouci'?'📱':(pm==='d17'?'🏦':(pm==='livraison'?'🚚':'❓'));
+            var html = '<p><strong>Commande #'+String(orderId).padStart(6,'0')+'</strong></p>'+
+                '<p style="color:var(--gray);font-size:13px;">'+new Date(data.order.date_commande).toLocaleString()+'</p>'+
+                '<p><span class="status-badge status-'+data.order.statut.replace(/ /g,'-').replace(/é/g,'e')+'">'+data.order.statut+'</span></p>'+
+                '<p><span class="pm-badge">'+pmIcon+' '+pm+'</span></p>'+
+                (data.order.payment_phone?'<p>Tel paiement: +216 '+data.order.payment_phone+'</p>':'')+
+                '<p style="font-size:18px;font-weight:800;color:var(--accent);">Total: '+parseFloat(data.order.total).toFixed(3)+' DT</p>'+
+                '<table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:12px;">'+
+                '<thead><tr style="background:var(--navy);color:#fff;"><th style="padding:8px;border-radius:6px 0 0 0;">Produit</th><th style="padding:8px;">Qté</th><th style="padding:8px;">Prix</th><th style="padding:8px;border-radius:0 6px 0 0;">Total</th></tr></thead><tbody>';
+            data.items.forEach(function(item){
+                html += '<tr style="border-bottom:1px solid var(--light);">'+
+                    '<td style="padding:8px;">'+item.product_name+'</td>'+
+                    '<td style="padding:8px;text-align:center;">'+item.quantite+'</td>'+
+                    '<td style="padding:8px;">'+parseFloat(item.prix_unitaire).toFixed(3)+' DT</td>'+
+                    '<td style="padding:8px;font-weight:700;">'+((item.quantite*item.prix_unitaire).toFixed(3))+' DT</td></tr>';
             });
-        }
-        
-        // Delete order function
-        function deleteOrder(orderId, orderNumber) {
-            $('#deleteOrderNumber').text(orderNumber);
-            $('#confirmDeleteBtn').attr('href', '?delete_order=' + orderId);
-            $('#deleteConfirmModal').modal('show');
-        }
-
-        // ============================================================
-// FORM VALIDATION & CONTROLS
-// ============================================================
-
-// Product name validation
-function validateProductName() {
-    const nameInput = document.getElementById('productName');
-    const name = nameInput.value.trim();
-    const previewDiv = document.getElementById('namePreview');
-    const previewSpan = document.getElementById('previewName');
-    
-    if (name.length >= 3) {
-        nameInput.classList.remove('is-invalid');
-        nameInput.classList.add('is-valid');
-        previewDiv.classList.add('active');
-        previewSpan.textContent = name;
-        updateFormSummary();
-        return true;
-    } else if (name.length > 0) {
-        nameInput.classList.add('is-invalid');
-        nameInput.classList.remove('is-valid');
-        previewDiv.classList.remove('active');
-        return false;
-    } else {
-        nameInput.classList.remove('is-invalid');
-        nameInput.classList.remove('is-valid');
-        previewDiv.classList.remove('active');
-        return false;
-    }
-}
-
-// Category validation
-function validateCategory() {
-    const categorySelect = document.getElementById('categorySelect');
-    const selected = categorySelect.value;
-    
-    if (selected) {
-        categorySelect.classList.remove('is-invalid');
-        categorySelect.classList.add('is-valid');
-        updateFormSummary();
-        return true;
-    } else {
-        categorySelect.classList.add('is-invalid');
-        categorySelect.classList.remove('is-valid');
-        return false;
-    }
-}
-
-// Price validation
-function validatePrice() {
-    const priceInput = document.getElementById('productPrice');
-    const price = parseFloat(priceInput.value);
-    
-    if (price > 0) {
-        priceInput.classList.remove('is-invalid');
-        priceInput.classList.add('is-valid');
-        updateFormSummary();
-        return true;
-    } else if (priceInput.value !== '') {
-        priceInput.classList.add('is-invalid');
-        priceInput.classList.remove('is-valid');
-        return false;
-    } else {
-        priceInput.classList.remove('is-invalid');
-        priceInput.classList.remove('is-valid');
-        return false;
-    }
-}
-
-// Stock validation
-function validateStock() {
-    const stockInput = document.getElementById('productStock');
-    const stock = parseInt(stockInput.value);
-    const stockStatus = document.getElementById('stockStatus');
-    const stockWarning = document.getElementById('stockWarning');
-    
-    if (!isNaN(stock) && stock >= 0) {
-        stockInput.classList.remove('is-invalid');
-        stockInput.classList.add('is-valid');
-        
-        // Update stock status badge
-        if (stock === 0) {
-            stockStatus.innerHTML = '<span class="badge" style="background: #dc3545; color: white; padding: 5px 10px;">⚠️ Rupture de stock</span>';
-            stockWarning.innerHTML = '<i class="fa fa-warning"></i> Ce produit sera marqué comme "Rupture"';
-            stockWarning.style.color = '#dc3545';
-        } else if (stock < 5) {
-            stockStatus.innerHTML = '<span class="badge" style="background: #ffc107; color: #000; padding: 5px 10px;">⚠️ Stock faible (' + stock + ' unités)</span>';
-            stockWarning.innerHTML = '<i class="fa fa-info-circle"></i> Stock faible, pensez à réapprovisionner';
-            stockWarning.style.color = '#ffc107';
-        } else {
-            stockStatus.innerHTML = '<span class="badge" style="background: #28a745; color: white; padding: 5px 10px;">✓ En stock (' + stock + ' unités)</span>';
-            stockWarning.innerHTML = '';
-        }
-        
-        updateFormSummary();
-        return true;
-    } else {
-        stockInput.classList.add('is-invalid');
-        stockInput.classList.remove('is-valid');
-        return false;
-    }
-}
-
-// Adjust stock with buttons
-function adjustStock(change) {
-    const stockInput = document.getElementById('productStock');
-    let currentValue = parseInt(stockInput.value);
-    if (isNaN(currentValue)) currentValue = 0;
-    const newValue = Math.max(0, currentValue + change);
-    stockInput.value = newValue;
-    validateStock();
-}
-
-// Character counter for description
-function updateCharCount() {
-    const description = document.getElementById('productDescription');
-    const charCount = document.getElementById('charCount');
-    const count = description.value.length;
-    const max = 500;
-    
-    charCount.textContent = count + ' / ' + max + ' caractères';
-    
-    if (count > max * 0.9) {
-        charCount.classList.add('danger');
-        charCount.classList.remove('warning');
-    } else if (count > max * 0.7) {
-        charCount.classList.add('warning');
-        charCount.classList.remove('danger');
-    } else {
-        charCount.classList.remove('warning', 'danger');
-    }
-}
-
-// Image preview
-function previewImage(input) {
-    const previewContainer = document.getElementById('imagePreviewContainer');
-    const preview = document.getElementById('imagePreview');
-    
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            previewContainer.style.display = 'block';
-        }
-        
-        reader.readAsDataURL(input.files[0]);
-        
-        // Validate file size (5MB max)
-        const fileSize = input.files[0].size / 1024 / 1024;
-        if (fileSize > 5) {
-            alert('L\'image est trop grande! Maximum 5MB.');
-            input.value = '';
-            previewContainer.style.display = 'none';
-        }
-    }
-}
-
-// Remove image
-function removeImage() {
-    const imageInput = document.getElementById('productImage');
-    const previewContainer = document.getElementById('imagePreviewContainer');
-    imageInput.value = '';
-    previewContainer.style.display = 'none';
-}
-
-// Update form summary
-function updateFormSummary() {
-    const summaryDiv = document.getElementById('formSummary');
-    const name = document.getElementById('productName').value.trim();
-    const categorySelect = document.getElementById('categorySelect');
-    const category = categorySelect.options[categorySelect.selectedIndex]?.text || '-';
-    const price = document.getElementById('productPrice').value;
-    const stock = document.getElementById('productStock').value;
-    
-    if (name && categorySelect.value && price > 0) {
-        summaryDiv.style.display = 'block';
-        document.getElementById('summaryName').textContent = name;
-        document.getElementById('summaryCategory').textContent = category;
-        document.getElementById('summaryPrice').textContent = parseFloat(price).toFixed(2);
-        document.getElementById('summaryStock').textContent = stock;
-    } else {
-        summaryDiv.style.display = 'none';
-    }
-}
-
-// Reset form
-function resetForm() {
-    if (confirm('Réinitialiser tous les champs du formulaire ?')) {
-        document.getElementById('addProductForm').reset();
-        document.getElementById('namePreview').classList.remove('active');
-        document.getElementById('imagePreviewContainer').style.display = 'none';
-        document.getElementById('formSummary').style.display = 'none';
-        
-        // Reset validation classes
-        document.querySelectorAll('.form-control').forEach(el => {
-            el.classList.remove('is-valid', 'is-invalid');
+            html += '</tbody></table>'+
+                '<div style="background:var(--off);border-radius:10px;padding:14px;margin-top:16px;font-size:13px;">'+
+                '<p style="margin:0 0 4px;"><strong>Client:</strong> '+data.order.nom_client+'</p>'+
+                '<p style="margin:0 0 4px;"><strong>Email:</strong> '+data.order.email_client+'</p>'+
+                '<p style="margin:0 0 4px;"><strong>Tél:</strong> '+data.order.telephone_client+'</p>'+
+                '<p style="margin:0;"><strong>Adresse:</strong> '+data.order.adresse_livraison.replace(/\n/g,'<br>')+'</p>'+
+                '</div>';
+            document.getElementById('orderDetailsContent').innerHTML = html;
         });
-        
-        // Reset stock status
-        document.getElementById('stockStatus').innerHTML = '<span class="badge" style="background: #28a745; color: white; padding: 5px 10px;">Disponible</span>';
-        document.getElementById('stockWarning').innerHTML = '';
-        document.getElementById('charCount').textContent = '0 / 500 caractères';
-    }
 }
 
-// Form submission validation
-document.getElementById('addProductForm').addEventListener('submit', function(e) {
-    const isValidName = validateProductName();
-    const isValidCategory = validateCategory();
-    const isValidPrice = validatePrice();
-    const isValidStock = validateStock();
-    
-    if (!isValidName || !isValidCategory || !isValidPrice || !isValidStock) {
-        e.preventDefault();
-        alert('Veuillez corriger les erreurs dans le formulaire avant de soumettre.');
-        
-        // Scroll to first error
-        const firstError = document.querySelector('.is-invalid');
-        if (firstError) {
-            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            firstError.focus();
-        }
-    }
-});
+function confirmDelete(id, num) {
+    document.getElementById('deleteOrderNum').textContent = '#'+num;
+    document.getElementById('confirmDeleteLink').href = '?delete_order='+id;
+    document.getElementById('deleteModal').classList.add('open');
+}
 
-// Real-time validation on input
-document.getElementById('productName').addEventListener('input', validateProductName);
-document.getElementById('categorySelect').addEventListener('change', validateCategory);
-document.getElementById('productPrice').addEventListener('input', validatePrice);
-document.getElementById('productStock').addEventListener('input', validateStock);
+// ═══════════════════════════════════════
+//  AI ASSISTANT
+// ═══════════════════════════════════════
+var currentProduct = null;
+var categoryChips = {
+    'Informatique':    ['Compatible Linux?','Garantie?','Caractéristiques?','Livraison?'],
+    'Formation':       ['Certificat inclus?','Durée?','Niveau requis?','Accès à vie?'],
+    'Food':            ['Ingrédients?','Date expiration?','Allergènes?','Livraison rapide?'],
+    'Accessories':     ['Matière?','Garantie?','Taille disponible?','Livraison?'],
+    'Bureautique':     ['Compatible Windows?','Garantie?','Livraison?','Marque?'],
+    'Logiciels':       ['Licence?','Compatible Mac?','Mises à jour?','Installation?'],
+    'Matériel réseau': ['Portée WiFi?','Compatible routeur?','Garantie?','Installation?']
+};
+var categoryAnswers = {
+    'Informatique':{ 'garantie':'2 ans de garantie constructeur. SAV 6j/7.','linux':'Compatible Ubuntu 22.04+. Drivers principaux supportés.','windows':'Livré avec Windows 11 préinstallé.','compatible':'Compatible Windows 11, Ubuntu et distributions Linux.','caracteristique':'Specs: ' },
+    'Formation':{ 'certificat':'Certificat de réussite délivré à la fin.','duree':'~40h de contenu à votre rythme.','niveau':'Aucun prérequis. Commence de zéro.','acces':'Accès à vie, mises à jour incluses.','livraison':'Formation en ligne — accès immédiat.' },
+    'Food':{ 'ingredient':'Consultez l\'emballage pour la liste complète.','expir':'Toujours frais à la livraison.','allergen':'Consultez la fiche ou contactez-nous.','livraison':'Livraison sous 24-48h.' },
+    'Logiciels':{ 'licence':'Licence permanente incluse.','mac':'Vérifiez la description pour compatibilité Mac.','mise':'Mises à jour mineures incluses.','install':'Envoyé par email après paiement.' }
+};
+var genericAnswers = {
+    'prix':       function(p){ return '"'+p.nom+'" est à '+parseFloat(p.prix).toFixed(3)+' DT. Flouci, D17 ou livraison.'; },
+    'combien':    function(p){ return 'Ce produit coûte '+parseFloat(p.prix).toFixed(3)+' DT.'; },
+    'stock':      function(p){ return parseInt(p.stock)>0?'Il reste '+p.stock+' unité(s) en stock.':'Désolé, en rupture de stock.'; },
+    'disponible': function(p){ return parseInt(p.stock)>0?p.nom+' est disponible.':'En rupture de stock.'; },
+    'livraison':  function()  { return 'Livraison en Tunisie sous 2-4 jours ouvrés.'; },
+    'paiement':   function()  { return 'Flouci 📱, D17 🏦 ou espèces à la livraison 🚚.'; },
+    'flouci':     function()  { return 'Oui, Flouci accepté. Entrez votre numéro lors de la commande.'; },
+    'd17':        function()  { return 'Oui, paiement D17 (Poste Tunisienne) disponible.'; },
+    'bonjour':    function(p) { return 'Bonjour! Je vous aide pour "'+p.nom+'". Posez votre question!'; },
+    'merci':      function()  { return 'Avec plaisir! 😊'; },
+    'description':function(p) { return p.description||'Consultez la fiche produit pour les détails.'; },
+    'info':       function(p) { return p.nom+' | '+p.categorie+' | '+parseFloat(p.prix).toFixed(3)+' DT | Stock: '+p.stock; }
+};
 
-// Auto-format price
-document.getElementById('productPrice').addEventListener('blur', function() {
-    let value = parseFloat(this.value);
-    if (!isNaN(value)) {
-        this.value = value.toFixed(3);
-    }
-});
+function openAIChat(nom, cat, prix, stock, desc) {
+    currentProduct = {nom:nom, categorie:cat, prix:prix, stock:stock, description:desc};
+    document.getElementById('aiProdName').textContent = nom;
+    document.getElementById('aiWrap').style.display = 'block';
+    document.getElementById('aiPanel').classList.add('open');
+    document.getElementById('aiMsgs').innerHTML = '';
+    appendAI('bot','Bonjour! Je suis votre assistant pour <strong>'+nom+'</strong>. Que souhaitez-vous savoir?');
+    var chips = categoryChips[cat] || ['Prix?','Stock?','Livraison?','Paiement?'];
+    var el = document.getElementById('aiChips');
+    el.innerHTML = '';
+    chips.forEach(function(q){
+        var s = document.createElement('span');
+        s.className='ai-chip'; s.textContent=q;
+        s.onclick=function(){ askAI(q); };
+        el.appendChild(s);
+    });
+    document.getElementById('aiInput').focus();
+}
+function closeAIChat() { document.getElementById('aiPanel').classList.remove('open'); document.getElementById('aiWrap').style.display='none'; }
+function toggleAI() { document.getElementById('aiPanel').classList.toggle('open'); }
+function askAI(q) { document.getElementById('aiChips').style.display='none'; sendAIMsg(q); }
+function appendAI(role, html, typing) {
+    var box = document.getElementById('aiMsgs');
+    var row = document.createElement('div'); row.className='ai-msg-row '+role;
+    var bub = document.createElement('div'); bub.className='ai-bub '+(typing?'typing':role);
+    bub.innerHTML = html;
+    if(role==='bot'){ var av=document.createElement('div'); av.style.cssText='width:20px;height:20px;background:#3bafda22;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;'; av.textContent='🤖'; row.appendChild(av); }
+    row.appendChild(bub); box.appendChild(row); box.scrollTop=box.scrollHeight; return bub;
+}
+function getSmartAnswer(q) {
+    if(!currentProduct) return 'Sélectionnez un produit d\'abord.';
+    var l=q.toLowerCase();
+    for(var k in genericAnswers) if(l.includes(k)) return genericAnswers[k](currentProduct);
+    var ca=categoryAnswers[currentProduct.categorie]||{};
+    for(var k in ca){ if(l.includes(k)){ var a=ca[k]; if(k==='caracteristique') a+=currentProduct.description; return a; } }
+    return 'Pour ce produit: '+currentProduct.description+'. Contactez notre équipe pour plus de détails.';
+}
+function sendAIMsg(text) {
+    var inp=document.getElementById('aiInput');
+    var q=text||inp.value.trim(); if(!q) return; inp.value='';
+    appendAI('user',q);
+    var t=appendAI('bot','Recherche en cours…',true);
+    setTimeout(function(){ t.className='ai-bub bot'; t.innerHTML=getSmartAnswer(q); document.getElementById('aiMsgs').scrollTop=9999; },600+Math.random()*400);
+}
 
-// Initialize character counter
-updateCharCount();
-
-    </script>
+// ═══════════════════════════════════════
+//  ORDER FORM SUBMIT (kept for checkout.php to POST back here)
+// ═══════════════════════════════════════
+function submitOrderForm(produit_id,quantite,nom,email,telephone,adresse,payment_method,payment_phone){
+    document.getElementById('form_produit_id').value=produit_id;
+    document.getElementById('form_quantite').value=quantite;
+    document.getElementById('form_nom').value=nom;
+    document.getElementById('form_email').value=email;
+    document.getElementById('form_telephone').value=telephone;
+    document.getElementById('form_adresse').value=adresse;
+    document.getElementById('form_payment_method').value=payment_method;
+    document.getElementById('form_payment_phone').value=payment_phone;
+    document.getElementById('realOrderForm').submit();
+}
+</script>
 </body>
 </html>
