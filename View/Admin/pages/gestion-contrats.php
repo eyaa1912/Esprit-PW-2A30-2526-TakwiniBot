@@ -15,7 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             trim($_POST['salaire'] ?? ''),
             trim($_POST['duree'] ?? ''),
             trim($_POST['dateCreation'] ?? date('Y-m-d')),
-            trim($_POST['statut'] ?? 'actif')
+            trim($_POST['statut'] ?? 'actif'),
+            trim($_POST['signature_entrepreneur'] ?? ''),
+            trim($_POST['signature_employe'] ?? '')
         );
         $res = $contratCtrl->addContrat((int)($_POST['offre_id'] ?? 0), $contrat);
         if (!empty($res['success'])) {
@@ -32,7 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             trim($_POST['salaire'] ?? ''),
             trim($_POST['duree'] ?? ''),
             trim($_POST['dateCreation'] ?? date('Y-m-d')),
-            trim($_POST['statut'] ?? 'actif')
+            trim($_POST['statut'] ?? 'actif'),
+            trim($_POST['signature_entrepreneur'] ?? ''),
+            trim($_POST['signature_employe'] ?? '')
         );
         $res = $contratCtrl->updateContrat($id, (int)($_POST['offre_id'] ?? 0), $contrat);
         if (!empty($res['success'])) {
@@ -714,6 +718,8 @@ function badge_statut(?string $s): string {
               <th>Durée</th>
               <th data-col="date">Date création</th>
               <th data-col="statut">Statut</th>
+              <th>Sig. Entrepreneur</th>
+              <th>Sig. Employé</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -746,6 +752,20 @@ function badge_statut(?string $s): string {
                   <td><?= htmlspecialchars((string)($c['duree'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
                   <td><?= htmlspecialchars((string)$dc, ENT_QUOTES, 'UTF-8') ?></td>
                   <td><?= badge_statut($c['statut'] ?? '') ?></td>
+                  <td>
+                    <?php if (!empty($c['signature_entrepreneur'])): ?>
+                      <img src="<?= htmlspecialchars($c['signature_entrepreneur']) ?>" style="max-height:40px;border:1px solid #e5e7eb;border-radius:4px;" alt="Sig. entrepreneur">
+                    <?php else: ?>
+                      <span class="badge bg-label-warning" style="font-size:10px;">Non signée</span>
+                    <?php endif; ?>
+                  </td>
+                  <td>
+                    <?php if (!empty($c['signature_employe'])): ?>
+                      <img src="<?= htmlspecialchars($c['signature_employe']) ?>" style="max-height:40px;border:1px solid #e5e7eb;border-radius:4px;" alt="Sig. employé">
+                    <?php else: ?>
+                      <span class="badge bg-label-warning" style="font-size:10px;">Non signée</span>
+                    <?php endif; ?>
+                  </td>
                   <td>
                     <button class="btn btn-sm btn-info me-1" title="Voir" data-contrat="<?= $rowJson ?>" onclick="voirContrat(this)">
                       <i class="bx bx-show"></i>
@@ -952,6 +972,45 @@ function badge_statut(?string $s): string {
               <option value="annulé">Annulé</option>
             </select>
           </div>
+
+          <!-- Signature Entrepreneur -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Signature de l'entrepreneur</label>
+            <div style="border:2px solid #e5e7eb;border-radius:8px;background:#fafafa;position:relative;">
+              <canvas id="canvas_entrepreneur" width="460" height="120"
+                style="display:block;cursor:crosshair;border-radius:6px;touch-action:none;"></canvas>
+              <button type="button" onclick="clearCanvas('canvas_entrepreneur','sig_entrepreneur')"
+                style="position:absolute;top:6px;right:6px;background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:2px 8px;font-size:11px;color:#888;cursor:pointer;">
+                Effacer
+              </button>
+            </div>
+            <input type="hidden" name="signature_entrepreneur" id="sig_entrepreneur">
+            <small class="text-muted">Signez dans le cadre ci-dessus</small>
+            <div id="sig_entrepreneur_preview" style="display:none;margin-top:6px;">
+              <small class="text-success">✓ Signature enregistrée</small>
+              <img id="sig_entrepreneur_img" src="" style="display:block;max-height:60px;margin-top:4px;border:1px solid #e5e7eb;border-radius:4px;" alt="Signature entrepreneur">
+            </div>
+          </div>
+
+          <!-- Signature Employé -->
+          <div class="mb-0">
+            <label class="form-label fw-semibold">Signature de l'employé</label>
+            <div style="border:2px solid #e5e7eb;border-radius:8px;background:#fafafa;position:relative;">
+              <canvas id="canvas_employe" width="460" height="120"
+                style="display:block;cursor:crosshair;border-radius:6px;touch-action:none;"></canvas>
+              <button type="button" onclick="clearCanvas('canvas_employe','sig_employe')"
+                style="position:absolute;top:6px;right:6px;background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:2px 8px;font-size:11px;color:#888;cursor:pointer;">
+                Effacer
+              </button>
+            </div>
+            <input type="hidden" name="signature_employe" id="sig_employe">
+            <small class="text-muted">Signez dans le cadre ci-dessus</small>
+            <div id="sig_employe_preview" style="display:none;margin-top:6px;">
+              <small class="text-success">✓ Signature enregistrée</small>
+              <img id="sig_employe_img" src="" style="display:block;max-height:60px;margin-top:4px;border:1px solid #e5e7eb;border-radius:4px;" alt="Signature employé">
+            </div>
+          </div>
+
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
@@ -1257,6 +1316,95 @@ document.getElementById('contratForm').addEventListener('submit', function(e) {
     <!-- pdfmake pour export PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    <script>
+    /* ── Signature numérique sur canvas ── */
+    function initCanvas(canvasId, hiddenId) {
+        var canvas  = document.getElementById(canvasId);
+        if (!canvas) return;
+        var ctx     = canvas.getContext('2d');
+        var drawing = false;
+        var lastX   = 0, lastY   = 0;
+
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth   = 2;
+        ctx.lineCap     = 'round';
+        ctx.lineJoin    = 'round';
+
+        function getPos(e) {
+            var rect = canvas.getBoundingClientRect();
+            var src  = e.touches ? e.touches[0] : e;
+            return { x: src.clientX - rect.left, y: src.clientY - rect.top };
+        }
+
+        function start(e) { e.preventDefault(); drawing = true; var p = getPos(e); lastX = p.x; lastY = p.y; }
+        function move(e)  {
+            e.preventDefault();
+            if (!drawing) return;
+            var p = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+            lastX = p.x; lastY = p.y;
+            // Sauvegarder dans le champ caché
+            document.getElementById(hiddenId).value = canvas.toDataURL('image/png');
+        }
+        function stop() { drawing = false; }
+
+        canvas.addEventListener('mousedown',  start);
+        canvas.addEventListener('mousemove',  move);
+        canvas.addEventListener('mouseup',    stop);
+        canvas.addEventListener('mouseleave', stop);
+        canvas.addEventListener('touchstart', start, { passive: false });
+        canvas.addEventListener('touchmove',  move,  { passive: false });
+        canvas.addEventListener('touchend',   stop);
+    }
+
+    function clearCanvas(canvasId, hiddenId) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        document.getElementById(hiddenId).value = '';
+    }
+
+    // Initialiser les canvas à l'ouverture du modal
+    document.getElementById('contratModal').addEventListener('shown.bs.modal', function () {
+        initCanvas('canvas_entrepreneur', 'sig_entrepreneur');
+        initCanvas('canvas_employe',      'sig_employe');
+    });
+
+    // Pré-remplir les signatures existantes en mode édition
+    var origEditContrat = window.editContrat;
+    window.editContrat = function(btn) {
+        origEditContrat(btn);
+        var d = JSON.parse(btn.getAttribute('data-contrat'));
+        setTimeout(function() {
+            // Entrepreneur
+            if (d.signature_entrepreneur) {
+                var img1 = new Image();
+                img1.onload = function() {
+                    var c1 = document.getElementById('canvas_entrepreneur');
+                    c1.getContext('2d').clearRect(0,0,c1.width,c1.height);
+                    c1.getContext('2d').drawImage(img1, 0, 0);
+                    document.getElementById('sig_entrepreneur').value = d.signature_entrepreneur;
+                };
+                img1.src = d.signature_entrepreneur;
+            }
+            // Employé
+            if (d.signature_employe) {
+                var img2 = new Image();
+                img2.onload = function() {
+                    var c2 = document.getElementById('canvas_employe');
+                    c2.getContext('2d').clearRect(0,0,c2.width,c2.height);
+                    c2.getContext('2d').drawImage(img2, 0, 0);
+                    document.getElementById('sig_employe').value = d.signature_employe;
+                };
+                img2.src = d.signature_employe;
+            }
+        }, 300);
+    };
+    </script>
 
     <!-- Place this tag before closing body tag for github widget button. -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>

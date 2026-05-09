@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/../api_mistral.php';
 
-// Simuler une analyse CV avec texte fixe
 $cvText = "Ahmed Benali, développeur PHP, 3 ans d'expérience, Laravel, MySQL.";
 $prompt = "Analyse ce CV et donne 3 améliorations : " . $cvText;
 

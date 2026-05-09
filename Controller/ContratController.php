@@ -49,8 +49,8 @@ class ContratController
             }
 
             $req = $db->prepare(
-                'INSERT INTO contrat (offre_id, salaire, duree, dateCreation, statut)
-                 VALUES (:offre_id, :salaire, :duree, :dateCreation, :statut)'
+                'INSERT INTO contrat (offre_id, salaire, duree, dateCreation, statut, signature_entrepreneur, signature_employe)
+                 VALUES (:offre_id, :salaire, :duree, :dateCreation, :statut, :sig_e, :sig_emp)'
             );
             $req->execute([
                 'offre_id'     => $offreId,
@@ -58,6 +58,8 @@ class ContratController
                 'duree'        => $contrat->getDuree(),
                 'dateCreation' => $contrat->getDateCreation(),
                 'statut'       => $contrat->getStatut(),
+                'sig_e'        => $contrat->getSignatureEntrepreneur(),
+                'sig_emp'      => $contrat->getSignatureEmploye(),
             ]);
             return ['success' => true, 'id' => (int) $db->lastInsertId()];
         } catch (Exception $e) {
@@ -110,7 +112,9 @@ class ContratController
                     salaire      = :salaire,
                     duree        = :duree,
                     dateCreation = :dateCreation,
-                    statut       = :statut
+                    statut       = :statut,
+                    signature_entrepreneur = :sig_e,
+                    signature_employe      = :sig_emp
                  WHERE id = :id'
             );
             $req->execute([
@@ -120,6 +124,8 @@ class ContratController
                 'duree'        => $contrat->getDuree(),
                 'dateCreation' => $contrat->getDateCreation(),
                 'statut'       => $contrat->getStatut(),
+                'sig_e'        => $contrat->getSignatureEntrepreneur(),
+                'sig_emp'      => $contrat->getSignatureEmploye(),
             ]);
             return ['success' => true];
         } catch (Exception $e) {
