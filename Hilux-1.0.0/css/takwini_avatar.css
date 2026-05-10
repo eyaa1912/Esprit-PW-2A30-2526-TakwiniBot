@@ -1,0 +1,300 @@
+/* ===== TakwiniBot Avatar System ===== */
+
+/* Floating Avatar Panel */
+.avatar-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 320px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    z-index: 9999;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Avatar Face */
+.avatar-face {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 15px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Eyes Animation */
+.avatar-eye {
+    fill: #333;
+    animation: blink 4s infinite;
+}
+
+@keyframes blink {
+    0%, 90%, 100% { transform: scaleY(1); }
+    95% { transform: scaleY(0.1); }
+}
+
+.avatar-mouth {
+    stroke: #333;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    animation: talk 0.6s ease-in-out;
+}
+
+@keyframes talk {
+    0%, 100% { d: path('M 40 60 Q 50 65 60 60'); }
+    50% { d: path('M 40 60 Q 50 70 60 60'); }
+}
+
+/* Language Switcher */
+.avatar-lang-switcher {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+    justify-content: center;
+}
+
+.lang-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.lang-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: white;
+}
+
+.lang-btn.active {
+    background: white;
+    color: #667eea;
+    border-color: white;
+}
+
+/* Sign Language Cards */
+.sign-cards-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 15px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.sign-cards-container.active {
+    max-height: 200px;
+}
+
+.sign-card {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 24px;
+}
+
+.sign-card:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: white;
+    transform: scale(1.05);
+}
+
+.sign-card-label {
+    font-size: 10px;
+    margin-top: 5px;
+    display: block;
+    font-weight: 600;
+}
+
+/* Accessibility Toggles */
+.accessibility-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.toggle-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.toggle-switch {
+    width: 40px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.toggle-switch.active {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: left 0.3s ease;
+}
+
+.toggle-switch.active::after {
+    left: 18px;
+}
+
+/* Subtitle Bar */
+.subtitle-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 15px 20px;
+    text-align: center;
+    font-size: 16px;
+    z-index: 9998;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    border-top: 3px solid #667eea;
+}
+
+.subtitle-bar.active {
+    max-height: 100px;
+}
+
+.subtitle-text {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Field Hints */
+.field-with-hint {
+    position: relative;
+}
+
+.hint-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #667eea;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: help;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.hint-icon:hover {
+    background: #764ba2;
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .avatar-panel {
+        width: 280px;
+        bottom: 10px;
+        right: 10px;
+        padding: 15px;
+    }
+
+    .avatar-face {
+        width: 100px;
+        height: 100px;
+    }
+
+    .sign-cards-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .subtitle-bar {
+        font-size: 14px;
+        padding: 10px 15px;
+    }
+}
+
+/* Accessibility - High Contrast */
+@media (prefers-contrast: more) {
+    .avatar-panel {
+        border: 3px solid white;
+    }
+
+    .lang-btn,
+    .sign-card,
+    .toggle-switch {
+        border-width: 3px;
+    }
+}
+
+/* Accessibility - Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .avatar-panel,
+    .avatar-eye,
+    .avatar-mouth,
+    .lang-btn,
+    .sign-card,
+    .toggle-switch,
+    .subtitle-bar {
+        animation: none !important;
+        transition: none !important;
+    }
+}

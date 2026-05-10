@@ -1,0 +1,8 @@
+Dashboard gestion entretiens :
+http://localhost/Hilux-1.0.0/sneat-plateforme-finale/sneat-plateforme-finale/sneat-final/gestion-entretiens.php
+
+Formulaire ajouter entretien :
+http://localhost/Hilux-1.0.0/Hilux-1.0.0/View/entretien/add.php
+
+Export PDF :
+http://localhost/Hilux-1.0.0/sneat-plateforme-finale/sneat-plateforme-finale/sneat-final/gestion-entretiens.php?action=print

@@ -1,0 +1,14 @@
+Options +FollowSymLinks
+RewriteEngine On
+
+# Enable directory browsing (optional, for debugging)
+Options +Indexes
+
+# Set default charset
+AddDefaultCharset UTF-8
+
+# Allow access to all files
+<FilesMatch "\.(php|html|css|js|jpg|jpeg|png|gif|svg|woff|woff2|ttf|eot)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
