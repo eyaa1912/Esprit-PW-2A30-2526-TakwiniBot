@@ -1,0 +1,308 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Takwinibot - Mes réclamations</title>
+  <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Exo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
+  <link rel="stylesheet" href="assets/fonts/themify-icons.css">
+  <link rel="stylesheet" href="assets/owlcarousel/css/owl.carousel.css">
+  <link rel="stylesheet" href="assets/owlcarousel/css/owl.theme.css">
+  <link rel="stylesheet" href="assets/css/fonts.css">
+  <link href="assets/css/prettyPhoto.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/animate.css">
+  <link rel="stylesheet" href="assets/css/slick.css">
+  <link rel="stylesheet" href="assets/css/menu.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/responsive.css">
+  <style>
+    .reclamation-page-title {
+      margin-top: 120px;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+    .reclamation-page-title h2 {
+      font-size: 42px;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .reclamation-page-title p {
+      color: #fff;
+      font-size: 18px;
+      margin: 0;
+    }
+    .reclamation-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+      padding: 30px;
+      margin-bottom: 25px;
+    }
+    .reclamation-meta {
+      margin-bottom: 15px;
+      color: #7a7a7a;
+      font-weight: 500;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .status-pending {
+      background: #fff3cd;
+      color: #a56a00;
+    }
+    .status-done {
+      background: #d1f7e4;
+      color: #0f7b44;
+    }
+    .admin-response {
+      background: #f3f8ff;
+      border-left: 4px solid #3bafda;
+      padding: 15px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body data-spy="scroll" data-offset="80">
+  <div class="preloader">
+    <div class="status">
+      <div class="status-mes"></div>
+    </div>
+  </div>
+
+  <div class="site-mobile-menu site-navbar-target">
+    <div class="site-mobile-menu-header">
+      <div class="site-mobile-menu-close mt-3">
+        <span class="icon-close2 js-menu-toggle"></span>
+      </div>
+    </div>
+    <div class="site-mobile-menu-body"></div>
+  </div>
+
+  <header class="site-navbar js-sticky-header site-navbar-target" role="banner">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-6 col-xl-2">
+          <h1 class="mb-0 site-logo"><a href="index.html"><img src="assets/img/logo.png" alt=""></a></h1>
+        </div>
+        <div class="col-12 col-md-10 d-none d-xl-block">
+          <nav class="site-navigation position-relative text-right" role="navigation">
+            <ul class="site-menu main-menu js-clone-nav mr-auto d-none d-lg-block">
+              <li><a href="index.html" class="nav-link">Home</a></li>
+              <li><a class="nav-link" href="about.html">About</a></li>
+              <li><a href="property.html" class="nav-link">Formations</a></li>
+              <li><a href="gallery.html" class="nav-link">Produits</a></li>
+              <li><a href="blog.html" class="nav-link">Entretien</a></li>
+              <li><a href="offres.html" class="nav-link">Offres</a></li>
+              <li><a class="nav-link" href="front_mes_reclamations.html">Réclamations</a></li>
+            </ul>
+          </nav>
+        </div>
+        <div class="col-6 d-inline-block d-xl-none ml-md-0 py-3" style="position: relative; top: 3px;">
+          <a href="#" class="site-menu-toggle js-menu-toggle float-right"><span class="icon-menu h3"></span></a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="home_bg" style="background-image: url(assets/img/bg/home-bg.jpg); background-size: cover; background-position: center center; padding: 120px 0 80px;">
+    <div class="container">
+      <div class="reclamation-page-title">
+        <h2>Mes réclamations</h2>
+        <p>Suivez le traitement de vos demandes.</p>
+        <p class="mt-3 mb-0" style="color: rgba(255,255,255,0.95); font-size: 15px;">
+          Total: <strong id="summary-total">0</strong>
+          &nbsp;·&nbsp; En attente: <strong id="summary-pending">0</strong>
+          &nbsp;·&nbsp; Traitées: <strong id="summary-done">0</strong>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="template_property section-padding">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-10 offset-lg-1 col-sm-12 col-xs-12">
+          <div id="reclamations-list">
+            <div class="reclamation-card">
+              <p class="mb-0 text-muted">Chargement des réclamations...</p>
+            </div>
+          </div>
+
+          <div class="text-center mt-4">
+            <a href="front_formulaire_reclamation.html" class="btn btn-serach-bg">Déposer une nouvelle réclamation</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer-area">
+    <div class="container">
+      <div class="row text-center">
+        <div class="col-lg-12 col-sm-12 col-xs-12">
+          <p class="footer_copyright">Takwinibot &copy; 2026 All Rights Reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/jquery-1.12.4.min.js"></script>
+  <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+  <script src="assets/js/modernizr-2.8.3.min.js"></script>
+  <script src="assets/js/jquery.stellar.min.js"></script>
+  <script src="assets/js/menu.js"></script>
+  <script src="assets/js/jquery.sticky.js"></script>
+  <script src="assets/owlcarousel/js/owl.carousel.min.js"></script>
+  <script src="assets/js/jquery.magnific-popup.min.js"></script>
+  <script src="assets/js/slick.min.js"></script>
+  <script src="assets/js/jquery.mixitup.js"></script>
+  <script src="assets/js/jquery.prettyPhoto.js"></script>
+  <script src="assets/js/scrolltopcontrol.js"></script>
+  <script src="assets/js/wow.min.js"></script>
+  <script src="assets/js/scripts.js"></script>
+  <script>
+    (function () {
+      var list = document.getElementById('reclamations-list');
+      var totalEl = document.getElementById('summary-total');
+      var pendingEl = document.getElementById('summary-pending');
+      var doneEl = document.getElementById('summary-done');
+      if (!list || !totalEl || !pendingEl || !doneEl) return;
+
+      function getControllerUrl(action) {
+        if (window.location.protocol === 'file:') {
+          return 'http://localhost/TakwiniBot%20-%20Copie/controllers/ReclamationController.php?action=' + encodeURIComponent(action);
+        }
+        var basePath = window.location.pathname.split('/views/')[0];
+        if (!basePath) basePath = '/TakwiniBot%20-%20Copie';
+        return window.location.origin + basePath + '/controllers/ReclamationController.php?action=' + encodeURIComponent(action);
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function formatDate(value) {
+        if (!value) return '-';
+        var date = new Date(String(value).replace(' ', 'T'));
+        if (Number.isNaN(date.getTime())) return escapeHtml(value);
+        return date.toLocaleString('fr-FR');
+      }
+
+      function getStoredIds() {
+        try {
+          var ids = JSON.parse(localStorage.getItem('takwini_reclamation_ids') || '[]');
+          return Array.isArray(ids) ? ids.filter(Boolean) : [];
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function getStatusMeta(statut) {
+        var value = String(statut || '').toLowerCase().replace(/\s+/g, '_');
+        if (value === 'traite') {
+          return { label: 'Traitée', className: 'status-done' };
+        }
+        return { label: 'En attente', className: 'status-pending' };
+      }
+
+      function renderStats(rows) {
+        var pending = 0;
+        var done = 0;
+        rows.forEach(function (item) {
+          var statut = String(item.statut || '').toLowerCase().replace(/\s+/g, '_');
+          if (statut === 'traite') {
+            done += 1;
+          } else {
+            pending += 1;
+          }
+        });
+        totalEl.textContent = String(rows.length);
+        pendingEl.textContent = String(pending);
+        doneEl.textContent = String(done);
+      }
+
+      function renderRows(rows) {
+        renderStats(rows);
+        if (!rows.length) {
+          list.innerHTML = '<div class="reclamation-card"><p class="mb-0 text-muted">Aucune réclamation trouvée. Déposez une demande ou ouvrez cette page depuis le formulaire (réclamations enregistrées sur cet appareil).</p></div>';
+          return;
+        }
+
+        list.innerHTML = rows.map(function (item) {
+          var status = getStatusMeta(item.statut);
+          var responseHtml = '';
+          if (item.reponse) {
+            responseHtml =
+              '<div class="admin-response">' +
+                '<strong><i class="fa fa-envelope"></i> Réponse administrateur:</strong>' +
+                '<p class="mb-1 mt-2">' + escapeHtml(item.reponse) + '</p>' +
+                '<small>Reçue le ' + formatDate(item.date_reponse) + '</small>' +
+              '</div>';
+          }
+
+          return (
+            '<div class="reclamation-card">' +
+              '<div class="d-flex justify-content-between align-items-center flex-wrap mb-2">' +
+                '<h4 class="mb-2">' + escapeHtml(item.sujet || '-') + '</h4>' +
+                '<span class="status-badge ' + status.className + '">' + escapeHtml(status.label) + '</span>' +
+              '</div>' +
+              '<p class="reclamation-meta"><i class="fa fa-calendar"></i> ' + formatDate(item.date_creation) + ' · ' + escapeHtml(item.type || '-') + '</p>' +
+              '<p>' + escapeHtml(item.message || '') + '</p>' +
+              responseHtml +
+            '</div>'
+          );
+        }).join('');
+      }
+
+      async function loadReclamations() {
+        var params = new URLSearchParams(window.location.search);
+        var userId = params.get('user_id');
+        var ids = params.get('ids') || getStoredIds().join(',');
+
+        if (!userId && !ids) {
+          renderRows([]);
+          return;
+        }
+
+        var url = new URL(getControllerUrl('list'));
+        if (userId) {
+          url.searchParams.set('user_id', userId);
+        } else {
+          url.searchParams.set('ids', ids);
+        }
+
+        try {
+          var response = await fetch(url.toString(), { method: 'GET' });
+          var text = await response.text();
+          var json = text ? JSON.parse(text) : null;
+          if (!response.ok || !json || !json.success) {
+            throw new Error((json && json.message) || 'Impossible de charger les réclamations.');
+          }
+          renderRows(Array.isArray(json.data) ? json.data : []);
+        } catch (error) {
+          list.innerHTML = '<div class="reclamation-card"><p class="mb-0 text-danger">' + escapeHtml((error && error.message) || 'Erreur réseau.') + '</p></div>';
+          renderStats([]);
+        }
+      }
+
+      loadReclamations();
+    })();
+  </script>
+</body>
+
+</html>
