@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Commandes Vocales</title>
+    <link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #11998e;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .btn-test {
+            background: #11998e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn-test:hover {
+            background: #0d7a6f;
+        }
+        .alert {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Test des Commandes Vocales</h1>
+        
+        <div class="alert alert-info">
+            <strong>Instructions :</strong>
+            <ol>
+                <li>Cliquez sur le bouton VERT 🎤 en bas à droite</li>
+                <li>Dites : <strong>"inscription"</strong></li>
+                <li>Le modal devrait s'ouvrir !</li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test 1 : Modal d'inscription</h3>
+            <p>Cliquez sur ce bouton pour tester manuellement :</p>
+            <button class="btn-test" data-toggle="modal" data-target="#inscriptionModal">
+                Ouvrir Modal Inscription
+            </button>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test 2 : Commande vocale</h3>
+            <p>Étapes :</p>
+            <ol>
+                <li>Cliquez sur le bouton vert 🎤 en bas à droite</li>
+                <li>Attendez "Je vous écoute"</li>
+                <li>Dites : <strong>"inscription"</strong></li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test 3 : Autres commandes</h3>
+            <p>Essayez aussi :</p>
+            <ul>
+                <li>Dites : <strong>"aide"</strong> → Affiche les commandes</li>
+                <li>Dites : <strong>"accueil"</strong> → Va à l'accueil</li>
+                <li>Dites : <strong>"formation"</strong> → Va aux formations</li>
+            </ul>
+        </div>
+        
+        <div class="alert alert-success">
+            <strong>✅ Si le modal s'ouvre, tout fonctionne !</strong>
+        </div>
+    </div>
+    
+    <!-- Modal Inscription -->
+    <div class="modal fade" id="inscriptionModal" tabindex="-1" role="dialog" aria-labelledby="inscriptionModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="inscriptionModalLabel">✅ Formulaire d'inscription</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-success">
+                        <strong>🎉 Succès !</strong> Le modal d'inscription s'est ouvert correctement !
+                    </div>
+                    <form>
+                        <div class="form-group">
+                            <label>Nom</label>
+                            <input type="text" class="form-control" placeholder="Votre nom">
+                        </div>
+                        <div class="form-group">
+                            <label>Prénom</label>
+                            <input type="text" class="form-control" placeholder="Votre prénom">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" class="form-control" placeholder="votre@email.com">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                    <button type="button" class="btn btn-primary">S'inscrire</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="assets/js/jquery-1.12.4.min.js"></script>
+    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="assets/js/voice-commands.js"></script>
+    
+    <script>
+        // Log pour debug
+        console.log('Page de test chargée');
+        console.log('Modal présent:', document.getElementById('inscriptionModal') ? 'OUI' : 'NON');
+    </script>
+</body>
+</html>
