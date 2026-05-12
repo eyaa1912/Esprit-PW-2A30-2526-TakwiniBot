@@ -11,7 +11,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Réclamations | Tableaux</title>
+    <title>Demo: Boxicons - Icons | Sneat - Bootstrap Dashboard FREE</title>
 
     <meta name="description" content="" />
 
@@ -40,9 +40,9 @@
 
     <!-- endbuild -->
 
-    <link rel="stylesheet" href="../assets/vendor/libs/apex-charts/apex-charts.css" />
-
     <!-- Page CSS -->
+
+    <link rel="stylesheet" href="../assets/vendor/css/pages/page-icons.css" />
 
     <!-- Helpers -->
     <script src="../assets/vendor/js/helpers.js"></script>
@@ -74,9 +74,9 @@
 
           <div class="menu-inner-shadow"></div>
 
-                                                            <ul class="menu-inner py-1">
+                                        <ul class="menu-inner py-1">
             <!-- Tableau de bord : accueil + modules plateforme (pas de démos externes Académie / e-commerce) -->
-            <li class="menu-item active open">
+            <li class="menu-item">
               <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons bx bx-home-smile"></i>
                 <div class="text-truncate">Tableau de bord</div>
@@ -131,7 +131,7 @@
                     </li>
                   </ul>
                 </li>
-                <li class="menu-item active">
+                <li class="menu-item">
                   <a href="gestion-reclamations.html" class="menu-link">
                     <div class="text-truncate">Réclamations</div>
                   </a>
@@ -493,163 +493,171 @@
           <div class="content-wrapper">
             <!-- Content -->
             <div class="container-xxl flex-grow-1 container-p-y">
-              <h4 class="fw-bold py-3 mb-2">Gestion des Réclamations</h4>
+              <p class="ms-3">
+                You can check complete list of box icons from
+                <a href="https://boxicons.com/" target="_blank">https://boxicons.com</a>
+              </p>
 
-              <div class="card" id="reclamations">
-                <div class="card-header border-bottom">
-                  <h5 class="card-title">Filtres de recherche</h5>
-                  <div class="d-flex justify-content-between align-items-center row py-3 gap-3 gap-md-0">
-                    <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Statut</option><option value="en_attente">En attente</option><option value="en_cours">En cours</option><option value="traite">Traité</option></select>
-                    </div>
-                    <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Type</option><option value="Technique">Technique</option><option value="Facturation">Facturation</option><option value="Livraison">Livraison</option><option value="Autre">Autre</option></select>
-                    </div>
-                    <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Période</option><option value="today">Aujourd'hui</option><option value="week">Cette semaine</option><option value="month">Ce mois</option></select>
-                    </div>
+              <!-- Icon container -->
+              <div class="d-flex flex-wrap" id="icons-container">
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-adobe mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">adobe</p>
                   </div>
                 </div>
-                <div class="card-datatable table-responsive">
-                  <div class="dataTables_wrapper dt-bootstrap5 no-footer">
-                    <div class="row mx-2 pt-3 pb-3">
-                      <div class="col-md-2 d-flex align-items-center">
-                        <select class="form-select w-auto"><option value="10">10</option><option value="25">25</option><option value="50">50</option></select>
-                      </div>
-                      <div class="col-md-10">
-                        <div class="dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-end flex-md-row flex-column gap-3">
-                          <div class="dataTables_filter"><input type="search" class="form-control" placeholder="Rechercher..." /></div>
-                          <div class="dt-buttons btn-group flex-wrap">
-                            <button class="btn btn-secondary buttons-collection dropdown-toggle btn-label-secondary mx-3" type="button"><span><i class="bx bx-export me-1 bx-sm"></i>Exporter</span></button>
-                            <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#addReclamationModal"><span><i class="bx bx-plus me-0 me-sm-1 bx-sm"></i><span class="d-none d-sm-inline-block">Ajouter Réclamation</span></span></button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <table class="table border-top dataTable">
-                      <thead>
-                        <tr>
-                          <th><input type="checkbox" class="form-check-input"></th>
-                          <th>CLIENT</th>
-                          <th>FORMULAIRE</th>
-                          <th>SUJET</th>
-                          <th>STATUT</th>
-                          <th>DATE</th>
-                          <th>ACTIONS</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Ahmed Benali</span></td>
-                          <td>Technique</td>
-                          <td>Problème de connexion à la plateforme</td>
-                          <td><span class="badge bg-label-warning text-capitalize">En attente</span></td>
-                          <td>2025-04-10</td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Sara Kaya</span></td>
-                          <td>Facturation</td>
-                          <td>Double facturation sur commande #4521</td>
-                          <td><span class="badge bg-label-primary text-capitalize">En cours</span></td>
-                          <td>2025-04-08</td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Mohamed Rami</span></td>
-                          <td>Livraison</td>
-                          <td>Colis non reçu après 10 jours</td>
-                          <td><span class="badge bg-label-success text-capitalize">Traité</span></td>
-                          <td>2025-03-20</td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
-                            </div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div class="row mx-2 mt-3 mb-3">
-                      <div class="col-sm-12 col-md-6 d-flex align-items-center">
-                        <div class="dataTables_info text-muted small">Affichage de 1 à 3 sur 3 entrées</div>
-                      </div>
-                      <div class="col-sm-12 col-md-6 d-flex justify-content-end">
-                        <ul class="pagination pagination-sm m-0">
-                          <li class="page-item disabled"><a href="#" class="page-link">Précédent</a></li>
-                          <li class="page-item active"><a href="#" class="page-link">1</a></li>
-                          <li class="page-item"><a href="#" class="page-link">Suivant</a></li>
-                        </ul>
-                      </div>
-                    </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-algolia mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">algolia</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-audible mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">audible</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-figma mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">figma</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-redbubble mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">redbubble</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-etsy mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">etsy</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-gitlab mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">gitlab</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-patreon mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">patreon</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-facebook-circle mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">facebook-circle</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-imdb mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">imdb</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-jquery mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">jquery</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-pinterest-alt mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">pinterest-alt</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-500px mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">500px</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-airbnb mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">airbnb</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-amazon mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">amazon</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-android mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">android</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-angular mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">angular</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-apple mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">apple</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-baidu mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">baidu</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-behance mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">behance</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-bing mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">bing</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-bitcoin mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">bitcoin</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-blogger mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">blogger</p>
+                  </div>
+                </div>
+                <div class="card icon-card cursor-pointer text-center mb-6 mx-3">
+                  <div class="card-body">
+                    <i class="icon-base bx bxl-bootstrap mb-2"></i>
+                    <p class="icon-name text-capitalize text-truncate mb-0">bootstrap</p>
                   </div>
                 </div>
               </div>
 
-              <!-- Modal Add Réclamation -->
-              <div class="modal fade" id="addReclamationModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title">Ajouter une réclamation</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <form>
-                      <div class="modal-body">
-                        <div class="row g-3">
-                          <div class="col-12">
-                            <label class="form-label">Nom du client</label>
-                            <input type="text" class="form-control" placeholder="Nom du client" />
-                          </div>
-                          <div class="col-md-6">
-                            <label class="form-label">Type de formulaire</label>
-                            <select class="form-select"><option value="">Sélectionner...</option><option value="Technique">Technique</option><option value="Facturation">Facturation</option><option value="Livraison">Livraison</option><option value="Autre">Autre</option></select>
-                          </div>
-                          <div class="col-md-6">
-                            <label class="form-label">Statut</label>
-                            <select class="form-select"><option value="en_attente">En attente</option><option value="en_cours">En cours</option><option value="traite">Traité</option></select>
-                          </div>
-                          <div class="col-12">
-                            <label class="form-label">Sujet</label>
-                            <input type="text" class="form-control" placeholder="Sujet de la réclamation" />
-                          </div>
-                          <div class="col-12">
-                            <label class="form-label">Message</label>
-                            <textarea class="form-control" rows="3" placeholder="Détails de la réclamation..."></textarea>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-primary">Enregistrer</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
+              <!-- Buttons -->
+              <div class="d-flex justify-content-center mx-auto gap-4">
+                <a href="https://boxicons.com/" target="_blank" class="btn btn-primary">View All Icons</a>
+                <a
+                  href="https://demos.themeselection.com/sneat-bootstrap-html-admin-template/documentation//Icons.html"
+                  class="btn btn-primary"
+                  target="_blank"
+                  >How to use icons?</a
+                >
               </div>
-
-            <!-- / Content -->
             </div>
-            <!-- /container-xxl -->
+            <!-- / Content -->
 
             <!-- Footer -->
             <footer class="content-footer footer bg-footer-theme">
@@ -733,11 +741,14 @@
 
     <!-- endbuild -->
 
+    <!-- Vendors JS -->
+
     <!-- Main JS -->
 
     <script src="../assets/js/main.js"></script>
     <script src="../assets/js/navbar-extras.js"></script>
 
+    <!-- Page JS -->
 
     <!-- Place this tag before closing body tag for github widget button. -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>

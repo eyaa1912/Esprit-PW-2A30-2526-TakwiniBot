@@ -11,7 +11,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Réclamations | Tableaux</title>
+    <title>Produits | Tableaux</title>
 
     <meta name="description" content="" />
 
@@ -131,7 +131,7 @@
                     </li>
                   </ul>
                 </li>
-                <li class="menu-item active">
+                <li class="menu-item">
                   <a href="gestion-reclamations.html" class="menu-link">
                     <div class="text-truncate">Réclamations</div>
                   </a>
@@ -141,7 +141,7 @@
                     <div class="text-truncate">Entretiens</div>
                   </a>
                 </li>
-                <li class="menu-item">
+                <li class="menu-item active">
                   <a href="gestion-produits.html" class="menu-link">
                     <div class="text-truncate">Produits</div>
                   </a>
@@ -493,20 +493,108 @@
           <div class="content-wrapper">
             <!-- Content -->
             <div class="container-xxl flex-grow-1 container-p-y">
-              <h4 class="fw-bold py-3 mb-2">Gestion des Réclamations</h4>
+              <h4 class="fw-bold py-3 mb-2">Produits</h4>
+              <p class="text-muted mb-4">Catalogue des produits et services.</p>
 
-              <div class="card" id="reclamations">
+              <div class="row g-6 mb-6">
+                <div class="col-sm-6 col-xl-3">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                          <span>Total produits</span>
+                          <div class="d-flex align-items-end mt-2">
+                            <h4 class="mb-0 me-2">124</h4>
+                            <small class="text-success">(+8%)</small>
+                          </div>
+                          <p class="mb-0">Catalogue complet</p>
+                        </div>
+                        <div class="avatar">
+                          <span class="avatar-initial rounded bg-label-primary">
+                            <i class="bx bx-cart bx-sm"></i>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                          <span>Actifs</span>
+                          <div class="d-flex align-items-end mt-2">
+                            <h4 class="mb-0 me-2">98</h4>
+                            <small class="text-success">(+12%)</small>
+                          </div>
+                          <p class="mb-0">En vente</p>
+                        </div>
+                        <div class="avatar">
+                          <span class="avatar-initial rounded bg-label-success">
+                            <i class="bx bx-check-circle bx-sm"></i>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                          <span>Inactifs</span>
+                          <div class="d-flex align-items-end mt-2">
+                            <h4 class="mb-0 me-2">26</h4>
+                            <small class="text-danger">(-5%)</small>
+                          </div>
+                          <p class="mb-0">Hors catalogue</p>
+                        </div>
+                        <div class="avatar">
+                          <span class="avatar-initial rounded bg-label-warning">
+                            <i class="bx bx-pause-circle bx-sm"></i>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                          <span>Rupture</span>
+                          <div class="d-flex align-items-end mt-2">
+                            <h4 class="mb-0 me-2">7</h4>
+                            <small class="text-danger">(-3%)</small>
+                          </div>
+                          <p class="mb-0">Stock épuisé</p>
+                        </div>
+                        <div class="avatar">
+                          <span class="avatar-initial rounded bg-label-danger">
+                            <i class="bx bx-x-circle bx-sm"></i>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card" id="produits">
                 <div class="card-header border-bottom">
                   <h5 class="card-title">Filtres de recherche</h5>
                   <div class="d-flex justify-content-between align-items-center row py-3 gap-3 gap-md-0">
                     <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Statut</option><option value="en_attente">En attente</option><option value="en_cours">En cours</option><option value="traite">Traité</option></select>
+                      <select class="form-select text-capitalize"><option value="">Sélectionner Catégorie</option><option value="Logiciel">Logiciel</option><option value="Matériel">Matériel</option><option value="Service">Service</option></select>
                     </div>
                     <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Type</option><option value="Technique">Technique</option><option value="Facturation">Facturation</option><option value="Livraison">Livraison</option><option value="Autre">Autre</option></select>
+                      <select class="form-select text-capitalize"><option value="">Sélectionner Stock</option><option value="Disponible">Disponible</option><option value="Rupture">Rupture</option></select>
                     </div>
                     <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Période</option><option value="today">Aujourd'hui</option><option value="week">Cette semaine</option><option value="month">Ce mois</option></select>
+                      <select class="form-select text-capitalize"><option value="">Sélectionner Statut</option><option value="Actif">Actif</option><option value="Inactif">Inactif</option></select>
                     </div>
                   </div>
                 </div>
@@ -518,10 +606,16 @@
                       </div>
                       <div class="col-md-10">
                         <div class="dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-end flex-md-row flex-column gap-3">
-                          <div class="dataTables_filter"><input type="search" class="form-control" placeholder="Rechercher..." /></div>
+                          <div class="dataTables_filter">
+                            <input type="search" class="form-control" placeholder="Rechercher..." />
+                          </div>
                           <div class="dt-buttons btn-group flex-wrap">
-                            <button class="btn btn-secondary buttons-collection dropdown-toggle btn-label-secondary mx-3" type="button"><span><i class="bx bx-export me-1 bx-sm"></i>Exporter</span></button>
-                            <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#addReclamationModal"><span><i class="bx bx-plus me-0 me-sm-1 bx-sm"></i><span class="d-none d-sm-inline-block">Ajouter Réclamation</span></span></button>
+                            <button class="btn btn-secondary buttons-collection dropdown-toggle btn-label-secondary mx-3" type="button">
+                              <span><i class="bx bx-export me-1 bx-sm"></i>Exporter</span>
+                            </button>
+                            <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#addProduitModal">
+                              <span><i class="bx bx-plus me-0 me-sm-1 bx-sm"></i><span class="d-none d-sm-inline-block">Ajouter Produit</span></span>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -530,60 +624,70 @@
                       <thead>
                         <tr>
                           <th><input type="checkbox" class="form-check-input"></th>
-                          <th>CLIENT</th>
-                          <th>FORMULAIRE</th>
-                          <th>SUJET</th>
+                          <th>PRODUIT</th>
+                          <th>CATÉGORIE</th>
+                          <th>PRIX</th>
+                          <th>STOCK</th>
                           <th>STATUT</th>
-                          <th>DATE</th>
                           <th>ACTIONS</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr>
                           <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Ahmed Benali</span></td>
-                          <td>Technique</td>
-                          <td>Problème de connexion à la plateforme</td>
-                          <td><span class="badge bg-label-warning text-capitalize">En attente</span></td>
-                          <td>2025-04-10</td>
+                          <td>
+                            <div class="d-flex justify-content-start align-items-center">
+                              <div class="avatar avatar-sm me-3">
+                                <span class="avatar-initial rounded bg-label-primary">LS</span>
+                              </div>
+                              <div class="d-flex flex-column">
+                                <span class="fw-medium text-heading">Licence lecteur d'écran</span>
+                                <small class="text-muted">REF-001</small>
+                              </div>
+                            </div>
+                          </td>
+                          <td><span class="text-truncate d-flex align-items-center"><span class="badge badge-center rounded bg-label-primary w-px-30 h-px-30 me-2"><i class="bx bx-code bx-xs"></i></span>Logiciel</span></td>
+                          <td>120 €</td>
+                          <td>45</td>
+                          <td><span class="badge bg-label-success text-capitalize">Actif</span></td>
                           <td>
                             <div class="d-flex align-items-center">
                               <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
                               <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
                               <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
+                              <div class="dropdown-menu dropdown-menu-end m-0">
+                                <a href="javascript:;" class="dropdown-item">Modifier</a>
+                                <a href="javascript:;" class="dropdown-item">Désactiver</a>
+                              </div>
                             </div>
                           </td>
                         </tr>
                         <tr>
                           <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Sara Kaya</span></td>
-                          <td>Facturation</td>
-                          <td>Double facturation sur commande #4521</td>
-                          <td><span class="badge bg-label-primary text-capitalize">En cours</span></td>
-                          <td>2025-04-08</td>
                           <td>
-                            <div class="d-flex align-items-center">
-                              <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
+                            <div class="d-flex justify-content-start align-items-center">
+                              <div class="avatar avatar-sm me-3">
+                                <span class="avatar-initial rounded bg-label-warning">CM</span>
+                              </div>
+                              <div class="d-flex flex-column">
+                                <span class="fw-medium text-heading">Clavier braille</span>
+                                <small class="text-muted">REF-002</small>
+                              </div>
                             </div>
                           </td>
-                        </tr>
-                        <tr>
-                          <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Mohamed Rami</span></td>
-                          <td>Livraison</td>
-                          <td>Colis non reçu après 10 jours</td>
-                          <td><span class="badge bg-label-success text-capitalize">Traité</span></td>
-                          <td>2025-03-20</td>
+                          <td><span class="text-truncate d-flex align-items-center"><span class="badge badge-center rounded bg-label-warning w-px-30 h-px-30 me-2"><i class="bx bx-keyboard bx-xs"></i></span>Matériel</span></td>
+                          <td>350 €</td>
+                          <td>0</td>
+                          <td><span class="badge bg-label-danger text-capitalize">Rupture</span></td>
                           <td>
                             <div class="d-flex align-items-center">
                               <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
                               <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
                               <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
+                              <div class="dropdown-menu dropdown-menu-end m-0">
+                                <a href="javascript:;" class="dropdown-item">Modifier</a>
+                                <a href="javascript:;" class="dropdown-item">Réapprovisionner</a>
+                              </div>
                             </div>
                           </td>
                         </tr>
@@ -591,12 +695,14 @@
                     </table>
                     <div class="row mx-2 mt-3 mb-3">
                       <div class="col-sm-12 col-md-6 d-flex align-items-center">
-                        <div class="dataTables_info text-muted small">Affichage de 1 à 3 sur 3 entrées</div>
+                        <div class="dataTables_info text-muted small">Affichage de 1 à 10 sur 124 entrées</div>
                       </div>
                       <div class="col-sm-12 col-md-6 d-flex justify-content-end">
                         <ul class="pagination pagination-sm m-0">
                           <li class="page-item disabled"><a href="#" class="page-link">Précédent</a></li>
                           <li class="page-item active"><a href="#" class="page-link">1</a></li>
+                          <li class="page-item"><a href="#" class="page-link">2</a></li>
+                          <li class="page-item"><a href="#" class="page-link">3</a></li>
                           <li class="page-item"><a href="#" class="page-link">Suivant</a></li>
                         </ul>
                       </div>
@@ -605,36 +711,36 @@
                 </div>
               </div>
 
-              <!-- Modal Add Réclamation -->
-              <div class="modal fade" id="addReclamationModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
+              <!-- Modal Add Produit -->
+              <div class="modal fade" id="addProduitModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
                   <div class="modal-content">
                     <div class="modal-header">
-                      <h5 class="modal-title">Ajouter une réclamation</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                      <h5 class="modal-title">Ajouter un produit</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form>
                       <div class="modal-body">
                         <div class="row g-3">
                           <div class="col-12">
-                            <label class="form-label">Nom du client</label>
-                            <input type="text" class="form-control" placeholder="Nom du client" />
+                            <label class="form-label">Nom du produit</label>
+                            <input type="text" class="form-control" placeholder="Nom du produit" />
                           </div>
                           <div class="col-md-6">
-                            <label class="form-label">Type de formulaire</label>
-                            <select class="form-select"><option value="">Sélectionner...</option><option value="Technique">Technique</option><option value="Facturation">Facturation</option><option value="Livraison">Livraison</option><option value="Autre">Autre</option></select>
+                            <label class="form-label">Catégorie</label>
+                            <select class="form-select"><option>Logiciel</option><option>Matériel</option><option>Service</option></select>
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label">Prix (€)</label>
+                            <input type="number" class="form-control" placeholder="0.00" />
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label">Stock</label>
+                            <input type="number" class="form-control" placeholder="0" />
                           </div>
                           <div class="col-md-6">
                             <label class="form-label">Statut</label>
-                            <select class="form-select"><option value="en_attente">En attente</option><option value="en_cours">En cours</option><option value="traite">Traité</option></select>
-                          </div>
-                          <div class="col-12">
-                            <label class="form-label">Sujet</label>
-                            <input type="text" class="form-control" placeholder="Sujet de la réclamation" />
-                          </div>
-                          <div class="col-12">
-                            <label class="form-label">Message</label>
-                            <textarea class="form-control" rows="3" placeholder="Détails de la réclamation..."></textarea>
+                            <select class="form-select"><option>Actif</option><option>Inactif</option></select>
                           </div>
                         </div>
                       </div>

@@ -93,7 +93,7 @@
                   </a>
                   <ul class="menu-sub">
                     <li class="menu-item active">
-                      <a href="gestion-formations.html" class="menu-link">
+                      <a href="gestion-formations.php" class="menu-link">
                         <div class="text-truncate">Vue d&apos;ensemble</div>
                       </a>
                     </li>
@@ -613,9 +613,9 @@
                             <button class="btn btn-secondary buttons-collection dropdown-toggle btn-label-secondary mx-3" type="button" aria-haspopup="dialog" aria-expanded="false">
                               <span><i class="bx bx-export me-1 bx-sm"></i>Exporter</span>
                             </button>
-                            <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#addFormationModal">
+                            <a href="gestion-formations.php" class="btn btn-primary">
                               <span><i class="bx bx-plus me-0 me-sm-1 bx-sm"></i><span class="d-none d-sm-inline-block">Ajouter Formation</span></span>
-                            </button>
+                            </a>
                           </div>
                         </div>
                       </div>
@@ -729,36 +729,44 @@
                     </div>
                     <form>
                       <div class="modal-body">
-                        <div class="row">
-                          <div class="col mb-3">
-                            <label for="formationTitre" class="form-label">Titre de la formation</label>
-                            <input type="text" id="formationTitre" class="form-control" placeholder="Entrez le titre" />
+                        <div class="row mb-3">
+                          <div class="col">
+                            <label for="formationTitre" class="form-label">Titre <span class="text-danger">*</span></label>
+                            <input type="text" id="formationTitre" name="titre" class="form-control" placeholder="Titre de la formation" maxlength="200" required />
                           </div>
                         </div>
-                        <div class="row g-2">
-                          <div class="col mb-0">
-                            <label for="formationDuree" class="form-label">Durée</label>
-                            <input type="text" id="formationDuree" class="form-control" placeholder="ex: 3 j" />
+                        <div class="row g-3 mb-3">
+                          <div class="col-md-6">
+                            <label for="formationDuree" class="form-label">Durée <span class="text-danger">*</span></label>
+                            <input type="text" id="formationDuree" name="duree" class="form-control" placeholder="ex: 3 jours, 40h" maxlength="50" required />
                           </div>
-                          <div class="col mb-0">
-                            <label for="formationPlaces" class="form-label">Places</label>
-                            <input type="text" id="formationPlaces" class="form-control" placeholder="ex: 20" />
+                          <div class="col-md-6">
+                            <label for="formationPrix" class="form-label">Prix (DT) <span class="text-danger">*</span></label>
+                            <input type="number" id="formationPrix" name="prix" class="form-control" placeholder="0.00" min="0" step="0.01" required />
                           </div>
                         </div>
-                        <div class="row mt-3">
-                          <div class="col mb-0">
-                            <label for="formationStatut" class="form-label">Statut</label>
-                            <select id="formationStatut" class="form-select">
-                              <option value="Ouverte">Ouverte</option>
-                              <option value="Fermée">Fermée</option>
-                              <option value="En attente">En attente</option>
+                        <div class="row mb-3">
+                          <div class="col">
+                            <label for="formationNiveau" class="form-label">Niveau <span class="text-danger">*</span></label>
+                            <select id="formationNiveau" name="niveau" class="form-select" required>
+                              <option value="">-- Sélectionner un niveau --</option>
+                              <option value="Débutant">Débutant</option>
+                              <option value="Intermédiaire">Intermédiaire</option>
+                              <option value="Avancé">Avancé</option>
+                              <option value="Expert">Expert</option>
                             </select>
                           </div>
                         </div>
-                        <div class="row mt-3">
-                          <div class="col mb-0">
-                            <label for="formationDescription" class="form-label">Description (Optionnel)</label>
-                            <textarea id="formationDescription" class="form-control" rows="3" placeholder="Description de la formation..."></textarea>
+                        <div class="row mb-3">
+                          <div class="col">
+                            <label for="formationDescription" class="form-label">Description</label>
+                            <textarea id="formationDescription" name="description" class="form-control" rows="3" placeholder="Description de la formation..."></textarea>
+                          </div>
+                        </div>
+                        <div class="row mb-1">
+                          <div class="col">
+                            <label for="formationDateCreation" class="form-label">Date de création <span class="text-danger">*</span></label>
+                            <input type="date" id="formationDateCreation" name="date_creation" class="form-control" required />
                           </div>
                         </div>
                       </div>

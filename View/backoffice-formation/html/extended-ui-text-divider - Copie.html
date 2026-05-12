@@ -11,7 +11,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Réclamations | Tableaux</title>
+    <title>Demo: Text Divider - Extended UI | Sneat - Bootstrap Dashboard FREE</title>
 
     <meta name="description" content="" />
 
@@ -39,8 +39,6 @@
     <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
 
     <!-- endbuild -->
-
-    <link rel="stylesheet" href="../assets/vendor/libs/apex-charts/apex-charts.css" />
 
     <!-- Page CSS -->
 
@@ -74,9 +72,9 @@
 
           <div class="menu-inner-shadow"></div>
 
-                                                            <ul class="menu-inner py-1">
+                                                  <ul class="menu-inner py-1">
             <!-- Tableau de bord : accueil + modules plateforme (pas de démos externes Académie / e-commerce) -->
-            <li class="menu-item active open">
+            <li class="menu-item">
               <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons bx bx-home-smile"></i>
                 <div class="text-truncate">Tableau de bord</div>
@@ -131,7 +129,7 @@
                     </li>
                   </ul>
                 </li>
-                <li class="menu-item active">
+                <li class="menu-item">
                   <a href="gestion-reclamations.html" class="menu-link">
                     <div class="text-truncate">Réclamations</div>
                   </a>
@@ -493,163 +491,129 @@
           <div class="content-wrapper">
             <!-- Content -->
             <div class="container-xxl flex-grow-1 container-p-y">
-              <h4 class="fw-bold py-3 mb-2">Gestion des Réclamations</h4>
-
-              <div class="card" id="reclamations">
-                <div class="card-header border-bottom">
-                  <h5 class="card-title">Filtres de recherche</h5>
-                  <div class="d-flex justify-content-between align-items-center row py-3 gap-3 gap-md-0">
-                    <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Statut</option><option value="en_attente">En attente</option><option value="en_cours">En cours</option><option value="traite">Traité</option></select>
-                    </div>
-                    <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Type</option><option value="Technique">Technique</option><option value="Facturation">Facturation</option><option value="Livraison">Livraison</option><option value="Autre">Autre</option></select>
-                    </div>
-                    <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Période</option><option value="today">Aujourd'hui</option><option value="week">Cette semaine</option><option value="month">Ce mois</option></select>
+              <div class="row gy-6">
+                <!-- Basic -->
+                <div class="col-md-12">
+                  <div class="card">
+                    <h5 class="card-header">Basic</h5>
+                    <div class="card-body">
+                      <div class="divider">
+                        <div class="divider-text">Text</div>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div class="card-datatable table-responsive">
-                  <div class="dataTables_wrapper dt-bootstrap5 no-footer">
-                    <div class="row mx-2 pt-3 pb-3">
-                      <div class="col-md-2 d-flex align-items-center">
-                        <select class="form-select w-auto"><option value="10">10</option><option value="25">25</option><option value="50">50</option></select>
+                <!-- /Basic -->
+
+                <!-- Text Alignment -->
+                <div class="col-md-12">
+                  <div class="card">
+                    <h5 class="card-header">Alignment</h5>
+                    <div class="card-body">
+                      <div class="divider text-start">
+                        <div class="divider-text">Start</div>
                       </div>
-                      <div class="col-md-10">
-                        <div class="dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-end flex-md-row flex-column gap-3">
-                          <div class="dataTables_filter"><input type="search" class="form-control" placeholder="Rechercher..." /></div>
-                          <div class="dt-buttons btn-group flex-wrap">
-                            <button class="btn btn-secondary buttons-collection dropdown-toggle btn-label-secondary mx-3" type="button"><span><i class="bx bx-export me-1 bx-sm"></i>Exporter</span></button>
-                            <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#addReclamationModal"><span><i class="bx bx-plus me-0 me-sm-1 bx-sm"></i><span class="d-none d-sm-inline-block">Ajouter Réclamation</span></span></button>
-                          </div>
+                      <div class="divider text-start-center">
+                        <div class="divider-text">Start-Center</div>
+                      </div>
+                      <div class="divider">
+                        <div class="divider-text">Center (Default)</div>
+                      </div>
+                      <div class="divider text-end-center">
+                        <div class="divider-text">End-Center</div>
+                      </div>
+                      <div class="divider text-end">
+                        <div class="divider-text">End</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- /Text Alignment -->
+
+                <!-- Divider Colors -->
+                <div class="col-md-12">
+                  <div class="card">
+                    <h5 class="card-header">Colors</h5>
+                    <div class="card-body">
+                      <div class="divider divider-primary">
+                        <div class="divider-text">Primary</div>
+                      </div>
+                      <div class="divider divider-success">
+                        <div class="divider-text">Success</div>
+                      </div>
+                      <div class="divider divider-danger">
+                        <div class="divider-text">Danger</div>
+                      </div>
+                      <div class="divider divider-warning">
+                        <div class="divider-text">Warning</div>
+                      </div>
+                      <div class="divider divider-info">
+                        <div class="divider-text">Info</div>
+                      </div>
+                      <div class="divider divider-dark">
+                        <div class="divider-text">Dark</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- /Divider Colors -->
+
+                <!-- Icons -->
+                <div class="col-md-12">
+                  <div class="card">
+                    <h5 class="card-header">Icons</h5>
+                    <div class="card-body">
+                      <div class="divider text-start">
+                        <div class="divider-text">
+                          <i class="icon-base bx bx-sun align-middle"></i>
+                        </div>
+                      </div>
+                      <div class="divider text-start-center">
+                        <div class="divider-text">
+                          <i class="icon-base bx bx-crown align-middle"></i>
+                        </div>
+                      </div>
+                      <div class="divider">
+                        <div class="divider-text">
+                          <i class="icon-base bx bx-star align-middle"></i>
+                        </div>
+                      </div>
+                      <div class="divider text-end-center">
+                        <div class="divider-text">
+                          <i class="icon-base bx bx-coffee-togo align-middle"></i>
+                        </div>
+                      </div>
+                      <div class="divider text-end">
+                        <div class="divider-text">
+                          <i class="icon-base bx bx-cut rotate-180 align-middle"></i>
                         </div>
                       </div>
                     </div>
-                    <table class="table border-top dataTable">
-                      <thead>
-                        <tr>
-                          <th><input type="checkbox" class="form-check-input"></th>
-                          <th>CLIENT</th>
-                          <th>FORMULAIRE</th>
-                          <th>SUJET</th>
-                          <th>STATUT</th>
-                          <th>DATE</th>
-                          <th>ACTIONS</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Ahmed Benali</span></td>
-                          <td>Technique</td>
-                          <td>Problème de connexion à la plateforme</td>
-                          <td><span class="badge bg-label-warning text-capitalize">En attente</span></td>
-                          <td>2025-04-10</td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Sara Kaya</span></td>
-                          <td>Facturation</td>
-                          <td>Double facturation sur commande #4521</td>
-                          <td><span class="badge bg-label-primary text-capitalize">En cours</span></td>
-                          <td>2025-04-08</td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Mohamed Rami</span></td>
-                          <td>Livraison</td>
-                          <td>Colis non reçu après 10 jours</td>
-                          <td><span class="badge bg-label-success text-capitalize">Traité</span></td>
-                          <td>2025-03-20</td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
-                            </div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div class="row mx-2 mt-3 mb-3">
-                      <div class="col-sm-12 col-md-6 d-flex align-items-center">
-                        <div class="dataTables_info text-muted small">Affichage de 1 à 3 sur 3 entrées</div>
+                  </div>
+                </div>
+                <!-- /Icons -->
+
+                <!-- Icons -->
+                <div class="col-md-12">
+                  <div class="card">
+                    <h5 class="card-header">Styles</h5>
+                    <div class="card-body">
+                      <div class="divider">
+                        <div class="divider-text">Solid (Default)</div>
                       </div>
-                      <div class="col-sm-12 col-md-6 d-flex justify-content-end">
-                        <ul class="pagination pagination-sm m-0">
-                          <li class="page-item disabled"><a href="#" class="page-link">Précédent</a></li>
-                          <li class="page-item active"><a href="#" class="page-link">1</a></li>
-                          <li class="page-item"><a href="#" class="page-link">Suivant</a></li>
-                        </ul>
+                      <div class="divider divider-dotted">
+                        <div class="divider-text">Dotted</div>
+                      </div>
+                      <div class="divider divider-dashed">
+                        <div class="divider-text">Dashed</div>
                       </div>
                     </div>
                   </div>
                 </div>
+                <!-- /Icons -->
               </div>
-
-              <!-- Modal Add Réclamation -->
-              <div class="modal fade" id="addReclamationModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title">Ajouter une réclamation</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <form>
-                      <div class="modal-body">
-                        <div class="row g-3">
-                          <div class="col-12">
-                            <label class="form-label">Nom du client</label>
-                            <input type="text" class="form-control" placeholder="Nom du client" />
-                          </div>
-                          <div class="col-md-6">
-                            <label class="form-label">Type de formulaire</label>
-                            <select class="form-select"><option value="">Sélectionner...</option><option value="Technique">Technique</option><option value="Facturation">Facturation</option><option value="Livraison">Livraison</option><option value="Autre">Autre</option></select>
-                          </div>
-                          <div class="col-md-6">
-                            <label class="form-label">Statut</label>
-                            <select class="form-select"><option value="en_attente">En attente</option><option value="en_cours">En cours</option><option value="traite">Traité</option></select>
-                          </div>
-                          <div class="col-12">
-                            <label class="form-label">Sujet</label>
-                            <input type="text" class="form-control" placeholder="Sujet de la réclamation" />
-                          </div>
-                          <div class="col-12">
-                            <label class="form-label">Message</label>
-                            <textarea class="form-control" rows="3" placeholder="Détails de la réclamation..."></textarea>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-primary">Enregistrer</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-
-            <!-- / Content -->
             </div>
-            <!-- /container-xxl -->
+            <!-- / Content -->
 
             <!-- Footer -->
             <footer class="content-footer footer bg-footer-theme">
@@ -733,11 +697,14 @@
 
     <!-- endbuild -->
 
+    <!-- Vendors JS -->
+
     <!-- Main JS -->
 
     <script src="../assets/js/main.js"></script>
     <script src="../assets/js/navbar-extras.js"></script>
 
+    <!-- Page JS -->
 
     <!-- Place this tag before closing body tag for github widget button. -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>

@@ -11,7 +11,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Réclamations | Tableaux</title>
+    <title>Email | Application</title>
 
     <meta name="description" content="" />
 
@@ -76,7 +76,7 @@
 
                                                             <ul class="menu-inner py-1">
             <!-- Tableau de bord : accueil + modules plateforme (pas de démos externes Académie / e-commerce) -->
-            <li class="menu-item active open">
+            <li class="menu-item">
               <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons bx bx-home-smile"></i>
                 <div class="text-truncate">Tableau de bord</div>
@@ -131,7 +131,7 @@
                     </li>
                   </ul>
                 </li>
-                <li class="menu-item active">
+                <li class="menu-item">
                   <a href="gestion-reclamations.html" class="menu-link">
                     <div class="text-truncate">Réclamations</div>
                   </a>
@@ -493,163 +493,222 @@
           <div class="content-wrapper">
             <!-- Content -->
             <div class="container-xxl flex-grow-1 container-p-y">
-              <h4 class="fw-bold py-3 mb-2">Gestion des Réclamations</h4>
+              <!-- Email App -->
+              <div class="card overflow-hidden" style="min-height:calc(100vh - 160px);">
+                <div class="row g-0 h-100">
 
-              <div class="card" id="reclamations">
-                <div class="card-header border-bottom">
-                  <h5 class="card-title">Filtres de recherche</h5>
-                  <div class="d-flex justify-content-between align-items-center row py-3 gap-3 gap-md-0">
-                    <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Statut</option><option value="en_attente">En attente</option><option value="en_cours">En cours</option><option value="traite">Traité</option></select>
-                    </div>
-                    <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Type</option><option value="Technique">Technique</option><option value="Facturation">Facturation</option><option value="Livraison">Livraison</option><option value="Autre">Autre</option></select>
-                    </div>
-                    <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Période</option><option value="today">Aujourd'hui</option><option value="week">Cette semaine</option><option value="month">Ce mois</option></select>
-                    </div>
-                  </div>
-                </div>
-                <div class="card-datatable table-responsive">
-                  <div class="dataTables_wrapper dt-bootstrap5 no-footer">
-                    <div class="row mx-2 pt-3 pb-3">
-                      <div class="col-md-2 d-flex align-items-center">
-                        <select class="form-select w-auto"><option value="10">10</option><option value="25">25</option><option value="50">50</option></select>
-                      </div>
-                      <div class="col-md-10">
-                        <div class="dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-end flex-md-row flex-column gap-3">
-                          <div class="dataTables_filter"><input type="search" class="form-control" placeholder="Rechercher..." /></div>
-                          <div class="dt-buttons btn-group flex-wrap">
-                            <button class="btn btn-secondary buttons-collection dropdown-toggle btn-label-secondary mx-3" type="button"><span><i class="bx bx-export me-1 bx-sm"></i>Exporter</span></button>
-                            <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#addReclamationModal"><span><i class="bx bx-plus me-0 me-sm-1 bx-sm"></i><span class="d-none d-sm-inline-block">Ajouter Réclamation</span></span></button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <table class="table border-top dataTable">
-                      <thead>
-                        <tr>
-                          <th><input type="checkbox" class="form-check-input"></th>
-                          <th>CLIENT</th>
-                          <th>FORMULAIRE</th>
-                          <th>SUJET</th>
-                          <th>STATUT</th>
-                          <th>DATE</th>
-                          <th>ACTIONS</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Ahmed Benali</span></td>
-                          <td>Technique</td>
-                          <td>Problème de connexion à la plateforme</td>
-                          <td><span class="badge bg-label-warning text-capitalize">En attente</span></td>
-                          <td>2025-04-10</td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Sara Kaya</span></td>
-                          <td>Facturation</td>
-                          <td>Double facturation sur commande #4521</td>
-                          <td><span class="badge bg-label-primary text-capitalize">En cours</span></td>
-                          <td>2025-04-08</td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Mohamed Rami</span></td>
-                          <td>Livraison</td>
-                          <td>Colis non reçu après 10 jours</td>
-                          <td><span class="badge bg-label-success text-capitalize">Traité</span></td>
-                          <td>2025-03-20</td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
-                            </div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div class="row mx-2 mt-3 mb-3">
-                      <div class="col-sm-12 col-md-6 d-flex align-items-center">
-                        <div class="dataTables_info text-muted small">Affichage de 1 à 3 sur 3 entrées</div>
-                      </div>
-                      <div class="col-sm-12 col-md-6 d-flex justify-content-end">
-                        <ul class="pagination pagination-sm m-0">
-                          <li class="page-item disabled"><a href="#" class="page-link">Précédent</a></li>
-                          <li class="page-item active"><a href="#" class="page-link">1</a></li>
-                          <li class="page-item"><a href="#" class="page-link">Suivant</a></li>
+                  <!-- Sidebar -->
+                  <div class="col-auto border-end" style="width:220px;min-height:calc(100vh - 160px);">
+                    <div class="p-3">
+                      <button class="btn btn-primary w-100 fw-semibold mb-4">Compose</button>
+
+                      <ul class="nav flex-column gap-1">
+                        <li class="nav-item">
+                          <a href="#" class="nav-link d-flex align-items-center gap-2 px-2 py-2 rounded active text-primary fw-semibold" id="mail-inbox">
+                            <i class="bx bx-envelope fs-5"></i> Inbox
+                            <span class="badge bg-primary ms-auto">21</span>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="#" class="nav-link d-flex align-items-center gap-2 px-2 py-2 rounded text-body" id="mail-sent">
+                            <i class="bx bx-send fs-5"></i> Sent
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="#" class="nav-link d-flex align-items-center gap-2 px-2 py-2 rounded text-body" id="mail-draft">
+                            <i class="bx bx-edit fs-5"></i> Draft
+                            <span class="badge bg-warning ms-auto">2</span>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="#" class="nav-link d-flex align-items-center gap-2 px-2 py-2 rounded text-body" id="mail-starred">
+                            <i class="bx bx-star fs-5"></i> Starred
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="#" class="nav-link d-flex align-items-center gap-2 px-2 py-2 rounded text-body" id="mail-spam">
+                            <i class="bx bx-info-circle fs-5"></i> Spam
+                            <span class="badge bg-danger ms-auto">4</span>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="#" class="nav-link d-flex align-items-center gap-2 px-2 py-2 rounded text-body" id="mail-trash">
+                            <i class="bx bx-trash fs-5"></i> Trash
+                          </a>
+                        </li>
+                      </ul>
+
+                      <div class="mt-4">
+                        <p class="text-uppercase small fw-semibold text-muted px-2 mb-2" style="font-size:.7rem;letter-spacing:.08em;">Labels</p>
+                        <ul class="nav flex-column gap-1">
+                          <li><a href="#" class="nav-link d-flex align-items-center gap-2 px-2 py-1 text-body"><span style="width:10px;height:10px;border-radius:50%;background:#71dd37;display:inline-block;"></span> Personal</a></li>
+                          <li><a href="#" class="nav-link d-flex align-items-center gap-2 px-2 py-1 text-body"><span style="width:10px;height:10px;border-radius:50%;background:#696cff;display:inline-block;"></span> Company</a></li>
+                          <li><a href="#" class="nav-link d-flex align-items-center gap-2 px-2 py-1 text-body"><span style="width:10px;height:10px;border-radius:50%;background:#ffab00;display:inline-block;"></span> Important</a></li>
+                          <li><a href="#" class="nav-link d-flex align-items-center gap-2 px-2 py-1 text-body"><span style="width:10px;height:10px;border-radius:50%;background:#ff3e1d;display:inline-block;"></span> Private</a></li>
                         </ul>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              <!-- Modal Add Réclamation -->
-              <div class="modal fade" id="addReclamationModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title">Ajouter une réclamation</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  <!-- Mail list -->
+                  <div class="col">
+                    <!-- Toolbar -->
+                    <div class="d-flex align-items-center gap-3 px-4 py-3 border-bottom">
+                      <div class="flex-grow-1 d-flex align-items-center gap-2">
+                        <i class="bx bx-search text-muted fs-5"></i>
+                        <input type="text" class="form-control border-0 shadow-none ps-1" placeholder="Search mail" style="background:transparent;" />
+                      </div>
                     </div>
-                    <form>
-                      <div class="modal-body">
-                        <div class="row g-3">
-                          <div class="col-12">
-                            <label class="form-label">Nom du client</label>
-                            <input type="text" class="form-control" placeholder="Nom du client" />
-                          </div>
-                          <div class="col-md-6">
-                            <label class="form-label">Type de formulaire</label>
-                            <select class="form-select"><option value="">Sélectionner...</option><option value="Technique">Technique</option><option value="Facturation">Facturation</option><option value="Livraison">Livraison</option><option value="Autre">Autre</option></select>
-                          </div>
-                          <div class="col-md-6">
-                            <label class="form-label">Statut</label>
-                            <select class="form-select"><option value="en_attente">En attente</option><option value="en_cours">En cours</option><option value="traite">Traité</option></select>
-                          </div>
-                          <div class="col-12">
-                            <label class="form-label">Sujet</label>
-                            <input type="text" class="form-control" placeholder="Sujet de la réclamation" />
-                          </div>
-                          <div class="col-12">
-                            <label class="form-label">Message</label>
-                            <textarea class="form-control" rows="3" placeholder="Détails de la réclamation..."></textarea>
-                          </div>
+
+                    <!-- Action bar -->
+                    <div class="d-flex align-items-center justify-content-between px-4 py-2 border-bottom">
+                      <div class="d-flex align-items-center gap-3">
+                        <input type="checkbox" class="form-check-input" id="checkAll">
+                        <a href="#" class="text-body"><i class="bx bx-trash fs-5"></i></a>
+                        <a href="#" class="text-body"><i class="bx bx-envelope fs-5"></i></a>
+                        <a href="#" class="text-body"><i class="bx bx-folder fs-5"></i></a>
+                        <a href="#" class="text-body"><i class="bx bx-transfer fs-5"></i></a>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <a href="#" class="text-body"><i class="bx bx-refresh fs-5"></i></a>
+                        <a href="#" class="text-body"><i class="bx bx-dots-vertical-rounded fs-5"></i></a>
+                      </div>
+                    </div>
+
+                    <!-- Emails -->
+                    <div class="email-list">
+
+                      <!-- Email row — unread -->
+                      <div class="email-row d-flex align-items-center px-4 py-3 border-bottom email-unread" style="cursor:pointer;">
+                        <input type="checkbox" class="form-check-input me-3 flex-shrink-0">
+                        <i class="bx bx-star fs-5 me-3 flex-shrink-0 text-warning"></i>
+                        <img src="../assets/img/avatars/1.png" class="rounded-circle me-3 flex-shrink-0" width="36" height="36" alt="">
+                        <div class="flex-grow-1 overflow-hidden">
+                          <span class="fw-semibold text-heading me-2">Chandler Bing</span>
+                          <span class="text-muted small">Focused impactful open issues from the project of GitHub</span>
+                        </div>
+                        <div class="flex-shrink-0 d-flex align-items-center gap-2 ms-3">
+                          <span style="width:8px;height:8px;border-radius:50%;background:#ff3e1d;display:inline-block;"></span>
+                          <small class="text-muted">08:40 AM</small>
                         </div>
                       </div>
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+
+                      <!-- Email row — unread -->
+                      <div class="email-row d-flex align-items-center px-4 py-3 border-bottom email-unread" style="cursor:pointer;">
+                        <input type="checkbox" class="form-check-input me-3 flex-shrink-0">
+                        <i class="bx bx-star fs-5 me-3 flex-shrink-0 text-warning"></i>
+                        <img src="../assets/img/avatars/2.png" class="rounded-circle me-3 flex-shrink-0" width="36" height="36" alt="">
+                        <div class="flex-grow-1 overflow-hidden">
+                          <span class="fw-semibold text-heading me-2">Ross Geller</span>
+                          <span class="text-muted small">Hey Katy, Dessert soufflé tootsie roll soufflé carrot cake halvah jelly.</span>
+                        </div>
+                        <div class="flex-shrink-0 d-flex align-items-center gap-2 ms-3">
+                          <span style="width:8px;height:8px;border-radius:50%;background:#696cff;display:inline-block;"></span>
+                          <small class="text-muted">10:12 AM</small>
+                        </div>
                       </div>
-                    </form>
+
+                      <!-- Email row — read -->
+                      <div class="email-row d-flex align-items-center px-4 py-3 border-bottom" style="cursor:pointer;background:#f8f8fb;">
+                        <input type="checkbox" class="form-check-input me-3 flex-shrink-0">
+                        <i class="bx bx-star fs-5 me-3 flex-shrink-0 text-muted"></i>
+                        <div class="avatar-initial rounded-circle d-flex align-items-center justify-content-center fw-bold me-3 flex-shrink-0" style="width:36px;height:36px;background:rgba(105,108,255,.15);color:#696cff;font-size:.8rem;">BS</div>
+                        <div class="flex-grow-1 overflow-hidden">
+                          <span class="fw-semibold text-heading me-2">Barney Stinson</span>
+                          <span class="text-muted small">Hey Katy, Soufflé apple pie caramels soufflé tiramisu bear claw.</span>
+                        </div>
+                        <div class="flex-shrink-0 d-flex align-items-center gap-2 ms-3">
+                          <i class="bx bx-paperclip text-muted"></i>
+                          <span style="width:8px;height:8px;border-radius:50%;background:#696cff;display:inline-block;"></span>
+                          <small class="text-muted">12:44 AM</small>
+                        </div>
+                      </div>
+
+                      <!-- Email row — read -->
+                      <div class="email-row d-flex align-items-center px-4 py-3 border-bottom" style="cursor:pointer;">
+                        <input type="checkbox" class="form-check-input me-3 flex-shrink-0">
+                        <i class="bx bx-star fs-5 me-3 flex-shrink-0 text-warning"></i>
+                        <img src="../assets/img/avatars/3.png" class="rounded-circle me-3 flex-shrink-0" width="36" height="36" alt="">
+                        <div class="flex-grow-1 overflow-hidden">
+                          <span class="fw-semibold text-heading me-2">Pheobe Buffay</span>
+                          <span class="text-muted small">Hey Katy, Tart croissant jujubes gummies macaroon Icing sweet.</span>
+                        </div>
+                        <div class="flex-shrink-0 d-flex align-items-center gap-2 ms-3">
+                          <span style="width:8px;height:8px;border-radius:50%;background:#71dd37;display:inline-block;"></span>
+                          <small class="text-muted">Yesterday</small>
+                        </div>
+                      </div>
+
+                      <!-- Email row — read -->
+                      <div class="email-row d-flex align-items-center px-4 py-3 border-bottom" style="cursor:pointer;background:#f8f8fb;">
+                        <input type="checkbox" class="form-check-input me-3 flex-shrink-0">
+                        <i class="bx bx-star fs-5 me-3 flex-shrink-0 text-muted"></i>
+                        <img src="../assets/img/avatars/4.png" class="rounded-circle me-3 flex-shrink-0" width="36" height="36" alt="">
+                        <div class="flex-grow-1 overflow-hidden">
+                          <span class="fw-semibold text-heading me-2">Ted Mosby</span>
+                          <span class="text-muted small">Hey Katy, I love Pudding cookie chocolate sweet tiramisu jujubes I love danish.</span>
+                        </div>
+                        <div class="flex-shrink-0 d-flex align-items-center gap-2 ms-3">
+                          <small class="text-muted">Yesterday</small>
+                        </div>
+                      </div>
+
+                      <!-- Email row — unread -->
+                      <div class="email-row d-flex align-items-center px-4 py-3 border-bottom email-unread" style="cursor:pointer;">
+                        <input type="checkbox" class="form-check-input me-3 flex-shrink-0">
+                        <i class="bx bx-star fs-5 me-3 flex-shrink-0 text-muted"></i>
+                        <div class="avatar-initial rounded-circle d-flex align-items-center justify-content-center fw-bold me-3 flex-shrink-0" style="width:36px;height:36px;background:rgba(113,221,55,.15);color:#71dd37;font-size:.8rem;">SK</div>
+                        <div class="flex-grow-1 overflow-hidden">
+                          <span class="fw-semibold text-heading me-2">Stacy Cooper</span>
+                          <span class="text-muted small">Hey Katy, I love danish. Cupcake I love carrot cake sugar plum I love.</span>
+                        </div>
+                        <div class="flex-shrink-0 d-flex align-items-center gap-2 ms-3">
+                          <span style="width:8px;height:8px;border-radius:50%;background:#ff3e1d;display:inline-block;"></span>
+                          <small class="text-muted">5 May</small>
+                        </div>
+                      </div>
+
+                      <!-- Email row — read -->
+                      <div class="email-row d-flex align-items-center px-4 py-3 border-bottom" style="cursor:pointer;background:#f8f8fb;">
+                        <input type="checkbox" class="form-check-input me-3 flex-shrink-0">
+                        <i class="bx bx-star fs-5 me-3 flex-shrink-0 text-muted"></i>
+                        <img src="../assets/img/avatars/2.png" class="rounded-circle me-3 flex-shrink-0" width="36" height="36" alt="">
+                        <div class="flex-grow-1 overflow-hidden">
+                          <span class="fw-semibold text-heading me-2">Monica Geller</span>
+                          <span class="text-muted small">Hey Katy, Brownie caramels tart I love jelly-o I love sweet roll.</span>
+                        </div>
+                        <div class="flex-shrink-0 d-flex align-items-center gap-2 ms-3">
+                          <small class="text-muted">4 May</small>
+                        </div>
+                      </div>
+
+                      <!-- Email row — read -->
+                      <div class="email-row d-flex align-items-center px-4 py-3 border-bottom" style="cursor:pointer;">
+                        <input type="checkbox" class="form-check-input me-3 flex-shrink-0">
+                        <i class="bx bx-star fs-5 me-3 flex-shrink-0 text-warning"></i>
+                        <div class="avatar-initial rounded-circle d-flex align-items-center justify-content-center fw-bold me-3 flex-shrink-0" style="width:36px;height:36px;background:rgba(255,171,0,.15);color:#ffab00;font-size:.8rem;">JT</div>
+                        <div class="flex-grow-1 overflow-hidden">
+                          <span class="fw-semibold text-heading me-2">Joey Tribbiani</span>
+                          <span class="text-muted small">Hey Katy, Candy canes I love gummies I love lollipop sweet roll.</span>
+                        </div>
+                        <div class="flex-shrink-0 d-flex align-items-center gap-2 ms-3">
+                          <small class="text-muted">3 May</small>
+                        </div>
+                      </div>
+
+                    </div>
+                    <!-- /Emails -->
                   </div>
+                  <!-- /Mail list -->
+
                 </div>
               </div>
+              <!-- /Email App -->
 
-            <!-- / Content -->
             </div>
             <!-- /container-xxl -->
+
+            <!-- / Content -->
 
             <!-- Footer -->
             <footer class="content-footer footer bg-footer-theme">
