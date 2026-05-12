@@ -1,0 +1,760 @@
+﻿<?php
+session_start();
+require_once __DIR__ . '/../../../../../config.php';
+require_once __DIR__ . '/../../../../../controller/UtilisateurController.php';
+
+// Protection admin → redirige vers login backoffice
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    header('Location: login-admin.php');
+    exit;
+}
+
+$controller = new UtilisateurController();
+$message    = '';
+$error      = '';
+$editUser   = null;
+
+// ── SUPPRESSION ───────────────────────────────────────────────────────────────
+if (isset($_GET['delete'])) {
+    $r = $controller->deleteUser((int) $_GET['delete']);
+    $message = $r['success'] ? $r['message'] : '';
+    $error   = $r['success'] ? '' : $r['message'];
+}
+
+// ── CHARGEMENT POUR MODIFICATION ─────────────────────────────────────────────
+if (isset($_GET['edit'])) {
+    $editUser = $controller->getById((int) $_GET['edit']);
+}
+
+// ── SAUVEGARDE MODIFICATION ───────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update') {
+    $id       = (int) $_POST['id'];
+    $nom      = trim($_POST['nom']   ?? '');
+    $email    = trim($_POST['email'] ?? '');
+    $password = $_POST['password']   ?? '';
+    if (empty($nom) || empty($email) || empty($password)) {
+        $error    = 'Tous les champs sont obligatoires.';
+        $editUser = $controller->getById($id);
+    } else {
+        $r = $controller->updateUser($id, $nom, $email, $password);
+        $message = $r['success'] ? $r['message'] : '';
+        $error   = $r['success'] ? '' : $r['message'];
+    }
+}
+
+// ── AJOUT UTILISATEUR ─────────────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add') {
+    $nom      = trim($_POST['nom']   ?? '');
+    $email    = trim($_POST['email'] ?? '');
+    $password = $_POST['password']   ?? '';
+    $role     = $_POST['role']       ?? 'candidat';
+    if (empty($nom) || empty($email) || empty($password)) {
+        $error = 'Tous les champs sont obligatoires.';
+    } else {
+        $r = $controller->register($nom, $email, $password);
+        $message = $r['success'] ? $r['message'] : '';
+        $error   = $r['success'] ? '' : $r['message'];
+    }
+}
+
+$users    = $controller->getAll();
+$total    = count($users);
+$actifs   = count(array_filter($users, fn($u) => $u['statut'] === 'actif'));
+$inactifs = $total - $actifs;
+
+// Avatar navbar admin
+$__av = $_SESSION['user']['avatar'] ?? '';
+if (!empty($__av)) {
+    $__navAvatar = '../../../../../view/frontoffice/' . $__av;
+} else {
+    $__navAvatar = '../assets/img/avatars/1.png';
+}
+?>
+<!doctype html>
+<html lang="fr" class="layout-menu-fixed layout-compact" data-assets-path="../assets/" data-template="vertical-menu-template-free">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"/>
+  <title>Utilisateurs | Takwini</title>
+  <link rel="icon" type="image/x-icon" href="../assets/img/favicon/tak.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/vendor/fonts/iconify-icons.css"/>
+  <link rel="stylesheet" href="../assets/vendor/css/core.css"/>
+  <link rel="stylesheet" href="../assets/css/demo.css"/>
+  <link rel="stylesheet" href="../assets/css/dark-mode.css"/>
+  <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css"/>
+  <script src="../assets/vendor/js/helpers.js"></script>
+  <script src="../assets/js/config.js"></script>
+</head>
+<body>
+<div class="layout-wrapper layout-content-navbar">
+  <div class="layout-container">
+
+    <!-- ── MENU ──────────────────────────────────────────────────────────── -->
+    <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+      <div class="app-brand demo">
+        <a href="index.html" class="app-brand-link">
+          <span class="app-brand-logo demo"><img src="../assets/img/favicon/tak.png" alt="Takwinibot" style="width:56px;height:56px;object-fit:contain;"></span>
+        </a>
+        <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+          <i class="bx bx-chevron-left d-block d-xl-none align-middle"></i>
+        </a>
+      </div>
+      <div class="menu-divider mt-0"></div>
+      <div class="menu-inner-shadow"></div>
+      <ul class="menu-inner py-1">
+        <li class="menu-item active open">
+          <a href="javascript:void(0);" class="menu-link menu-toggle">
+            <i class="menu-icon tf-icons bx bx-home-smile"></i>
+            <div class="text-truncate">Tableau de bord</div>
+          </a>
+          <ul class="menu-sub">
+            <li class="menu-item"><a href="index.html" class="menu-link"><div class="text-truncate">Accueil</div></a></li>
+            <li class="menu-item">
+              <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <div class="text-truncate">Formations</div>
+              </a>
+              <ul class="menu-sub">
+                <li class="menu-item"><a href="/Esprit-PW-2A30-2627-TakwiniBot-gestion_formation/Esprit-PW-2A30-2627-TakwiniBot-gestion_formation/gestion_formation/View/backoffice-formation/gestion-formations.php" class="menu-link"><div class="text-truncate">Vue d'ensemble</div></a></li>
+                <li class="menu-item"><a href="/Esprit-PW-2A30-2627-TakwiniBot-gestion_formation/Esprit-PW-2A30-2627-TakwiniBot-gestion_formation/gestion_formation/View/backoffice-formation/gestion-inscriptions.php" class="menu-link"><div class="text-truncate">Inscriptions</div></a></li>
+                <li class="menu-item"><a href="/Esprit-PW-2A30-2627-TakwiniBot-gestion_formation/Esprit-PW-2A30-2627-TakwiniBot-gestion_formation/gestion_formation/View/backoffice-formation/gestion-inscriptions.html" class="menu-link"><div class="text-truncate">Certificats</div></a></li>
+              </ul>
+            </li>
+            <li class="menu-item"><a href="gestion-offres.html" class="menu-link"><div class="text-truncate">Offres</div></a></li>
+            <li class="menu-item"><a href="gestion-reclamations.html" class="menu-link"><div class="text-truncate">Réclamations</div></a></li>
+            <li class="menu-item"><a href="gestion-entretiens.html" class="menu-link"><div class="text-truncate">Entretiens</div></a></li>
+            <li class="menu-item"><a href="gestion-produits.html" class="menu-link"><div class="text-truncate">Produits</div></a></li>
+            <li class="menu-item open">
+              <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <div class="text-truncate">Utilisateurs</div>
+              </a>
+              <ul class="menu-sub">
+                <li class="menu-item active">
+                  <a href="gestion-utilisateurs.php" class="menu-link"><div class="text-truncate">Liste des utilisateurs</div></a>
+                </li>
+                <li class="menu-item">
+                  <a href="gestion-recruteurs.php" class="menu-link"><div class="text-truncate">Liste des recruteurs</div></a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li class="menu-header small text-uppercase"><span class="menu-header-text">Applications</span></li>
+        <li class="menu-item"><a href="email-boite.html" class="menu-link"><i class="menu-icon tf-icons bx bx-envelope"></i><div class="text-truncate">Email</div></a></li>
+        <li class="menu-item"><a href="app-chat-local.html" class="menu-link"><i class="menu-icon tf-icons bx bx-chat"></i><div class="text-truncate">Discuter</div></a></li>
+        <li class="menu-item"><a href="app-calendrier-local.html" class="menu-link"><i class="menu-icon tf-icons bx bx-calendar"></i><div class="text-truncate">Calendrier</div></a></li>
+        <li class="menu-item">
+          <a href="/Esprit-PW-2A30-2627-TakwiniBot-gestion_user/Esprit-PW-2A30-2627-TakwiniBot-gestion_user/view/frontoffice/formations/index.php" class="menu-link" target="_blank">
+            <i class="menu-icon tf-icons bx bx-globe"></i>
+            <div class="text-truncate">Voir le site</div>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="../../../../../Model/logout.php" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-power-off"></i>
+            <div class="text-truncate">Déconnexion</div>
+          </a>
+        </li>
+      </ul>
+    </aside>
+    <!-- / Menu -->
+
+    <div class="layout-page">
+      <!-- Navbar -->
+      <nav class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme" id="layout-navbar">
+        <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+          <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)"><i class="icon-base bx bx-menu icon-md"></i></a>
+        </div>
+        <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
+          <div class="navbar-nav align-items-center me-auto">
+            <div class="nav-item d-flex align-items-center">
+              <span class="w-px-22 h-px-22"><i class="icon-base bx bx-search icon-md"></i></span>
+              <input type="text" class="form-control border-0 shadow-none ps-1 ps-sm-2 d-md-block d-none" placeholder="Search..." aria-label="Search..."/>
+            </div>
+          </div>
+          <ul class="navbar-nav flex-row align-items-center ms-md-auto">
+            <li class="nav-item me-2 me-xl-1">
+              <a class="nav-link" href="javascript:void(0);" id="app-theme-toggle">
+                <i class="icon-base bx bx-moon icon-md" id="app-theme-toggle-icon"></i>
+              </a>
+            </li>
+            <li class="nav-item navbar-dropdown dropdown-user dropdown">
+              <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
+                <div class="avatar avatar-online">
+                  <img src="<?= $__navAvatar ?>" alt class="rounded-circle" style="width:40px;height:40px;object-fit:cover;"/>
+                </div>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                  <a class="dropdown-item" href="#">
+                    <div class="d-flex">
+                      <div class="flex-shrink-0 me-3">
+                        <div class="avatar avatar-online">
+                          <img src="<?= $__navAvatar ?>" alt class="rounded-circle" style="width:40px;height:40px;object-fit:cover;"/>
+                        </div>
+                      </div>
+                      <div class="flex-grow-1">
+                        <h6 class="mb-0"><?= htmlspecialchars($_SESSION['user']['nom']) ?></h6>
+                        <small class="text-body-secondary">Admin</small>
+                      </div>
+                    </div>
+                  </a>
+                </li>
+                <li><div class="dropdown-divider my-1"></div></li>
+                <li>
+                  <a class="dropdown-item" href="../../../../../Model/logout.php">
+                    <i class="icon-base bx bx-power-off icon-md me-3"></i><span>Déconnexion</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <!-- / Navbar -->
+
+      <div class="content-wrapper">
+        <div class="container-xxl flex-grow-1 container-p-y">
+
+          <h4 class="fw-bold py-3 mb-2">Utilisateurs</h4>
+          <p class="text-muted mb-4">Tableaux avec actions Modifier / Supprimer.</p>
+
+          <?php if ($message): ?>
+          <div class="alert alert-success alert-dismissible mb-4" role="alert">
+            <?= htmlspecialchars($message) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          <?php endif; ?>
+          <?php if ($error): ?>
+          <div class="alert alert-danger alert-dismissible mb-4" role="alert">
+            <?= htmlspecialchars($error) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          <?php endif; ?>
+
+          <!-- Statistiques réelles -->
+          <div class="row g-6 mb-6">
+            <div class="col-sm-6 col-xl-3">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex align-items-start justify-content-between">
+                    <div class="content-left">
+                      <span>Utilisateurs</span>
+                      <div class="d-flex align-items-end mt-2">
+                        <h4 class="mb-0 me-2"><?= $total ?></h4>
+                      </div>
+                      <p class="mb-0">Total utilisateurs</p>
+                    </div>
+                    <div class="avatar"><span class="avatar-initial rounded bg-label-primary"><i class="bx bx-user bx-sm"></i></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex align-items-start justify-content-between">
+                    <div class="content-left">
+                      <span>Actifs</span>
+                      <div class="d-flex align-items-end mt-2">
+                        <h4 class="mb-0 me-2 text-success"><?= $actifs ?></h4>
+                      </div>
+                      <p class="mb-0">Connectés</p>
+                    </div>
+                    <div class="avatar"><span class="avatar-initial rounded bg-label-success"><i class="bx bx-check-circle bx-sm"></i></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex align-items-start justify-content-between">
+                    <div class="content-left">
+                      <span>Inactifs</span>
+                      <div class="d-flex align-items-end mt-2">
+                        <h4 class="mb-0 me-2 text-danger"><?= $inactifs ?></h4>
+                      </div>
+                      <p class="mb-0">Déconnectés</p>
+                    </div>
+                    <div class="avatar"><span class="avatar-initial rounded bg-label-danger"><i class="bx bx-user-x bx-sm"></i></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex align-items-start justify-content-between">
+                    <div class="content-left">
+                      <span>Admins</span>
+                      <div class="d-flex align-items-end mt-2">
+                        <h4 class="mb-0 me-2"><?= count(array_filter($users, fn($u) => $u['role'] === 'admin')) ?></h4>
+                      </div>
+                      <p class="mb-0">Administrateurs</p>
+                    </div>
+                    <div class="avatar"><span class="avatar-initial rounded bg-label-warning"><i class="bx bx-crown bx-sm"></i></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Graphique des rôles -->
+          <?php
+            $nbAdmin     = count(array_filter($users, fn($u) => $u['role'] === 'admin'));
+            $nbCandidat  = count(array_filter($users, fn($u) => $u['role'] === 'candidat'));
+            $nbRecruteur = count(array_filter($users, fn($u) => $u['role'] === 'recruteur'));
+          ?>
+          <div class="card mb-6">
+            <div class="card-header">
+              <h5 class="mb-0">Graphique des rôles</h5>
+            </div>
+            <div class="card-body">
+              <canvas id="rolesChart" height="100"></canvas>
+            </div>
+          </div>
+
+          <!-- Formulaire modification (inline si ?edit=X) -->
+          <?php if ($editUser): ?>
+          <div class="card mb-6">
+            <div class="card-header d-flex align-items-center justify-content-between">
+              <h5 class="mb-0"><i class="bx bx-edit me-2"></i>Modifier l'utilisateur #<?= $editUser['id'] ?></h5>
+              <a href="gestion-utilisateurs.php" class="btn btn-sm btn-outline-secondary">Annuler</a>
+            </div>
+            <div class="card-body">
+              <form method="POST" action="gestion-utilisateurs.php">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="id" value="<?= $editUser['id'] ?>">
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label class="form-label">Nom</label>
+                    <input type="text" name="nom" class="form-control" value="<?= htmlspecialchars($editUser['nom'] ?? '') ?>" required>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($editUser['email']) ?>" required>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Nouveau mot de passe</label>
+                    <input type="password" name="password" class="form-control" placeholder="Nouveau mot de passe" required>
+                  </div>
+                </div>
+                <div class="mt-3">
+                  <button type="submit" class="btn btn-primary"><i class="bx bx-save me-1"></i>Enregistrer</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <?php endif; ?>
+
+          <!-- Tableau -->
+          <div class="card">
+            <div class="card-header border-bottom">
+              <h5 class="card-title">Filtres de recherche</h5>
+              <div class="d-flex justify-content-between align-items-center row py-3 gap-3 gap-md-0">
+                <div class="col-md-4">
+                  <select class="form-select text-capitalize" id="filterRole">
+                    <option value="">Sélectionner Rôle</option>
+                    <option value="admin">Admin</option>
+                    <option value="candidat">Candidat</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <select class="form-select text-capitalize" id="filterStatut">
+                    <option value="">Sélectionner Statut</option>
+                    <option value="actif">Actif</option>
+                    <option value="inactif">Inactif</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <input type="text" id="searchInput" class="form-control" placeholder="Rechercher...">
+                </div>
+              </div>
+            </div>
+            <div class="card-datatable table-responsive">
+              <div class="dataTables_wrapper dt-bootstrap5 no-footer">
+                <div class="row mx-2 pt-3 pb-3">
+                  <div class="col-md-10 d-flex justify-content-end gap-2">
+                    <div class="dt-buttons btn-group flex-wrap">
+                      <button class="btn btn-outline-secondary" type="button" id="btnSortNom" title="Trier par nom">
+                        Trier A → Z
+                      </button>
+                      <button class="btn btn-outline-danger" type="button" id="btnExportPdf">
+                        Export PDF
+                      </button>
+                      <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#addUtilisateurModal">
+                        <span><i class="bx bx-plus me-0 me-sm-1 bx-sm"></i><span class="d-none d-sm-inline-block">Ajouter Utilisateur</span></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <table class="table border-top dataTable" id="usersTable">
+                  <thead>
+                    <tr>
+                      <th><input type="checkbox" class="form-check-input" id="checkAll"></th>
+                      <th id="th-nom" style="cursor:pointer;user-select:none;">
+                        UTILISATEUR
+                      </th>
+                      <th>RÔLE</th>
+                      <th>STATUT</th>
+                      <th>BANNISSEMENT</th>
+                      <th>ACTIONS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  <?php foreach ($users as $u):
+                    $initiale = strtoupper(mb_substr($u['nom'] ?? 'U', 0, 1));
+                    $avatarColors = ['primary','success','warning','info','danger','secondary'];
+                    $color = $avatarColors[$u['id'] % count($avatarColors)];
+                  ?>
+                    <tr data-role="<?= $u['role'] ?>" data-statut="<?= $u['statut'] ?>">
+                      <td><input type="checkbox" class="form-check-input row-check"></td>
+                      <td>
+                        <div class="d-flex justify-content-start align-items-center user-name">
+                          <div class="avatar-wrapper">
+                            <div class="avatar avatar-sm me-3">
+                              <span class="avatar-initial rounded-circle bg-label-<?= $color ?>"><?= $initiale ?></span>
+                            </div>
+                          </div>
+                          <div class="d-flex flex-column">
+                            <span class="fw-medium text-heading"><?= htmlspecialchars($u['nom'] ?? '-') ?></span>
+                            <small class="text-muted"><?= htmlspecialchars($u['email']) ?></small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="text-truncate d-flex align-items-center">
+                          <span class="badge badge-center rounded bg-label-<?= $u['role'] === 'admin' ? 'primary' : 'success' ?> w-px-30 h-px-30 me-2">
+                            <i class="bx <?= $u['role'] === 'admin' ? 'bx-crown' : 'bx-user' ?> bx-xs"></i>
+                          </span>
+                          <?= ucfirst($u['role']) ?>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge bg-label-<?= $u['statut'] === 'actif' ? 'success' : ($u['statut'] === 'suspendu' ? 'danger' : 'secondary') ?> text-capitalize">
+                          <?= $u['statut'] ?>
+                        </span>
+                      </td>
+                      <td>
+                        <?php $isBanned = ($u['statut'] === 'suspendu'); ?>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="form-check form-switch mb-0">
+                            <input
+                              class="form-check-input ban-toggle"
+                              type="checkbox"
+                              role="switch"
+                              id="ban-<?= $u['id'] ?>"
+                              data-id="<?= $u['id'] ?>"
+                              <?= $isBanned ? 'checked' : '' ?>
+                              style="cursor:pointer;width:2.5em;height:1.3em;"
+                            >
+                          </div>
+                          <label for="ban-<?= $u['id'] ?>" class="mb-0" style="cursor:pointer;font-size:12px;font-weight:600;">
+                            <span class="ban-label-<?= $u['id'] ?> <?= $isBanned ? 'text-danger' : 'text-success' ?>">
+                              <?= $isBanned ? 'Banni' : 'Actif' ?>
+                            </span>
+                          </label>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <a href="gestion-utilisateurs.php?delete=<?= $u['id'] ?>"
+                             class="text-body"
+                             title="Supprimer"
+                             onclick="return confirm('Supprimer <?= htmlspecialchars(addslashes($u['nom'] ?? '')) ?> ?')">
+                            <i class="bx bx-trash bx-sm me-2"></i>
+                          </a>
+                          <a href="gestion-utilisateurs.php?edit=<?= $u['id'] ?>" class="text-body" title="Modifier">
+                            <i class="bx bx-edit bx-sm me-2"></i>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                  </tbody>
+                </table>
+
+                <div class="row mx-2 mt-3 mb-3">
+                  <div class="col-sm-12 col-md-6 d-flex align-items-center">
+                    <div class="dataTables_info text-muted small">
+                      Total : <?= $total ?> utilisateur(s)
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Ajouter Utilisateur -->
+          <div class="modal fade" id="addUtilisateurModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Ajouter un utilisateur</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="gestion-utilisateurs.php">
+                  <input type="hidden" name="action" value="add">
+                  <div class="modal-body">
+                    <div class="row g-3">
+                      <div class="col-12">
+                        <label class="form-label">Nom complet</label>
+                        <input type="text" name="nom" class="form-control" placeholder="Nom et prénom" required/>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="email@exemple.com" required/>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Mot de passe</label>
+                        <input type="password" name="password" class="form-control" placeholder="Mot de passe" required/>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Rôle</label>
+                        <select name="role" class="form-select">
+                          <option value="candidat">Candidat</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!-- Footer -->
+        <footer class="content-footer footer bg-footer-theme">
+          <div class="container-xxl">
+            <div class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
+              <div class="mb-2 mb-md-0">© <script>document.write(new Date().getFullYear())</script>, Takwini</div>
+            </div>
+          </div>
+        </footer>
+        <div class="content-backdrop fade"></div>
+      </div>
+    </div>
+  </div>
+  <div class="layout-overlay layout-menu-toggle"></div>
+</div>
+
+<script src="../assets/vendor/libs/jquery/jquery.js"></script>
+<script src="../assets/vendor/libs/popper/popper.js"></script>
+<script src="../assets/vendor/js/bootstrap.js"></script>
+<script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+<script src="../assets/vendor/js/menu.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/navbar-extras.js"></script>
+
+<script>
+//Recherche
+function filterTable() {
+  const search  = document.getElementById('searchInput').value.toLowerCase();
+  const role    = document.getElementById('filterRole').value.toLowerCase();
+  const statut  = document.getElementById('filterStatut').value.toLowerCase();
+
+  document.querySelectorAll('#usersTable tbody tr').forEach(row => {
+    const nom    = (row.querySelector('.fw-medium')?.textContent || '').toLowerCase();
+    const rRole  = row.dataset.role;
+    const rStat  = row.dataset.statut;
+    const matchS = nom.includes(search);
+    const matchR = !role   || rRole  === role;
+    const matchT = !statut || rStat  === statut;
+    row.style.display = (matchS && matchR && matchT) ? '' : 'none';
+  });
+}
+
+document.getElementById('searchInput').addEventListener('keyup', filterTable);
+document.getElementById('filterRole').addEventListener('change', filterTable);
+document.getElementById('filterStatut').addEventListener('change', filterTable);
+
+// Checkbox tout sélectionner
+document.getElementById('checkAll').addEventListener('change', function() {
+  document.querySelectorAll('.row-check').forEach(cb => cb.checked = this.checked);
+});
+
+// Graphique des rôles
+new Chart(document.getElementById('rolesChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Admin', 'Candidat', 'Recruteur'],
+        datasets: [{
+            label: 'Nombre',
+            data: [<?= $nbAdmin ?>, <?= $nbCandidat ?>, <?= $nbRecruteur ?>],
+            backgroundColor: ['#696cff', '#71dd37', '#ffab00'],
+            borderRadius: 8,
+            borderSkipped: false,
+            barThickness: 60,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ' ' + ctx.parsed.y + ' utilisateur(s)'
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 },
+                title: { display: true, text: 'Nombre', color: '#888' },
+                grid: { color: 'rgba(0,0,0,0.05)' }
+            },
+            x: {
+                grid: { display: false }
+            }
+        }
+    }
+});
+
+// Tri par nom A→Z uniquement
+document.getElementById('btnSortNom').addEventListener('click', function () {
+    const tbody = document.querySelector('#usersTable tbody');
+    const rows  = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.sort((a, b) => {
+        const nomA = a.querySelector('.fw-medium')?.textContent.trim().toLowerCase() || '';
+        const nomB = b.querySelector('.fw-medium')?.textContent.trim().toLowerCase() || '';
+        return nomA.localeCompare(nomB, 'fr');
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+});
+
+document.getElementById('th-nom').addEventListener('click', function () {
+    document.getElementById('btnSortNom').click();
+});
+
+// Export PDF
+document.getElementById('btnExportPdf').addEventListener('click', function () {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Titre
+    doc.setFontSize(16);
+    doc.setTextColor(40, 40, 40);
+    doc.text('Liste des Utilisateurs - Takwini', 14, 18);
+
+    // Date
+    doc.setFontSize(9);
+    doc.setTextColor(120, 120, 120);
+    doc.text('Exporté le ' + new Date().toLocaleDateString('fr-FR'), 14, 25);
+
+    // Données du tableau (lignes visibles uniquement)
+    const rows = [];
+    document.querySelectorAll('#usersTable tbody tr').forEach(tr => {
+        if (tr.style.display === 'none') return;
+        const nom    = tr.querySelector('.fw-medium')?.textContent.trim() || '';
+        const email  = tr.querySelector('small')?.textContent.trim() || '';
+        const role   = tr.dataset.role || '';
+        const statut = tr.dataset.statut || '';
+        rows.push([nom, email, role, statut]);
+    });
+
+    doc.autoTable({
+        startY: 30,
+        head: [['Nom', 'Email', 'Rôle', 'Statut']],
+        body: rows,
+        headStyles: { fillColor: [105, 108, 255], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 245, 255] },
+        styles: { fontSize: 10, cellPadding: 4 },
+        margin: { left: 14, right: 14 }
+    });
+
+    doc.save('utilisateurs-takwini.pdf');
+});
+
+// ── Toggle Ban/Unban ─────────────────────────────────────────────────────────
+document.querySelectorAll('.ban-toggle').forEach(function(toggle) {
+    toggle.addEventListener('change', function() {
+        const userId = this.dataset.id;
+        const isBanning = this.checked; // checked = on veut bannir
+        const label = document.querySelector('.ban-label-' + userId);
+        const row   = this.closest('tr');
+
+        // Confirmation
+        const action = isBanning ? 'bannir' : 'débannir';
+        if (!confirm('Voulez-vous vraiment ' + action + ' cet utilisateur ?')) {
+            this.checked = !this.checked; // annuler
+            return;
+        }
+
+        fetch('toggle-ban.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: parseInt(userId) })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const banned = data.newStatut === 'suspendu';
+
+                // Mettre à jour le label
+                label.textContent = banned ? 'Banni' : 'Actif';
+                label.className   = 'ban-label-' + userId + (banned ? ' text-danger' : ' text-success');
+
+                // Mettre à jour le badge statut dans la même ligne
+                const badge = row.querySelector('td:nth-child(5) .badge');
+                if (badge) {
+                    badge.textContent = data.newStatut;
+                    badge.className   = 'badge text-capitalize bg-label-' + (banned ? 'danger' : 'success');
+                }
+
+                // Mettre à jour data-statut pour les filtres
+                row.dataset.statut = data.newStatut;
+
+                // Toast notification
+                showToast(data.message, banned ? 'danger' : 'success');
+            } else {
+                this.checked = !this.checked; // annuler le toggle
+                showToast(data.message || 'Erreur.', 'danger');
+            }
+        })
+        .catch(() => {
+            this.checked = !this.checked;
+            showToast('Erreur réseau.', 'danger');
+        });
+    });
+});
+
+function showToast(msg, type) {
+    const existing = document.getElementById('ban-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'ban-toast';
+    toast.style.cssText = `
+        position:fixed;bottom:24px;right:24px;z-index:9999;
+        background:${type === 'danger' ? '#dc3545' : '#198754'};
+        color:#fff;padding:12px 20px;border-radius:10px;
+        font-size:14px;font-weight:600;
+        box-shadow:0 4px 16px rgba(0,0,0,.2);
+        animation:slideIn .3s ease;
+    `;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+}
+</script>
+<style>
+@keyframes slideIn { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.ban-toggle:checked { background-color: #dc3545 !important; border-color: #dc3545 !important; }
+</style>
+</body>
+</html>
