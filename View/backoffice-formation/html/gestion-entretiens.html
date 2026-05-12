@@ -493,20 +493,108 @@
           <div class="content-wrapper">
             <!-- Content -->
             <div class="container-xxl flex-grow-1 container-p-y">
-              <h4 class="fw-bold py-3 mb-2">Gestion des Entretiens</h4>
+              <h4 class="fw-bold py-3 mb-2">Entretiens</h4>
+              <p class="text-muted mb-4">Tableaux avec actions Modifier / Supprimer (menu ⋮).</p>
 
-              <div class="card" id="entretiens">
+              <div class="row g-6 mb-6">
+                <div class="col-sm-6 col-xl-3">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                          <span>Entretiens</span>
+                          <div class="d-flex align-items-end mt-2">
+                            <h4 class="mb-0 me-2">648</h4>
+                            <small class="text-success">(+17%)</small>
+                          </div>
+                          <p class="mb-0">Total entretiens</p>
+                        </div>
+                        <div class="avatar">
+                          <span class="avatar-initial rounded bg-label-primary">
+                            <i class="bx bx-calendar bx-sm"></i>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                          <span>À venir</span>
+                          <div class="d-flex align-items-end mt-2">
+                            <h4 class="mb-0 me-2">42</h4>
+                            <small class="text-success">(+35%)</small>
+                          </div>
+                          <p class="mb-0">Analyse semaine</p>
+                        </div>
+                        <div class="avatar">
+                          <span class="avatar-initial rounded bg-label-warning">
+                            <i class="bx bx-time-five bx-sm"></i>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                          <span>Terminés</span>
+                          <div class="d-flex align-items-end mt-2">
+                            <h4 class="mb-0 me-2">580</h4>
+                            <small class="text-success">(+12%)</small>
+                          </div>
+                          <p class="mb-0">Analyse semaine</p>
+                        </div>
+                        <div class="avatar">
+                          <span class="avatar-initial rounded bg-label-success">
+                            <i class="bx bx-check bx-sm"></i>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                          <span>Annulés</span>
+                          <div class="d-flex align-items-end mt-2">
+                            <h4 class="mb-0 me-2">26</h4>
+                            <small class="text-danger">(-10%)</small>
+                          </div>
+                          <p class="mb-0">Analyse semaine</p>
+                        </div>
+                        <div class="avatar">
+                          <span class="avatar-initial rounded bg-label-danger">
+                            <i class="bx bx-x-circle bx-sm"></i>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card" id="types">
                 <div class="card-header border-bottom">
                   <h5 class="card-title">Filtres de recherche</h5>
                   <div class="d-flex justify-content-between align-items-center row py-3 gap-3 gap-md-0">
                     <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Type</option><option value="Technique">Technique</option><option value="RH">RH</option><option value="Comportemental">Comportemental</option></select>
+                      <select class="form-select text-capitalize"><option value="">Sélectionner Type</option><option value="Technique">Technique</option><option value="RH">RH</option></select>
                     </div>
                     <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Statut</option><option value="planifie">Planifié</option><option value="effectue">Effectué</option><option value="annule">Annulé</option><option value="reporte">Reporté</option></select>
+                      <select class="form-select text-capitalize"><option value="">Sélectionner Modalité</option><option value="Visio">Visio</option><option value="Présentiel">Présentiel</option></select>
                     </div>
                     <div class="col-md-4">
-                      <select class="form-select text-capitalize"><option value="">Sélectionner Période</option><option value="today">Aujourd'hui</option><option value="week">Cette semaine</option><option value="month">Ce mois</option></select>
+                      <select class="form-select text-capitalize"><option value="">Sélectionner Statut</option><option value="Planifié">Planifié</option><option value="Terminé">Terminé</option><option value="Annulé">Annulé</option></select>
                     </div>
                   </div>
                 </div>
@@ -518,10 +606,16 @@
                       </div>
                       <div class="col-md-10">
                         <div class="dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-end flex-md-row flex-column gap-3">
-                          <div class="dataTables_filter"><input type="search" class="form-control" placeholder="Rechercher..." /></div>
+                          <div class="dataTables_filter">
+                            <input type="search" class="form-control" placeholder="Rechercher..." />
+                          </div>
                           <div class="dt-buttons btn-group flex-wrap">
-                            <button class="btn btn-secondary buttons-collection dropdown-toggle btn-label-secondary mx-3" type="button"><span><i class="bx bx-export me-1 bx-sm"></i>Exporter</span></button>
-                            <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#addEntretienModal"><span><i class="bx bx-plus me-0 me-sm-1 bx-sm"></i><span class="d-none d-sm-inline-block">Ajouter Entretien</span></span></button>
+                            <button class="btn btn-secondary buttons-collection dropdown-toggle btn-label-secondary mx-3" type="button">
+                              <span><i class="bx bx-export me-1 bx-sm"></i>Exporter</span>
+                            </button>
+                            <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#addEntretienModal">
+                              <span><i class="bx bx-plus me-0 me-sm-1 bx-sm"></i><span class="d-none d-sm-inline-block">Ajouter Entretien</span></span>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -531,59 +625,73 @@
                         <tr>
                           <th><input type="checkbox" class="form-check-input"></th>
                           <th>CANDIDAT</th>
+                          <th>POSTE</th>
                           <th>TYPE</th>
                           <th>DATE</th>
                           <th>STATUT</th>
-                          <th>LIEN</th>
                           <th>ACTIONS</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr>
                           <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Ahmed Benali</span></td>
-                          <td>Technique</td>
-                          <td>2025-04-12 14:00</td>
+                          <td>
+                            <div class="d-flex justify-content-start align-items-center user-name">
+                              <div class="avatar-wrapper">
+                                <div class="avatar avatar-sm me-3">
+                                  <img src="../assets/img/avatars/2.png" alt="Avatar" class="rounded-circle">
+                                </div>
+                              </div>
+                              <div class="d-flex flex-column">
+                                <span class="fw-medium text-heading">A. Ben</span>
+                                <small class="text-muted">a.ben@mail.com</small>
+                              </div>
+                            </div>
+                          </td>
+                          <td><span class="text-heading">Dev web</span></td>
+                          <td><span class="text-truncate d-flex align-items-center"><span class="badge badge-center rounded bg-label-primary w-px-30 h-px-30 me-2"><i class="bx bx-code bx-xs"></i></span>Technique</span></td>
+                          <td>12/04 14h</td>
                           <td><span class="badge bg-label-warning text-capitalize">Planifié</span></td>
-                          <td><a href="https://meet.google.com/abc" target="_blank" class="text-primary">meet.google.com/abc</a></td>
                           <td>
                             <div class="d-flex align-items-center">
                               <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
                               <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
                               <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
+                              <div class="dropdown-menu dropdown-menu-end m-0">
+                                <a href="javascript:;" class="dropdown-item">Modifier</a>
+                                <a href="javascript:;" class="dropdown-item">Annuler</a>
+                              </div>
                             </div>
                           </td>
                         </tr>
                         <tr>
                           <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Sara Kaya</span></td>
-                          <td>RH</td>
-                          <td>2025-04-01 10:30</td>
-                          <td><span class="badge bg-label-success text-capitalize">Effectué</span></td>
-                          <td><a href="https://zoom.us/j/123" target="_blank" class="text-primary">zoom.us/j/123</a></td>
                           <td>
-                            <div class="d-flex align-items-center">
-                              <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
-                              <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
+                            <div class="d-flex justify-content-start align-items-center user-name">
+                              <div class="avatar-wrapper">
+                                <div class="avatar avatar-sm me-3">
+                                  <span class="avatar-initial rounded-circle bg-label-success">SK</span>
+                                </div>
+                              </div>
+                              <div class="d-flex flex-column">
+                                <span class="fw-medium text-heading">S. Kaya</span>
+                                <small class="text-muted">s.kaya@mail.com</small>
+                              </div>
                             </div>
                           </td>
-                        </tr>
-                        <tr>
-                          <td><input type="checkbox" class="form-check-input"></td>
-                          <td><span class="fw-medium">Mohamed Trabelsi</span></td>
-                          <td>Comportemental</td>
-                          <td>2025-03-28 09:00</td>
-                          <td><span class="badge bg-label-danger text-capitalize">Annulé</span></td>
-                          <td><span class="text-muted">—</span></td>
+                          <td><span class="text-heading">Assistant RH</span></td>
+                          <td><span class="text-truncate d-flex align-items-center"><span class="badge badge-center rounded bg-label-success w-px-30 h-px-30 me-2"><i class="bx bx-user bx-xs"></i></span>RH</span></td>
+                          <td>01/04</td>
+                          <td><span class="badge bg-label-secondary text-capitalize">Terminé</span></td>
                           <td>
                             <div class="d-flex align-items-center">
                               <a href="javascript:;" class="text-body"><i class="bx bx-trash bx-sm me-2"></i></a>
                               <a href="javascript:;" class="text-body"><i class="bx bx-show bx-sm me-2"></i></a>
                               <a href="javascript:;" class="text-body dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-sm"></i></a>
-                              <div class="dropdown-menu dropdown-menu-end m-0"><a href="javascript:;" class="dropdown-item">Modifier</a><a href="javascript:;" class="dropdown-item">Supprimer</a></div>
+                              <div class="dropdown-menu dropdown-menu-end m-0">
+                                <a href="javascript:;" class="dropdown-item">Modifier</a>
+                                <a href="javascript:;" class="dropdown-item">Archiver</a>
+                              </div>
                             </div>
                           </td>
                         </tr>
@@ -591,12 +699,14 @@
                     </table>
                     <div class="row mx-2 mt-3 mb-3">
                       <div class="col-sm-12 col-md-6 d-flex align-items-center">
-                        <div class="dataTables_info text-muted small">Affichage de 1 à 3 sur 3 entrées</div>
+                        <div class="dataTables_info text-muted small">Affichage de 1 à 10 sur 50 entrées</div>
                       </div>
                       <div class="col-sm-12 col-md-6 d-flex justify-content-end">
                         <ul class="pagination pagination-sm m-0">
                           <li class="page-item disabled"><a href="#" class="page-link">Précédent</a></li>
                           <li class="page-item active"><a href="#" class="page-link">1</a></li>
+                          <li class="page-item"><a href="#" class="page-link">2</a></li>
+                          <li class="page-item"><a href="#" class="page-link">3</a></li>
                           <li class="page-item"><a href="#" class="page-link">Suivant</a></li>
                         </ul>
                       </div>
@@ -607,11 +717,11 @@
 
               <!-- Modal Add Entretien -->
               <div class="modal fade" id="addEntretienModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-dialog modal-dialog-centered" role="document">
                   <div class="modal-content">
                     <div class="modal-header">
                       <h5 class="modal-title">Ajouter un entretien</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form>
                       <div class="modal-body">
@@ -620,25 +730,17 @@
                             <label class="form-label">Candidat</label>
                             <input type="text" class="form-control" placeholder="Nom du candidat" />
                           </div>
-                          <div class="col-md-6">
-                            <label class="form-label">Type d'entretien</label>
-                            <select class="form-select"><option value="">Sélectionner...</option><option value="Technique">Technique</option><option value="RH">RH</option><option value="Comportemental">Comportemental</option></select>
-                          </div>
-                          <div class="col-md-6">
-                            <label class="form-label">Date et heure</label>
-                            <input type="datetime-local" class="form-control" />
-                          </div>
-                          <div class="col-md-6">
-                            <label class="form-label">Statut</label>
-                            <select class="form-select"><option value="planifie">Planifié</option><option value="effectue">Effectué</option><option value="annule">Annulé</option><option value="reporte">Reporté</option></select>
-                          </div>
-                          <div class="col-md-6">
-                            <label class="form-label">Lien (URL)</label>
-                            <input type="url" class="form-control" placeholder="https://meet.google.com/..." />
-                          </div>
                           <div class="col-12">
-                            <label class="form-label">Notes</label>
-                            <textarea class="form-control" rows="3" placeholder="Remarques sur l'entretien..."></textarea>
+                            <label class="form-label">Poste</label>
+                            <input type="text" class="form-control" placeholder="Intitulé du poste" />
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label">Type</label>
+                            <select class="form-select"><option>Technique</option><option>RH</option></select>
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label">Date</label>
+                            <input type="datetime-local" class="form-control" />
                           </div>
                         </div>
                       </div>

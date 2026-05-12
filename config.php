@@ -1,11 +1,11 @@
 <?php
 
-if (!class_exists('config')) {
-    class config
-    {
+
+class config
+
+{
 
   private static $pdo = null;
-
 
 
   public static function getConnexion()
@@ -18,7 +18,7 @@ if (!class_exists('config')) {
 
         self::$pdo = new PDO(
 
-          'mysql:host=localhost;dbname=projet_takwini',
+          'mysql:host=localhost;dbname=takwini_db',
 
           'root',
 
@@ -46,6 +46,4 @@ if (!class_exists('config')) {
 
   }
 
-    }
 }
-

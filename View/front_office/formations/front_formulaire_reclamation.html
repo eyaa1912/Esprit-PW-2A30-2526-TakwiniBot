@@ -105,6 +105,10 @@
       resize: vertical;
       padding-top: 12px;
     }
+    .form-wrapper .form-control.field-error {
+      border-color: #d9534f;
+      box-shadow: 0 0 0 0.12rem rgba(217, 83, 79, 0.22);
+    }
     .form-actions {
       display: flex;
       gap: 12px;
@@ -166,11 +170,11 @@
             <ul class="site-menu main-menu js-clone-nav mr-auto d-none d-lg-block">
               <li><a href="index.html" class="nav-link">Home</a></li>
               <li><a class="nav-link" href="about.html">About</a></li>
-              <li><a href="formation.php" class="nav-link">Formations</a></li>
+              <li><a href="formation.html" class="nav-link">Formations</a></li>
               <li><a href="gallery.html" class="nav-link">Produits</a></li>
               <li><a href="blog.html" class="nav-link">Entretien</a></li>
-              <li><a href="offres-emploi/offres-emploi.html" class="nav-link">Offres</a></li>
-              <li class="nav-reclamation-login"><a class="nav-link" href="front_mes_reclamations.html">Réclamations</a><a href="Modern-Login-master/login.html" class="login-pill">Se connecter</a></li>
+              <li><a href="file:///C:/Users/AMEN/Desktop/offres-emploi.html" class="nav-link">Offres</a></li>
+              <li class="nav-reclamation-login"><a class="nav-link" href="front_mes_reclamations.html">Réclamations</a><a href="file:///C:/Users/AMEN/Desktop/Modern-Login-master/Modern-Login-master/login.html" class="login-pill">Se connecter</a></li>
             </ul>
           </nav>
         </div>
@@ -200,10 +204,11 @@
       <div class="row">
         <div class="col-lg-8 col-sm-12 col-xs-12">
           <div class="form-wrapper">
-            <form action="#" method="post">
+            <form id="reclamation-form" action="/Esprit-PW-2A30-2627-TakwiniBot-gestion_reclamation/Controller/ReclamationController.php?action=add" method="post">
+              <div id="reclamation-status" class="alert d-none" role="alert"></div>
               <div class="form-group">
                 <label for="type">Type de réclamation *</label>
-                <select id="type" name="type" class="form-control" required>
+                <select id="type" name="type" class="form-control">
                   <option value="">Sélectionnez un type</option>
                   <option value="technique">Problème technique</option>
                   <option value="offre">Signalement d'offre inappropriée</option>
@@ -215,16 +220,16 @@
 
               <div class="form-group">
                 <label for="sujet">Sujet *</label>
-                <input type="text" id="sujet" name="sujet" class="form-control" placeholder="Ex: Problème d'accès à une offre" required>
+                <input type="text" id="sujet" name="sujet" class="form-control" placeholder="Ex: Problème d'accès à une offre">
               </div>
 
               <div class="form-group">
                 <label for="message">Message *</label>
-                <textarea id="message" name="message" class="form-control" placeholder="Décrivez votre problème en détail..." required></textarea>
+                <textarea id="message" name="message" class="form-control" placeholder="Décrivez votre problème en détail..."></textarea>
               </div>
 
               <div class="form-actions">
-                <button type="submit" class="btn btn-serach-bg">Envoyer ma réclamation</button>
+                <button type="submit" class="btn btn-serach-bg" id="reclamation-submit">Envoyer ma réclamation</button>
                 <button type="reset" class="btn btn-soft">Réinitialiser</button>
                 <a href="front_mes_reclamations.html" class="btn btn-soft">Retour à mes réclamations</a>
               </div>
@@ -271,17 +276,10 @@
   <script src="assets/js/scrolltopcontrol.js"></script>
   <script src="assets/js/wow.min.js"></script>
   <script src="assets/js/scripts.js"></script>
-  <!-- Assistant Vocal -->
-  <script src="assets/js/voice-assistant.js"></script>
-  <!-- Commandes Vocales -->
-  <script src="assets/js/voice-commands.js"></script>
-  <!-- Chatbot Takwinibot -->
-  <script src="assets/js/chatbot.js"></script>
-<!-- Hand Tracking -->
-<script src="assets/js/hand-tracking.js"></script>
-</body></html>
+  <script src="assets/js/reclamation-form.js"></script>
+</body>
 
-
+</html>
 
 
 

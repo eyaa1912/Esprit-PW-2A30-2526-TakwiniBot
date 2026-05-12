@@ -81,7 +81,7 @@
 							</li>
 							<li><a class="nav-link" href="about.html">about</a></li>
 							<li class="has-children">
-								<a href="formation.php" class="nav-link">Formations</a>
+								<a href="formation.html" class="nav-link">Formations</a>
 								<ul class="dropdown">
 									<li><a href="formation-details.html" class="nav-link">DÃ©tails de la Formation</a></li>
 								</ul>
@@ -104,8 +104,8 @@
 									<li><a href="blog-post.html" class="nav-link">Blog Single</a></li>
 								</ul>
 							</li>
-							<li><a class="nav-link" href="offres-emploi/offres-emploi.html">Offres</a></li>
-							<li class="nav-reclamation-login"><a class="nav-link" href="front_mes_reclamations.html">Réclamations</a><a href="Modern-Login-master/login.html" class="login-pill">Se connecter</a></li>
+							<li><a class="nav-link" href="file:///C:/Users/AMEN/Desktop/offres-emploi.html">Offres</a></li>
+							<li class="nav-reclamation-login"><a class="nav-link" href="front_mes_reclamations.html">Réclamations</a><a href="file:///C:/Users/AMEN/Desktop/Modern-Login-master/Modern-Login-master/login.html" class="login-pill">Se connecter</a></li>
 						</ul>
 					</nav>
 				</div>
@@ -511,16 +511,6 @@
 	<script src="assets/js/wow.min.js"></script>
 	<!-- scripts js -->
 	<script src="assets/js/scripts.js"></script>
-	
-	<!-- Assistant Vocal -->
-	<script src="assets/js/voice-assistant.js"></script>
-	
-	<!-- Commandes Vocales -->
-	<script src="assets/js/voice-commands.js"></script>
-	<!-- Chatbot Takwinibot -->
-	<script src="assets/js/chatbot.js"></script>
-<!-- Hand Tracking -->
-<script src="assets/js/hand-tracking.js"></script>
 
 	<!-- Modal Inscription -->
 	<div class="modal fade" id="inscriptionModal" tabindex="-1" role="dialog" aria-labelledby="inscriptionModalLabel" aria-hidden="true" style="z-index: 99999;">
@@ -533,63 +523,28 @@
 	        </button>
 	      </div>
 	      <div class="modal-body">
-	        <form id="formInscription">
-	          <!-- Formation sélectionnée (rempli automatiquement) -->
-	          <div class="form-group" style="text-align:left;">
-	            <label for="insc-formation">Formation</label>
-	            <input type="text" class="form-control" id="insc-formation" placeholder="Nom de la formation" readonly style="background:#f8f9fa;">
+	        <form>
+	          <div class="form-group" style="text-align: left;">
+	            <label for="cin">CIN</label>
+	            <input type="text" class="form-control" id="cin" placeholder="Votre CIN" required>
 	          </div>
-	          <!-- ID Utilisateur -->
-	          <div class="form-group" style="text-align:left;">
-	            <label for="insc-user-id">ID Utilisateur</label>
-	            <input type="number" class="form-control" id="insc-user-id" placeholder="Ex: 1" required min="1">
+	          <div class="form-group" style="text-align: left;">
+	            <label for="nom">Nom</label>
+	            <input type="text" class="form-control" id="nom" placeholder="Votre Nom" required>
 	          </div>
-	          <!-- Nom -->
-	          <div class="form-group" style="text-align:left;">
-	            <label for="insc-nom">Nom</label>
-	            <input type="text" class="form-control" id="insc-nom" placeholder="Votre nom" required>
+	          <div class="form-group" style="text-align: left;">
+	            <label for="prenom">PrÃ©nom</label>
+	            <input type="text" class="form-control" id="prenom" placeholder="Votre PrÃ©nom" required>
 	          </div>
-	          <!-- Prénom -->
-	          <div class="form-group" style="text-align:left;">
-	            <label for="insc-prenom">Prénom</label>
-	            <input type="text" class="form-control" id="insc-prenom" placeholder="Votre prénom" required>
-	          </div>
-	          <!-- Email -->
-	          <div class="form-group" style="text-align:left;">
-	            <label for="insc-email">Email</label>
-	            <input type="email" class="form-control" id="insc-email" placeholder="Votre adresse email" required>
-	          </div>
-	          <!-- Niveau -->
-	          <div class="form-group" style="text-align:left;">
-	            <label for="insc-niveau">Niveau</label>
-	            <select class="form-control" id="insc-niveau" required>
-	              <option value="">-- Sélectionner --</option>
-	              <option value="Débutant">Débutant</option>
-	              <option value="Intermédiaire">Intermédiaire</option>
-	              <option value="Avancé">Avancé</option>
-	              <option value="Expert">Expert</option>
-	            </select>
-	          </div>
-	          <!-- Mode de formation -->
-	          <div class="form-group" style="text-align:left;">
-	            <label for="insc-mode">Mode de formation</label>
-	            <select class="form-control" id="insc-mode" required>
-	              <option value="">-- Sélectionner --</option>
-	              <option value="En ligne">En ligne</option>
-	              <option value="Présentiel">Présentiel</option>
-	              <option value="Hybride">Hybride</option>
-	            </select>
+	          <div class="form-group" style="text-align: left;">
+	            <label for="email">Gmail</label>
+	            <input type="email" class="form-control" id="email" placeholder="Votre adresse Gmail" required>
 	          </div>
 	        </form>
-	        <!-- Indicateur vocal dans le modal -->
-	        <div id="insc-voice-hint" style="display:none;margin-top:10px;padding:8px 12px;background:#e8f5e9;border-radius:8px;font-size:12px;color:#2e7d32;">
-	          🎤 <strong>Mode vocal actif</strong> — Dites le nom du champ puis sa valeur.<br>
-	          Ex: <em>"nom Seif"</em> · <em>"prénom Ahmed"</em> · <em>"email test@gmail.com"</em>
-	        </div>
 	      </div>
 	      <div class="modal-footer">
-	        <button type="button" class="btn btn-secondary" id="insc-annuler" data-dismiss="modal">Annuler</button>
-	        <button type="button" class="btn btn-serach-bg" id="insc-submit" style="background-color:#3bafda;color:#fff;">S'inscrire</button>
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+	        <button type="button" class="btn btn-serach-bg" style="background-color: #3bafda; color: #fff;">S'inscrire</button>
 	      </div>
 	    </div>
 	  </div>
@@ -598,8 +553,6 @@
 </body>
 
 </html>
-
-
 
 
 
