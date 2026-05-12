@@ -1,0 +1,339 @@
+﻿/* ═══════════════════════════════════════════
+   WIDGET ACCESSIBILITÉ VISUELLE — TAKWINIBOT
+═══════════════════════════════════════════ */
+#accessibility-widget {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 99999;
+    font-family: 'DM Sans', Arial, sans-serif;
+}
+#accessibility-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #7c3aed;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 18px rgba(124,58,237,.4);
+    transition: background .2s, transform .2s;
+    font-size: 22px;
+}
+#accessibility-btn:hover { background: #5b21b6; transform: scale(1.08); }
+
+#accessibility-label {
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    background: #fff;
+    border: 1.5px solid #ede9fe;
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #7c3aed;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    display: none !important; /* Caché en permanence — visible uniquement au survol via JS */
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+/* Afficher le label uniquement au survol du widget */
+#accessibility-widget:hover #accessibility-label {
+    display: block !important;
+}
+#accessibility-menu {
+    position: fixed;
+    bottom: 95px;
+    right: 28px;
+    background: #fff;
+    border: 1.5px solid #ede9fe;
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(124,58,237,.18);
+    padding: 8px 8px 12px 8px;
+    min-width: 210px;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 100000;
+    animation: accSlideUp .18s ease;
+}
+@keyframes accSlideUp {
+    from { opacity:0; transform:translateY(10px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+.access-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    transition: background .15s, color .15s;
+}
+.access-option:hover  { background: #f5f3ff; color: #7c3aed; }
+.access-option.active { background: #ede9fe; color: #7c3aed; font-weight: 700; }
+#btn-normal { color: #6b7280; }
+#btn-normal:hover { background: #f3f4f6; color: #111; }
+#btn-normal.active { background: #e5e7eb; color: #111; font-weight: 700; }
+
+
+/* 
+   MODE DALTONISME
+ */
+
+/* 1. Logo navbar */
+body.mode-daltonisme .site-logo { transform: none !important; }
+body.mode-daltonisme header.site-navbar .col-6.col-xl-2 { flex: 0 0 200px !important; max-width: 200px !important; min-width: 200px !important; }
+body.mode-daltonisme header.site-navbar .col-12.col-md-10 { flex: 0 0 calc(100% - 200px) !important; max-width: calc(100% - 200px) !important; }
+
+/* 2. Liens navbar  soulignement */
+body.mode-daltonisme .site-menu > li > a, body.mode-daltonisme .site-navbar a.nav-link { text-decoration: underline !important; text-underline-offset: 3px !important; color: #000 !important; }
+body.mode-daltonisme .site-menu > li > a:hover { color: #0055aa !important; }
+
+/* 3. Bouton Se Connecter */
+body.mode-daltonisme .login-pill { background: #0055aa !important; color: #fff !important; border: 3px solid #000 !important; font-weight: 800 !important; border-radius: 4px !important; }
+
+/* 4. Boutons hero  forme pleine vs tirets */
+body.mode-daltonisme .home_btn_color_one { background: #fff !important; color: #000 !important; border: 3px solid #fff !important; font-weight: 800 !important; text-transform: uppercase !important; }
+body.mode-daltonisme .home_btn_color_two { background: transparent !important; color: #fff !important; border: 3px dashed #fff !important; font-weight: 800 !important; text-transform: uppercase !important; }
+
+/* 5. Badges type offre — formes geometriques */
+body.mode-daltonisme [data-type-badge]::before { font-size: 11px; font-weight: 900; margin-right: 3px; }
+body.mode-daltonisme [data-type-badge="CDI"]::before       { content: 'CDI '; color: #0055aa; }
+body.mode-daltonisme [data-type-badge="CDD"]::before       { content: 'CDD '; color: #ee7733; }
+body.mode-daltonisme [data-type-badge="Freelance"]::before { content: 'FRL '; color: #8800cc; }
+body.mode-daltonisme [data-type-badge="Stage"]::before     { content: 'STG '; color: #cc6600; }
+
+/* 6. Couleurs semantiques  rougeorange, vertbleu, jauneviolet */
+body.mode-daltonisme .badge-success, body.mode-daltonisme .bg-success, body.mode-daltonisme .bg-label-success { background-color: #0077bb !important; color: #fff !important; }
+body.mode-daltonisme .badge-danger,  body.mode-daltonisme .bg-danger,  body.mode-daltonisme .bg-label-danger  { background-color: #ee7733 !important; color: #fff !important; }
+body.mode-daltonisme .badge-warning, body.mode-daltonisme .bg-warning, body.mode-daltonisme .bg-label-warning { background-color: #8800cc !important; color: #fff !important; }
+body.mode-daltonisme .text-success { color: #0077bb !important; }
+body.mode-daltonisme .text-danger  { color: #cc4400 !important; }
+body.mode-daltonisme .text-warning { color: #8800cc !important; }
+
+/* 7. Boutons */
+body.mode-daltonisme .btn-primary, body.mode-daltonisme .btn-contact-bg, body.mode-daltonisme .job-action .btn { background-color: #0055aa !important; border: 3px solid #003377 !important; color: #fff !important; font-weight: 700 !important; }
+body.mode-daltonisme .btn-outline-primary { background-color: transparent !important; color: #0055aa !important; border: 3px solid #0055aa !important; font-weight: 700 !important; }
+
+/* 8. Erreurs formulaire */
+body.mode-daltonisme .invalid-feedback { color: #003377 !important; font-weight: 700 !important; background: #e8f0fe !important; padding: 5px 10px !important; border-radius: 4px !important; border-left: 4px solid #003377 !important; display: block !important; }
+body.mode-daltonisme .invalid-feedback::before { content: '[!] '; font-weight: 900; }
+body.mode-daltonisme .is-invalid { border: 2px solid #003377 !important; box-shadow: 0 0 0 3px rgba(0,51,119,.2) !important; }
+
+/* 9. Liens generaux */
+body.mode-daltonisme a:not(.btn):not(.login-pill):not(.nav-link):not([class*="menu"]) { text-decoration: underline !important; text-underline-offset: 2px !important; }
+
+/* 10. Cartes offres */
+body.mode-daltonisme .job-card { border-left: 4px solid #0055aa !important; padding-left: 16px !important; }
+
+/* 11. Texte hero */
+body.mode-daltonisme .home_bg h2, body.mode-daltonisme .home_bg p { text-shadow: 0 2px 8px rgba(0,0,0,.95) !important; font-weight: 700 !important; }
+
+
+/* ═══════════════════════════════════════════
+   MODE DYSLEXIE
+═══════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap');
+
+/* Police Lexend sur tout le contenu sauf navbar */
+body.mode-dyslexie,
+body.mode-dyslexie * {
+    font-family: 'Lexend', Arial, sans-serif !important;
+    letter-spacing: 0.12em !important;
+    word-spacing: 0.25em !important;
+    line-height: 2.0 !important;
+}
+
+/* Exclure la navbar */
+body.mode-dyslexie header.site-navbar,
+body.mode-dyslexie header.site-navbar * {
+    font-family: inherit !important;
+    letter-spacing: normal !important;
+    word-spacing: normal !important;
+    line-height: normal !important;
+    font-size: inherit !important;
+}
+
+/* Titres et descriptions des offres */
+body.mode-dyslexie .job-details h3 {
+    font-family: 'Lexend', Arial, sans-serif !important;
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1.8 !important;
+    color: #1a1a1a !important;
+}
+body.mode-dyslexie .job-details div,
+body.mode-dyslexie .job-details p {
+    font-family: 'Lexend', Arial, sans-serif !important;
+    font-size: 15px !important;
+    line-height: 2.2 !important;
+    letter-spacing: 0.1em !important;
+    word-spacing: 0.3em !important;
+    color: #333 !important;
+}
+
+/* Espacement généreux entre les cartes */
+body.mode-dyslexie .job-card {
+    margin-bottom: 36px !important;
+    padding: 28px 0 !important;
+}
+
+/* Fond blanc pur */
+body.mode-dyslexie { background: #fff !important; }
+body.mode-dyslexie .offres-section { background: #fff !important; }
+
+/* ═══════════════════════════════════════════
+   MODE CONCENTRATION (TDAH)
+═══════════════════════════════════════════ */
+body.mode-concentration *,
+body.mode-concentration *::before,
+body.mode-concentration *::after {
+    animation: none !important;
+    transition: none !important;
+}
+body.mode-concentration .preloader { display: none !important; }
+body.mode-concentration { background: #fff !important; }
+body.mode-concentration .about_video,
+body.mode-concentration .our_video,
+body.mode-concentration .our_team,
+body.mode-concentration .home_btn,
+body.mode-concentration .footer_social,
+body.mode-concentration [class*="wow"],
+body.mode-concentration .owl-carousel,
+body.mode-concentration .slick-slider { display: none !important; }
+body.mode-concentration .job-card {
+    display: block !important;
+    margin-bottom: 40px !important;
+    padding: 30px !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06) !important;
+}
+body.mode-concentration p,
+body.mode-concentration li,
+body.mode-concentration div {
+    color: #111 !important;
+    line-height: 2.4 !important;
+    word-spacing: 0.3em !important;
+    letter-spacing: 0.04em !important;
+}
+body.mode-concentration h1,
+body.mode-concentration h2,
+body.mode-concentration h3,
+body.mode-concentration h4 {
+    line-height: 2.0 !important;
+    word-spacing: 0.2em !important;
+    letter-spacing: 0.03em !important;
+    margin-bottom: 16px !important;
+}
+body.mode-concentration .job-details h3 {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    margin-bottom: 12px !important;
+}
+body.mode-concentration section.home_bg,
+body.mode-concentration section.home_bg * { color: #fff !important; text-shadow: 0 2px 8px rgba(0,0,0,1) !important; }
+body.mode-concentration .section-top,
+body.mode-concentration .section-top * { color: #fff !important; text-shadow: 0 2px 6px rgba(0,0,0,.9) !important; }
+
+/* ═══════════════════════════════════════════
+   MODE ANXIETE
+═══════════════════════════════════════════ */
+body.mode-anxiete .invalid-feedback,
+body.mode-anxiete .text-danger,
+body.mode-anxiete .alert-danger {
+    color: #2563eb !important;
+    background: #eff6ff !important;
+    border-color: #bfdbfe !important;
+    font-weight: 500 !important;
+}
+body.mode-anxiete .invalid-feedback::before { content: 'Note : '; }
+body.mode-anxiete .is-invalid { border-color: #3b82f6 !important; box-shadow: 0 0 0 3px rgba(59,130,246,.15) !important; }
+body.mode-anxiete .btn-outline-primary,
+body.mode-anxiete .btn-primary,
+body.mode-anxiete .btn-contact-bg {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #fff !important;
+    font-size: 16px !important;
+    padding: 12px 28px !important;
+    border-radius: 8px !important;
+}
+body.mode-anxiete { background: #f8fafc !important; }
+body.mode-anxiete .offres-section,
+body.mode-anxiete .login_register { background: #f8fafc !important; }
+
+/* ═══════════════════════════════════════════
+   MODE EPILEPSIE
+═══════════════════════════════════════════ */
+body.mode-epilepsie *,
+body.mode-epilepsie *::before,
+body.mode-epilepsie *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+}
+body.mode-epilepsie a:hover,
+body.mode-epilepsie button:hover,
+body.mode-epilepsie .btn:hover { transition: none !important; transform: none !important; }
+body.mode-epilepsie .preloader { display: none !important; }
+body.mode-epilepsie .owl-carousel,
+body.mode-epilepsie .slick-slider,
+body.mode-epilepsie [class*="wow"] { animation: none !important; opacity: 1 !important; transform: none !important; visibility: visible !important; }
+
+/* ═══════════════════════════════════════════
+   MODE MALVOYANCE
+═══════════════════════════════════════════ */
+body.mode-malvoyance header.site-navbar { background: #ffffff !important; border-bottom: 3px solid #000 !important; }
+body.mode-malvoyance .sticky-wrapper, body.mode-malvoyance .sticky-wrapper.is-sticky { background: #fff !important; }
+body.mode-malvoyance .sticky-wrapper .site-navbar .site-menu > li > a,
+body.mode-malvoyance .sticky-wrapper.is-sticky .site-navbar .site-menu > li > a,
+body.mode-malvoyance .sticky-wrapper .site-navbar .site-logo a,
+body.mode-malvoyance header.site-navbar a.nav-link,
+body.mode-malvoyance header.site-navbar .site-menu a,
+body.mode-malvoyance header.site-navbar .nav-link {
+    color: #000000 !important; font-size: 16px !important; font-weight: 700 !important;
+    text-shadow: none !important; background: transparent !important;
+}
+body.mode-malvoyance header.site-navbar .login-pill {
+    background: #7c3aed !important; color: #fff !important;
+    border-radius: 20px !important; padding: 8px 18px !important;
+    font-weight: 700 !important; text-shadow: none !important;
+}
+body.mode-malvoyance section.home_bg,
+body.mode-malvoyance section.home_bg * { color: #ffffff !important; text-shadow: 0 2px 8px rgba(0,0,0,1) !important; }
+body.mode-malvoyance section.home_bg h2 { font-size: 3rem !important; font-weight: 900 !important; }
+body.mode-malvoyance section.home_bg p  { font-size: 1.3rem !important; line-height: 2 !important; }
+body.mode-malvoyance .section-top,
+body.mode-malvoyance .section-top * { color: #ffffff !important; text-shadow: 0 2px 6px rgba(0,0,0,.9) !important; }
+body.mode-malvoyance .section-padding h1, body.mode-malvoyance .section-padding h2,
+body.mode-malvoyance .section-padding h3, body.mode-malvoyance .section-padding p,
+body.mode-malvoyance .about-us h2, body.mode-malvoyance .about-us h3,
+body.mode-malvoyance .about-us p, body.mode-malvoyance .our_team h3,
+body.mode-malvoyance .offres-section h3, body.mode-malvoyance .offres-section p,
+body.mode-malvoyance .offres-section div { color: #000000 !important; text-shadow: none !important; line-height: 2.1 !important; }
+body.mode-malvoyance .footer-area { background: #111 !important; }
+body.mode-malvoyance .footer-area * { color: #ffffff !important; text-shadow: none !important; }
+body.mode-malvoyance .job-details h3 { font-size: 24px !important; font-weight: 900 !important; color: #000 !important; }
+body.mode-malvoyance .job-action .btn { font-size: 18px !important; padding: 14px 32px !important; font-weight: 800 !important; border-width: 3px !important; display: block !important; width: 100% !important; margin-bottom: 12px !important; }
+body.mode-malvoyance label { font-size: 18px !important; font-weight: 700 !important; color: #000 !important; text-shadow: none !important; }
+body.mode-malvoyance .form-control, body.mode-malvoyance input,
+body.mode-malvoyance select, body.mode-malvoyance textarea { font-size: 17px !important; padding: 12px !important; border: 2px solid #000 !important; color: #000 !important; background: #fff !important; }
+body.mode-malvoyance .fa, body.mode-malvoyance .ti, body.mode-malvoyance i[class] { font-size: 1.4em !important; }

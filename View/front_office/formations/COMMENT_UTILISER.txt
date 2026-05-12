@@ -1,0 +1,113 @@
+═══════════════════════════════════════════════════════════════
+   🎤 ASSISTANT VOCAL - GUIDE D'UTILISATION RAPIDE
+═══════════════════════════════════════════════════════════════
+
+✅ ÉTAPE 1 : DÉMARRER VOTRE SERVEUR
+────────────────────────────────────────────────────────────────
+1. Ouvrir XAMPP Control Panel
+2. Cliquer sur "Start" pour Apache
+3. Cliquer sur "Start" pour MySQL
+4. Attendre que les deux deviennent verts
+
+
+✅ ÉTAPE 2 : OUVRIR LA PAGE FORMATIONS
+────────────────────────────────────────────────────────────────
+Dans votre navigateur (Chrome, Firefox, Edge...), tapez :
+
+   http://localhost/gestion_formation/View/front_office/formations/formation.php
+
+OU si vous avez un autre chemin :
+
+   http://localhost/VOTRE_DOSSIER/gestion_formation/View/front_office/formations/formation.php
+
+
+✅ ÉTAPE 3 : UTILISER L'ASSISTANT VOCAL
+────────────────────────────────────────────────────────────────
+1. Cherchez le BOUTON FLOTTANT en bas à droite de la page
+   → Il ressemble à un haut-parleur : 🔊
+
+2. Le bouton peut être :
+   • VIOLET avec 🔊 = ACTIVÉ (l'assistant fonctionne)
+   • GRIS avec 🔇 = DÉSACTIVÉ (l'assistant est en pause)
+
+3. Cliquez sur le bouton pour activer/désactiver
+
+4. Passez votre curseur sur N'IMPORTE QUEL TEXTE :
+   • Le titre "FORMATIONS"
+   • "Dernières formations"
+   • Les noms des formations
+   • Les descriptions
+   • Les boutons
+   • TOUT LE TEXTE de la page !
+
+5. Le texte sera LU AUTOMATIQUEMENT ! 🎉
+
+
+📝 PAGES OÙ L'ASSISTANT FONCTIONNE
+────────────────────────────────────────────────────────────────
+✅ formation.php (votre page actuelle)
+✅ formation.html
+✅ index.html
+✅ test-simple.html (pour tester rapidement)
+✅ demo-assistant-vocal.html (démonstration complète)
+
+
+🎯 TEST RAPIDE (Sans serveur)
+────────────────────────────────────────────────────────────────
+Si vous voulez tester IMMÉDIATEMENT sans serveur :
+
+1. Allez dans le dossier :
+   gestion_formation/View/front_office/formations/
+
+2. Double-cliquez sur :
+   test-simple.html
+
+3. La page s'ouvre dans votre navigateur
+
+4. Passez votre curseur sur les textes → Ils sont lus !
+
+
+🔧 PERSONNALISATION
+────────────────────────────────────────────────────────────────
+Pour modifier l'assistant vocal, éditez le fichier :
+   assets/js/voice-assistant.js
+
+Vous pouvez changer :
+• La vitesse de lecture (ligne 145)
+• La position du bouton (lignes 42-43)
+• Les couleurs (ligne 47)
+
+
+❓ PROBLÈMES COURANTS
+────────────────────────────────────────────────────────────────
+
+PROBLÈME : Le bouton n'apparaît pas
+SOLUTION : 
+  • Vérifiez que Font Awesome est chargé
+  • Ouvrez la console (F12) pour voir les erreurs
+  • Vérifiez que le fichier voice-assistant.js existe
+
+PROBLÈME : Pas de son
+SOLUTION :
+  • Vérifiez le volume de votre ordinateur
+  • Cliquez sur le bouton pour l'activer (🔊)
+  • Cliquez d'abord sur la page
+  • Essayez Chrome (meilleur support)
+
+PROBLÈME : La voix n'est pas en français
+SOLUTION :
+  • Vérifiez les paramètres de langue de votre navigateur
+  • Installez des voix françaises sur votre système
+
+
+📞 BESOIN D'AIDE ?
+────────────────────────────────────────────────────────────────
+Consultez ces fichiers :
+• README_ASSISTANT_VOCAL.md (documentation complète)
+• GUIDE_EXECUTION.md (guide détaillé)
+• INSTRUCTIONS_ASSISTANT_VOCAL.md (instructions d'installation)
+
+
+═══════════════════════════════════════════════════════════════
+   Bon test ! 🚀
+═══════════════════════════════════════════════════════════════
